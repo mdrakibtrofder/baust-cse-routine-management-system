@@ -1,0 +1,6614 @@
+{
+  "teachers": [
+    {
+      "id": "6f607443-91e0-4357-9929-76365dd05d69",
+      "short_name": "JA",
+      "name": "Dr. S.M. Jahangir Alam",
+      "designation": "Professor",
+      "department": "CSE",
+      "status": "Librarian",
+      "assigned_credit": 6.75
+    },
+    {
+      "id": "2b3ecc55-ebc7-4a6f-9248-221c174b908d",
+      "short_name": "MSA",
+      "name": "Dr. Mohammed Sowket Ali",
+      "designation": "Associate Professor",
+      "department": "CSE",
+      "status": "",
+      "assigned_credit": 9.0
+    },
+    {
+      "id": "3dd843b5-9960-499b-b2a2-a158bec82a01",
+      "short_name": "NHC",
+      "name": "Dr. Md Nakib Hayat Chowdhury",
+      "designation": "Associate Professor",
+      "department": "CSE",
+      "status": "HoD",
+      "assigned_credit": 7.5
+    },
+    {
+      "id": "48056e35-483c-4e70-9df8-200273889d49",
+      "short_name": "TMM",
+      "name": "Taher Muhammad Mahdee",
+      "designation": "Associate Professor",
+      "department": "CSE",
+      "status": "ICT Wing",
+      "assigned_credit": 9.0
+    },
+    {
+      "id": "63bda968-7b72-41e2-97a6-c5e593872797",
+      "short_name": "AH",
+      "name": "Md. Al-Hasan",
+      "designation": "Assistant Professor",
+      "department": "CSE",
+      "status": "",
+      "assigned_credit": 12.0
+    },
+    {
+      "id": "c25c32a5-62a3-4410-8e1b-db610009ee56",
+      "short_name": "AHS",
+      "name": "Ananna Hoque Shathi",
+      "designation": "Lecturer",
+      "department": "CSE",
+      "status": "",
+      "assigned_credit": 12.0
+    },
+    {
+      "id": "a1b62bea-b6c0-43b3-bab1-5fb2e7417c35",
+      "short_name": "ASM",
+      "name": "Alifa Shanzidah Manarat",
+      "designation": "Lecturer",
+      "department": "CSE",
+      "status": "",
+      "assigned_credit": 12.0
+    },
+    {
+      "id": "82b23c47-14e6-4fe7-b95f-e1bf79f91415",
+      "short_name": "AZ",
+      "name": "Ashrafun Zannat",
+      "designation": "Assistant Professor",
+      "department": "CSE",
+      "status": "",
+      "assigned_credit": 9.75
+    },
+    {
+      "id": "2d0cdd24-dd96-4354-844a-dbcc5bb3b118",
+      "short_name": "MH",
+      "name": "Md. Mahadi Hasan",
+      "designation": "Lecturer",
+      "department": "CSE",
+      "status": "",
+      "assigned_credit": 10.5
+    },
+    {
+      "id": "994394b1-c008-46cf-a2bd-1e24482b853e",
+      "short_name": "AA",
+      "name": "Abdullah Al Asif",
+      "designation": "Lecturer",
+      "department": "CSE",
+      "status": "",
+      "assigned_credit": 12.0
+    },
+    {
+      "id": "9487a3bd-dc7b-4a4b-ae78-26ffc4294d99",
+      "short_name": "MZH",
+      "name": "MD Zahim Hassan",
+      "designation": "Lecturer",
+      "department": "CSE",
+      "status": "DPC",
+      "assigned_credit": 9.0
+    },
+    {
+      "id": "9896f3a3-e54a-4a98-9d20-61a6fe0450be",
+      "short_name": "MAM",
+      "name": "Munira Akter Mou",
+      "designation": "Lecturer",
+      "department": "CSE",
+      "status": "",
+      "assigned_credit": 12.25
+    },
+    {
+      "id": "9b46d9de-b20d-42e3-b636-e1d74e71ed68",
+      "short_name": "ST",
+      "name": "Shifa Tasmiah Tisha",
+      "designation": "Lecturer",
+      "department": "CSE",
+      "status": "",
+      "assigned_credit": 13.5
+    },
+    {
+      "id": "f3e58861-9f13-422e-a83f-31cbdd0f7a8f",
+      "short_name": "AS",
+      "name": "Anite Halim Sagor",
+      "designation": "Lecturer",
+      "department": "CSE",
+      "status": "PUO",
+      "assigned_credit": 12.25
+    },
+    {
+      "id": "4cc77ff7-2fe9-44f3-8abb-36cf18964b82",
+      "short_name": "MM",
+      "name": "Md. Manirujjaman",
+      "designation": "Lecturer",
+      "department": "CSE",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "fcced635-fc8d-4b25-ac02-1a3c65f44406",
+      "short_name": "RA",
+      "name": "Rohul Amin",
+      "designation": "Lecturer",
+      "department": "CSE",
+      "status": "",
+      "assigned_credit": 12.0
+    },
+    {
+      "id": "08854265-f18b-432a-849d-99df1dd8ad5f",
+      "short_name": "MSZ",
+      "name": "Mst. Sabrina Zaman",
+      "designation": "Lecturer",
+      "department": "CSE",
+      "status": "",
+      "assigned_credit": 12.0
+    },
+    {
+      "id": "96eab838-b81c-4888-9515-401cf5615c99",
+      "short_name": "SA",
+      "name": "Saad Ahmed",
+      "designation": "Lecturer",
+      "department": "CSE",
+      "status": "",
+      "assigned_credit": 10.5
+    },
+    {
+      "id": "fd39ee44-9bcd-4019-9912-44a76f9fd02e",
+      "short_name": "MO",
+      "name": "Md. Osama",
+      "designation": "Lecturer",
+      "department": "CSE",
+      "status": "",
+      "assigned_credit": 12.0
+    },
+    {
+      "id": "3eeab2fb-7b65-4436-ad54-34298fab67d8",
+      "short_name": "NR",
+      "name": "Nadim Reza",
+      "designation": "Lecturer",
+      "department": "CSE",
+      "status": "",
+      "assigned_credit": 13.5
+    },
+    {
+      "id": "8eb83d45-b0a6-4d21-aaa8-a47b262a39ee",
+      "short_name": "AKZ",
+      "name": "AKZ Rasel Rahman",
+      "designation": "Lecturer",
+      "department": "CSE",
+      "status": "",
+      "assigned_credit": 13.5
+    },
+    {
+      "id": "d827bdbf-1115-4da2-aaea-c1aee9acc61f",
+      "short_name": "SG",
+      "name": "Sunayana Ghosh",
+      "designation": "Lecturer",
+      "department": "CSE",
+      "status": "",
+      "assigned_credit": 12.0
+    },
+    {
+      "id": "ca2470dd-64f1-4d76-a86a-25f40a825c59",
+      "short_name": "MRT",
+      "name": "Md. Rakib Trofder",
+      "designation": "Lecturer",
+      "department": "CSE",
+      "status": "",
+      "assigned_credit": 13.25
+    },
+    {
+      "id": "c8581e02-e6c6-4b23-8d41-eb346d576859",
+      "short_name": "GR",
+      "name": "S. M Golam Rifat",
+      "designation": "Lecturer",
+      "department": "CSE",
+      "status": "",
+      "assigned_credit": 12.0
+    },
+    {
+      "id": "169b5d53-be44-4122-833f-2ced20a67b7e",
+      "short_name": "MAS",
+      "name": "Maskur Al Shal Sabil",
+      "designation": "Lecturer",
+      "department": "CSE",
+      "status": "",
+      "assigned_credit": 13.5
+    },
+    {
+      "id": "9ab8c2bf-b556-42a1-b06d-f770e86e20fe",
+      "short_name": "RR",
+      "name": "Roman Raihan",
+      "designation": "Lecturer",
+      "department": "CSE",
+      "status": "",
+      "assigned_credit": 13.5
+    },
+    {
+      "id": "c1ca7672-69b2-4db4-b5fe-7af571b4f98a",
+      "short_name": "MI",
+      "name": "Md. Minhazul Islam",
+      "designation": "Lecturer",
+      "department": "CSE",
+      "status": "",
+      "assigned_credit": 12.0
+    },
+    {
+      "id": "4f390b67-6c52-4f3e-9ad7-8221ef51e27c",
+      "short_name": "NAO",
+      "name": "Md. Nahid Anam Opu",
+      "designation": "Lecturer",
+      "department": "CSE",
+      "status": "",
+      "assigned_credit": 12.0
+    },
+    {
+      "id": "a0349d9b-1d4a-4dad-922e-dd2934c31db3",
+      "short_name": "TQA",
+      "name": "Thuifique Alam",
+      "designation": "Lecturer",
+      "department": "EEE",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "e990bc7e-f790-4ed2-9c37-4a9c3d44186c",
+      "short_name": "MA",
+      "name": "Mahin Anjum",
+      "designation": "Lecturer",
+      "department": "EEE",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "5218aca4-c875-477a-8d8f-feca20a8197e",
+      "short_name": "EEE1",
+      "name": "EEE FACULTY 1",
+      "designation": "FACULTY",
+      "department": "EEE",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "59438857-05f7-4746-b2fb-857f591254cf",
+      "short_name": "EEE2",
+      "name": "EEE FACULTY 2",
+      "designation": "FACULTY",
+      "department": "EEE",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "5654e91a-55f6-4629-b03f-9a5563d3c28a",
+      "short_name": "EAS",
+      "name": "Md Atiq Shariar",
+      "designation": "Lecturer",
+      "department": "EEE",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "d38958a8-a07e-4b5c-9a90-ab21ba3dae5b",
+      "short_name": "MATH1",
+      "name": "MATH FACULTY 1",
+      "designation": "FACULTY",
+      "department": "MATH",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "1ff6cebd-90ef-4df9-9e17-443b4c469230",
+      "short_name": "MATH2",
+      "name": "MATH FACULTY 2",
+      "designation": "FACULTY",
+      "department": "MATH",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "fceb9f47-a292-4b5a-a8da-fef9f4f7d89b",
+      "short_name": "MATH3",
+      "name": "MATH FACULTY 3",
+      "designation": "FACULTY",
+      "department": "MATH",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "fa5ec123-2f36-4eff-a8cb-b8366c30c953",
+      "short_name": "MATH4",
+      "name": "MATH FACULTY 4",
+      "designation": "FACULTY",
+      "department": "MATH",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "409d0802-a5f0-4bbb-8629-fec94e2a2dcb",
+      "short_name": "PHY",
+      "name": "PHYSICS FACULTY",
+      "designation": "FACULTY",
+      "department": "PHYSICS",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "e7a1f048-e955-4310-a3d0-c191e27f98a6",
+      "short_name": "CHEM",
+      "name": "CHEMISTRY FACULTY",
+      "designation": "FACULTY",
+      "department": "CHEMISTRY",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "42095e08-4d69-429c-9251-0c38c8c3d387",
+      "short_name": "HUM1",
+      "name": "HUM FACULTY 1",
+      "designation": "FACULTY",
+      "department": "HUM",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "c0379ed1-b67d-42f6-9893-a9954d6dbf2d",
+      "short_name": "HUM2",
+      "name": "HUM FACULTY 2",
+      "designation": "FACULTY",
+      "department": "HUM",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "92ec3774-1806-4640-a552-a3d626887af2",
+      "short_name": "BBA",
+      "name": "BBA FACULTY",
+      "designation": "FACULTY",
+      "department": "BBA",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "a1edb29a-7004-4526-a674-fdcb484c7f8a",
+      "short_name": "AIS",
+      "name": "AIS FACULTY",
+      "designation": "FACULTY",
+      "department": "AIS",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "14c420b5-1fe1-41d2-bd3b-64cbd1c5a42f",
+      "short_name": "IPE",
+      "name": "IPE FACULTY",
+      "designation": "FACULTY",
+      "department": "IPE",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "98bdfdac-1c1c-4d40-921a-964f3c7b6c9c",
+      "short_name": "ME",
+      "name": "ME FACULTY",
+      "designation": "FACULTY",
+      "department": "ME",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "ce8f87dd-3311-439e-b748-d6e30b228a6d",
+      "short_name": "ENG1",
+      "name": "ENGLISH FACULTY 1",
+      "designation": "FACULTY",
+      "department": "ENG",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "296c5599-17a2-4c44-89bf-a1db0a524302",
+      "short_name": "ENG2",
+      "name": "ENGLISH FACULTY 2",
+      "designation": "FACULTY",
+      "department": "ENG",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "b04d4d32-7c0c-41e5-9b64-abe8bfdb769f",
+      "short_name": "PR",
+      "name": "Punom Roy",
+      "designation": "Lecturer",
+      "department": "CE",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "aa4a514f-bb22-4ffe-97bc-af8081a8dd5f",
+      "short_name": "TO",
+      "name": "TECHNICAL OFFICER",
+      "designation": "LAB TEC.",
+      "department": "CSE",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "ae9bdb47-6b8c-44cd-ace5-b33956943450",
+      "short_name": "EMH",
+      "name": "Md. Mehedi Hasan",
+      "designation": "Lecturer",
+      "department": "EEE",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "c8a9dd47-cdcb-4b81-bcb3-727b8787487b",
+      "short_name": "MYH",
+      "name": "Md. Yah-Ya Ul Haque",
+      "designation": "Assistant Professor",
+      "department": "EEE",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "4adb2f5d-5e80-487f-9752-b435fe04a2bb",
+      "short_name": "MNMN",
+      "name": "NADIM MAHMUD NOBIN",
+      "designation": "Lecturer",
+      "department": "A&S",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "066daccc-ceb7-4ae1-9cfe-59e648fd4cf9",
+      "short_name": "UK",
+      "name": "Ummey Kulsum",
+      "designation": "Assistant Professor",
+      "department": "A&S",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "24a96469-16dc-4417-be05-25ec316ee68f",
+      "short_name": "MHM",
+      "name": "Md Hasib Mahmub",
+      "designation": "Lecturer",
+      "department": "EEE",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "46d35fbc-20aa-401e-91c1-9256a1bcf731",
+      "short_name": "RH",
+      "name": "Rakibul Hasan",
+      "designation": "Lecturer",
+      "department": "A&S",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "ad93b127-0b1c-45fc-973b-f3a8f1a79f2d",
+      "short_name": "NHMS",
+      "name": "Nur Hasan Muhammad Shahin",
+      "designation": "Assistant Professor",
+      "department": "A&S",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "f8b20003-6dff-4ba1-8b96-f2c78ac4ba01",
+      "short_name": "NT_ENG",
+      "name": "NEW Teacher 1",
+      "designation": "Lecturer",
+      "department": "ENG",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "b9bc52e7-60a2-47af-8cc0-2e44a4ab5b64",
+      "short_name": "SM",
+      "name": "Shuvro Mondal",
+      "designation": "Lecturer",
+      "department": "EEE",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "4c9ed58a-9ae1-4e82-86b0-54b3b423d52a",
+      "short_name": "JB",
+      "name": "Jobayed Bhuiya",
+      "designation": "Lecturer",
+      "department": "A&S",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "837cdab1-e34f-40a9-999b-d5e3ba5c3bb7",
+      "short_name": "AWA",
+      "name": "Md. Aiman Wasee",
+      "designation": "Lecturer",
+      "department": "A&S",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "2db20048-4f48-404d-a2ff-2a7819c54712",
+      "short_name": "NT2_ENG",
+      "name": "NEW Teacher 1",
+      "designation": "Lecturer",
+      "department": "ENG",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "67603e52-27bc-457a-8bf2-afbc06d25ca4",
+      "short_name": "NT_IPE",
+      "name": "NEW Teacher 1",
+      "designation": "Lecturer",
+      "department": "IPE",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "16bfcec5-e8a9-41b1-84f1-6c4c8a188824",
+      "short_name": "NHS",
+      "name": "Nahid Hasan Shoaib",
+      "designation": "Lecturer",
+      "department": "EEE",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "b096c5c0-3793-4359-ab4e-5606929c0b66",
+      "short_name": "DKMAH",
+      "name": "Dr. Kazi Mohammad Anamoul Haque",
+      "designation": "Associate Professor",
+      "department": "A&S",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "cd3c218d-13f0-4a46-8219-4d46ce75ec98",
+      "short_name": "MSR",
+      "name": "Md. Saifur Rahman",
+      "designation": "Lecturer",
+      "department": "AIS",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "b861e1df-65fb-4807-90cb-2c02e6e72349",
+      "short_name": "IR",
+      "name": "Irfan Raju",
+      "designation": "Assistant Professor",
+      "department": "A&S",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "f9509488-4242-4ad7-adfc-28225b05bc76",
+      "short_name": "AFH1",
+      "name": "Adjunct Faculty",
+      "designation": "Assistant Professor",
+      "department": "A&S",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "a6f94262-433d-422c-ad0b-e1d9849271da",
+      "short_name": "MAH",
+      "name": "Md Ashik Hasan",
+      "designation": "Lecturer",
+      "department": "ME",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "9b0aef5b-58ad-40bd-8bbc-58cc70f835a5",
+      "short_name": "EMMH",
+      "name": "Md Mehedi Hasan",
+      "designation": "Lecturer",
+      "department": "EEE",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "01e865ab-a938-435c-a21f-ad4ca240b784",
+      "short_name": "ME1",
+      "name": "ME1",
+      "designation": "Faculty",
+      "department": "",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "ca07b19a-6e29-4200-8497-3ba45a4cf520",
+      "short_name": "TUE, 12.30-1.30 - 308",
+      "name": "TUE, 12.30-1.30 - 308",
+      "designation": "Faculty",
+      "department": "",
+      "status": "",
+      "assigned_credit": 0
+    },
+    {
+      "id": "e83244f6-401e-47c1-ba29-b9afe03fd712",
+      "short_name": "NF1",
+      "name": "NF1",
+      "designation": "Faculty",
+      "department": "",
+      "status": "",
+      "assigned_credit": 0
+    }
+  ],
+  "rooms": [
+    {
+      "id": "682b1de3-dd17-42b8-af60-89b16391e3e8",
+      "name": "304",
+      "room_type": "Theory",
+      "capacity": 50
+    },
+    {
+      "id": "568a402f-08b4-4cb9-923d-2a72c5aa3d24",
+      "name": "305",
+      "room_type": "Theory",
+      "capacity": 70
+    },
+    {
+      "id": "cbb50e5f-ef50-4927-ba44-5a63f08d4b05",
+      "name": "306",
+      "room_type": "Theory",
+      "capacity": 40
+    },
+    {
+      "id": "9886b28f-a1c9-4e71-9ca2-3592f807ff7b",
+      "name": "308",
+      "room_type": "Theory",
+      "capacity": 50
+    },
+    {
+      "id": "7cf5f292-e3c6-49cb-a67e-dde5aa968962",
+      "name": "309",
+      "room_type": "Theory",
+      "capacity": 70
+    },
+    {
+      "id": "8fb67e1a-f701-47f8-aa86-54f749ef4043",
+      "name": "310",
+      "room_type": "Theory",
+      "capacity": 40
+    },
+    {
+      "id": "3e87d8fc-7103-4293-b472-cb73894dc75a",
+      "name": "407",
+      "room_type": "Theory",
+      "capacity": 60
+    },
+    {
+      "id": "44608613-ae1f-471f-aa2c-14026f6af0a7",
+      "name": "207",
+      "room_type": "Theory",
+      "capacity": 50
+    },
+    {
+      "id": "bb844987-7d0d-45b5-a847-d358826d0f86",
+      "name": "206",
+      "room_type": "Theory",
+      "capacity": 50
+    },
+    {
+      "id": "182abba8-d282-462c-8eb7-d940003af1eb",
+      "name": "302",
+      "room_type": "Sessional",
+      "capacity": 70
+    },
+    {
+      "id": "1bf26c1f-d284-4483-b4ea-f8115ae9e96e",
+      "name": "307",
+      "room_type": "Sessional",
+      "capacity": 50
+    },
+    {
+      "id": "e7aa443b-268d-48be-9921-25d9de0b19d6",
+      "name": "311",
+      "room_type": "Sessional",
+      "capacity": 70
+    }
+  ],
+  "sections": [
+    {
+      "id": "daafcc7e-8647-4c5e-8cad-d23212d637e0",
+      "level": 1,
+      "term": "I",
+      "name": "A",
+      "total_students": 50
+    },
+    {
+      "id": "b7e773f9-75b2-4b52-ba41-7fe4e0fe04d8",
+      "level": 1,
+      "term": "I",
+      "name": "B",
+      "total_students": 55
+    },
+    {
+      "id": "8dac4fbb-c799-49f3-88df-f5cec68888af",
+      "level": 1,
+      "term": "II",
+      "name": "A",
+      "total_students": 60
+    },
+    {
+      "id": "c28c1340-155a-4762-bace-969c43a6476a",
+      "level": 1,
+      "term": "II",
+      "name": "B",
+      "total_students": 40
+    },
+    {
+      "id": "6a426044-9de6-4cf7-b644-1fafff8873ee",
+      "level": 2,
+      "term": "I",
+      "name": "A",
+      "total_students": 30
+    },
+    {
+      "id": "22542c5d-94f0-4601-a61a-f1326e534bde",
+      "level": 2,
+      "term": "I",
+      "name": "B",
+      "total_students": 30
+    },
+    {
+      "id": "c522149d-fa12-4a2f-9d25-8a31d71fad10",
+      "level": 2,
+      "term": "II",
+      "name": "A",
+      "total_students": 35
+    },
+    {
+      "id": "59498de3-cd58-4f67-b6eb-92f4159329f2",
+      "level": 2,
+      "term": "II",
+      "name": "B",
+      "total_students": 35
+    },
+    {
+      "id": "cf48cbfb-5a11-4b80-818a-82fb780c8685",
+      "level": 2,
+      "term": "II",
+      "name": "C",
+      "total_students": 35
+    },
+    {
+      "id": "504eb421-bea9-4527-93c1-9fbff64d0349",
+      "level": 3,
+      "term": "I",
+      "name": "A",
+      "total_students": 50
+    },
+    {
+      "id": "e271ed13-8d57-4acb-ba60-afc22a03293b",
+      "level": 3,
+      "term": "I",
+      "name": "B",
+      "total_students": 45
+    },
+    {
+      "id": "42fc398f-c8b4-4177-af7a-115ede0a351e",
+      "level": 3,
+      "term": "II",
+      "name": "A",
+      "total_students": 55
+    },
+    {
+      "id": "f0e81f44-1fa9-4d7c-a369-e5324930eab7",
+      "level": 3,
+      "term": "II",
+      "name": "B",
+      "total_students": 55
+    },
+    {
+      "id": "57bf9aef-c51e-469f-b094-8127ef3fdfff",
+      "level": 4,
+      "term": "I",
+      "name": "A",
+      "total_students": 50
+    },
+    {
+      "id": "dee5ccd2-fbbe-4d6d-8e83-afbe34ba12f2",
+      "level": 4,
+      "term": "I",
+      "name": "B",
+      "total_students": 50
+    },
+    {
+      "id": "1c6b7387-1f7a-4fb1-bccc-d48d6ab57201",
+      "level": 4,
+      "term": "II",
+      "name": "A",
+      "total_students": 40
+    }
+  ],
+  "courses": [
+    {
+      "id": "a888dcbb-bd51-41f6-9acc-7b56c3c54a5c",
+      "code": "CSE 1100",
+      "name": "Introduction to Computer System Sessional",
+      "credit": 1.5,
+      "course_type": "sessional_1.5",
+      "level": 1,
+      "term": "I",
+      "theory": 0,
+      "sessional": 1.5
+    },
+    {
+      "id": "30f8f1cc-ac6d-4fe6-a2c1-dc75aa6d5748",
+      "code": "CSE 1101",
+      "name": "Structured Programming Language",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 1,
+      "term": "I",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "1f83008b-f145-4101-b021-019d64c154bf",
+      "code": "CSE 1102",
+      "name": "Structured Programming Language Sessional",
+      "credit": 1.5,
+      "course_type": "sessional_1.5",
+      "level": 1,
+      "term": "I",
+      "theory": 0,
+      "sessional": 1.5
+    },
+    {
+      "id": "2d5e6151-f54b-4814-a1d3-ba95f4957c8b",
+      "code": "EEE 1163",
+      "name": "Introduction to Electrical Engineering",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 1,
+      "term": "I",
+      "theory": 0,
+      "sessional": 0
+    },
+    {
+      "id": "3d6bdea6-d63c-43dc-95fe-8a85121e1321",
+      "code": "EEE 1164",
+      "name": "Introduction to Electrical Engineering Sessional",
+      "credit": 1.5,
+      "course_type": "sessional_1.5",
+      "level": 1,
+      "term": "I",
+      "theory": 0,
+      "sessional": 1.5
+    },
+    {
+      "id": "1814a5c6-0e19-4766-a91b-db1a9ed07590",
+      "code": "MATH 1141",
+      "name": "Differential Calculus, Integral Calculus, and Coordinate Geometry",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 1,
+      "term": "I",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "dbab4bdd-9b7a-4279-a85d-b3d5f54a6d8b",
+      "code": "PHY 1131",
+      "name": "Physics",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 1,
+      "term": "I",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "73583139-974a-457c-8248-6c1297975bc9",
+      "code": "PHY 1132",
+      "name": "Physics Sessional",
+      "credit": 0.75,
+      "course_type": "sessional_0.75",
+      "level": 1,
+      "term": "I",
+      "theory": 0,
+      "sessional": 0.75
+    },
+    {
+      "id": "ca56c202-115e-4444-8f26-29153707a2a1",
+      "code": "ENG 1127",
+      "name": "English",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 1,
+      "term": "I",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "c55b918b-a7ad-4f5d-a3cd-9e90b7fe0303",
+      "code": "CSE 1201",
+      "name": "Discrete Mathematics",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 1,
+      "term": "II",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "4809053c-1c5d-4d40-b8df-5b11dadaa096",
+      "code": "CSE 1203",
+      "name": "Object Oriented Programming Language I",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 1,
+      "term": "II",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "ea40e7fa-82ae-4370-9f61-888e1bd9ced4",
+      "code": "CSE 1204",
+      "name": "Object Oriented Programming Language I Sessional",
+      "credit": 1.5,
+      "course_type": "sessional_1.5",
+      "level": 1,
+      "term": "II",
+      "theory": 0,
+      "sessional": 1.5
+    },
+    {
+      "id": "6bcdd1ea-d834-49ee-8461-7cc046c95072",
+      "code": "CSE 1208",
+      "name": "Numerical Methods Sessional",
+      "credit": 1.5,
+      "course_type": "sessional_1.5",
+      "level": 1,
+      "term": "II",
+      "theory": 0,
+      "sessional": 1.5
+    },
+    {
+      "id": "c10b4d91-d29a-4052-8299-6897bb01df5e",
+      "code": "EEE 1269",
+      "name": "Electronic Circuits",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 1,
+      "term": "II",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "5685995d-a005-4ec2-af31-727fb1d0bd33",
+      "code": "EEE 1270",
+      "name": "Electronic Circuits Sessional",
+      "credit": 0.75,
+      "course_type": "sessional_0.75",
+      "level": 1,
+      "term": "II",
+      "theory": 0,
+      "sessional": 0.75
+    },
+    {
+      "id": "f9c32ed0-428a-4921-ba3f-ac71ee46f311",
+      "code": "ENG 1228",
+      "name": "Developing English Skill Sessional",
+      "credit": 0.75,
+      "course_type": "sessional_0.75",
+      "level": 1,
+      "term": "II",
+      "theory": 0,
+      "sessional": 0.75
+    },
+    {
+      "id": "67024bc2-86f4-4825-b4f6-ce553dc97622",
+      "code": "MATH 1243",
+      "name": "Ordinary Differential Equations and Partial Differential Equations",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 1,
+      "term": "II",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "a33b633b-78df-4471-b7b7-00a547f5146c",
+      "code": "CE 1250",
+      "name": "Engineering Drawing and CAD Sessional",
+      "credit": 0.75,
+      "course_type": "sessional_0.75",
+      "level": 1,
+      "term": "II",
+      "theory": 0,
+      "sessional": 0.75
+    },
+    {
+      "id": "242e61f3-224a-4243-aecb-574287bfe660",
+      "code": "HUM 1221",
+      "name": "Bengali Language and Literature",
+      "credit": 2.0,
+      "course_type": "theory_2.0",
+      "level": 1,
+      "term": "II",
+      "theory": 2.0,
+      "sessional": 0
+    },
+    {
+      "id": "db9f7b80-0cce-4ad0-8dbf-e087f969fb01",
+      "code": "CSE 2100",
+      "name": "Software Development Project I",
+      "credit": 0.75,
+      "course_type": "sessional_0.75",
+      "level": 2,
+      "term": "I",
+      "theory": 0,
+      "sessional": 0.75
+    },
+    {
+      "id": "0f46897c-4d6b-473f-bcc7-96b219496860",
+      "code": "CSE 2101",
+      "name": "Digital Logic Design",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 2,
+      "term": "I",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "ebf5220d-5f61-48f0-8739-1a6b5551411a",
+      "code": "CSE 2102",
+      "name": "Digital Logic Design Sessional",
+      "credit": 1.5,
+      "course_type": "sessional_1.5",
+      "level": 2,
+      "term": "I",
+      "theory": 0,
+      "sessional": 1.5
+    },
+    {
+      "id": "294abde3-7463-463b-8663-d1e3a120da0a",
+      "code": "CSE 2103",
+      "name": "Data Structures and Algorithm I",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 2,
+      "term": "I",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "2d745d88-2dea-4449-bb55-d309c2a1386c",
+      "code": "CSE 2104",
+      "name": "Data Structures and Algorithm I Sessional",
+      "credit": 1.5,
+      "course_type": "sessional_1.5",
+      "level": 2,
+      "term": "I",
+      "theory": 0,
+      "sessional": 1.5
+    },
+    {
+      "id": "62402cd4-8454-40f6-a75f-1e473ed229d0",
+      "code": "CSE 2105",
+      "name": "Applied Statistics for Computer Science",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 2,
+      "term": "I",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "63f295fc-7917-4c8c-b345-3bf1ffda147b",
+      "code": "CSE 2108",
+      "name": "Object Oriented Programming Language II Sessional",
+      "credit": 1.5,
+      "course_type": "sessional_1.5",
+      "level": 2,
+      "term": "I",
+      "theory": 0,
+      "sessional": 1.5
+    },
+    {
+      "id": "5fd34395-5f7d-4c78-a785-eb34c1d996d4",
+      "code": "CHEM 2133",
+      "name": "Chemistry",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 2,
+      "term": "I",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "512eef2c-6e39-4d46-99f1-57a17396c4e8",
+      "code": "MATH 2145",
+      "name": "Vector Calculus, Linear Algebra and Complex Variable",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 2,
+      "term": "I",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "8eda9b98-f382-4fac-adcc-3dcfa0dc635d",
+      "code": "CSE 2201",
+      "name": "Data Structures and Algorithm II",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 2,
+      "term": "II",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "b8295040-6393-40c9-b745-9b4f43bc9ee7",
+      "code": "CSE 2202",
+      "name": "Data Structures and Algorithm II Sessional",
+      "credit": 1.5,
+      "course_type": "sessional_1.5",
+      "level": 2,
+      "term": "II",
+      "theory": 0,
+      "sessional": 1.5
+    },
+    {
+      "id": "d7b574a1-5b30-4395-bc1a-8a588cc1fe63",
+      "code": "CSE 2203",
+      "name": "Theory of Computation",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 2,
+      "term": "II",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "f677bb81-c9d8-461e-9e2f-bd7e4305d957",
+      "code": "CSE 2205",
+      "name": "Database Management Systems",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 2,
+      "term": "II",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "55f7f970-6e5d-465c-bc0a-cbd00c13182d",
+      "code": "CSE 2206",
+      "name": "Database Management Systems Sessional",
+      "credit": 1.5,
+      "course_type": "sessional_1.5",
+      "level": 2,
+      "term": "II",
+      "theory": 0,
+      "sessional": 1.5
+    },
+    {
+      "id": "2743c144-83e1-4f00-9984-c5d0cbf5b904",
+      "code": "EEE 2269",
+      "name": "Electrical Drives and Instrumentation",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 2,
+      "term": "II",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "9a21e26e-a24c-4cfa-b6ad-ab49a2e651b7",
+      "code": "EEE 2270",
+      "name": "Electrical Drives and Instrumentation Sessional",
+      "credit": 0.75,
+      "course_type": "sessional_0.75",
+      "level": 2,
+      "term": "II",
+      "theory": 0,
+      "sessional": 0.75
+    },
+    {
+      "id": "7aa55bec-6dbe-4e9b-8d1f-c8918fd40a03",
+      "code": "MATH 2247",
+      "name": "Laplace Transformation and Fourier Analysis",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 2,
+      "term": "II",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "1ad2b0d2-dfe7-4c53-8e9c-b87261fb03f7",
+      "code": "HUM 2221",
+      "name": "History of the Emergence of Bangladesh",
+      "credit": 2.0,
+      "course_type": "theory_2.0",
+      "level": 2,
+      "term": "II",
+      "theory": 2.0,
+      "sessional": 0
+    },
+    {
+      "id": "cf2c8f7b-3bf7-4cfe-a8a0-d5942052fa07",
+      "code": "CSE 3100",
+      "name": "Software Development Project II",
+      "credit": 0.75,
+      "course_type": "sessional_0.75",
+      "level": 3,
+      "term": "I",
+      "theory": 0,
+      "sessional": 0.75
+    },
+    {
+      "id": "cbf32c2e-f1d6-4361-8486-3ead31793d03",
+      "code": "CSE 3101",
+      "name": "Software Engineering",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 3,
+      "term": "I",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "965396f9-a5ad-4697-9b79-06acc0ad6884",
+      "code": "CSE 3102",
+      "name": "Software Engineering Sessional",
+      "credit": 0.75,
+      "course_type": "sessional_0.75",
+      "level": 3,
+      "term": "I",
+      "theory": 0,
+      "sessional": 0.75
+    },
+    {
+      "id": "1ddec1a1-fd3d-4b6e-9479-ed97df57187a",
+      "code": "CSE 3103",
+      "name": "Microprocessors, Microcontrollers and Embedded Systems",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 3,
+      "term": "I",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "00d3d83c-fc3c-42c0-9482-e7cd6aa89c2e",
+      "code": "CSE 3104",
+      "name": "Microprocessors, Microcontrollers and Embedded Systems Sessional",
+      "credit": 0.75,
+      "course_type": "sessional_0.75",
+      "level": 3,
+      "term": "I",
+      "theory": 0,
+      "sessional": 0.75
+    },
+    {
+      "id": "d768b090-a71b-49e5-8640-3c0fb95eb4dc",
+      "code": "CSE 3105",
+      "name": "Computer Architecture",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 3,
+      "term": "I",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "587ba78d-834a-4b68-b50e-0bdb8482b6ab",
+      "code": "CSE 3107",
+      "name": "Data Communication",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 3,
+      "term": "I",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "cf89b631-bce1-4700-abec-263a8e7b2482",
+      "code": "CSE 3109",
+      "name": "Compiler",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 3,
+      "term": "I",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "9c724c36-c4cf-4746-a2be-b5209a55dcf5",
+      "code": "CSE 3110",
+      "name": "Compiler Sessional",
+      "credit": 0.75,
+      "course_type": "sessional_0.75",
+      "level": 3,
+      "term": "I",
+      "theory": 0,
+      "sessional": 0.75
+    },
+    {
+      "id": "93ae5a32-2ad4-4ebb-8470-6e5bf89f40b5",
+      "code": "ME 3181",
+      "name": "Basic Mechanical Engineering",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 3,
+      "term": "I",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "170e1da9-2a92-49be-a5d5-fedad0d17ba0",
+      "code": "CSE 3200",
+      "name": "Web Engineering Project",
+      "credit": 1.5,
+      "course_type": "sessional_1.5",
+      "level": 3,
+      "term": "II",
+      "theory": 0,
+      "sessional": 1.5
+    },
+    {
+      "id": "7c255373-60e8-4d98-8ed7-f018eb794676",
+      "code": "CSE 3201",
+      "name": "Artificial Intelligence",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 3,
+      "term": "II",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "4a11ce7f-f9bd-431b-b306-461cbdefb13a",
+      "code": "CSE 3202",
+      "name": "Artificial Intelligence Sessional",
+      "credit": 0.75,
+      "course_type": "sessional_0.75",
+      "level": 3,
+      "term": "II",
+      "theory": 0,
+      "sessional": 0.75
+    },
+    {
+      "id": "480d5187-7b26-4e97-b664-0deb5ea6b9ea",
+      "code": "CSE 3203",
+      "name": "Operating System",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 3,
+      "term": "II",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "ad9fb71d-d8fa-4eba-ab6e-bf17db69b975",
+      "code": "CSE 3204",
+      "name": "Operating System Sessional",
+      "credit": 1.5,
+      "course_type": "sessional_1.5",
+      "level": 3,
+      "term": "II",
+      "theory": 0,
+      "sessional": 1.5
+    },
+    {
+      "id": "b438a9c3-8ad4-4b89-844f-ee7c57daccc3",
+      "code": "CSE 3205",
+      "name": "Computer Networks",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 3,
+      "term": "II",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "e71dab7b-8405-4608-91aa-d4be03708619",
+      "code": "CSE 3206",
+      "name": "Computer Networks Sessional",
+      "credit": 1.5,
+      "course_type": "sessional_1.5",
+      "level": 3,
+      "term": "II",
+      "theory": 0,
+      "sessional": 1.5
+    },
+    {
+      "id": "1949cdf6-a740-45a6-b491-2c1cdb36638d",
+      "code": "CSE 3207",
+      "name": "Mathematical Analysis for Computer Science",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 3,
+      "term": "II",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "d42d63c9-3a2a-4cd8-90e2-38b8ee65164f",
+      "code": "CSE 3209",
+      "name": "Information System Design",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 3,
+      "term": "II",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "e21ffd55-03f1-45c2-89d7-9d45c19469a7",
+      "code": "CSE 3210",
+      "name": "Information System Design Sessional",
+      "credit": 0.75,
+      "course_type": "sessional_0.75",
+      "level": 3,
+      "term": "II",
+      "theory": 0,
+      "sessional": 0.75
+    },
+    {
+      "id": "ca499015-8cf5-4872-a47f-88eeee5a7731",
+      "code": "CSE 4000",
+      "name": "Project/Thesis*",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 4,
+      "term": "I",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "283f0a7a-3255-43d9-a092-accacead7265",
+      "code": "CSE 4100",
+      "name": "Industrial Training (Start in 3-II)",
+      "credit": 1.0,
+      "course_type": "theory_3.0",
+      "level": 4,
+      "term": "I",
+      "theory": 1.0,
+      "sessional": 0
+    },
+    {
+      "id": "fa709369-ab80-4a62-92d7-794dacfdc407",
+      "code": "CSE 4101",
+      "name": "Computer Security",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 4,
+      "term": "I",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "50440660-ff8d-423e-abd0-0943e536de50",
+      "code": "CSE 4102",
+      "name": "Computer Security Sessional",
+      "credit": 0.75,
+      "course_type": "sessional_0.75",
+      "level": 4,
+      "term": "I",
+      "theory": 0,
+      "sessional": 0.75
+    },
+    {
+      "id": "86a1fc36-9d79-4afc-a228-0081d31e28a2",
+      "code": "CSE 4103",
+      "name": "Computer Graphics",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 4,
+      "term": "I",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "3ef8507d-420d-400f-ab9b-68a0f4b7b718",
+      "code": "CSE 4104",
+      "name": "Computer Graphics Sessional",
+      "credit": 0.75,
+      "course_type": "sessional_0.75",
+      "level": 4,
+      "term": "I",
+      "theory": 0,
+      "sessional": 0.75
+    },
+    {
+      "id": "a2cb92aa-a3d9-4c0a-b3fc-3ae512cdba8c",
+      "code": "HUM 4123",
+      "name": "Engineering Economics",
+      "credit": 2.0,
+      "course_type": "theory_2.0",
+      "level": 4,
+      "term": "I",
+      "theory": 2.0,
+      "sessional": 0
+    },
+    {
+      "id": "a895239b-b2cd-4cbf-862c-d88e2369dcf5",
+      "code": "CSE 4141",
+      "name": "Object Oriented Software Engineering",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 4,
+      "term": "I",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "549c472b-96e9-47bf-a1b0-df2977e6c335",
+      "code": "CSE 4142",
+      "name": "Object Oriented Software Engineering Sessional",
+      "credit": 0.75,
+      "course_type": "sessional_0.75",
+      "level": 4,
+      "term": "I",
+      "theory": 0,
+      "sessional": 0.75
+    },
+    {
+      "id": "f4a76adf-d66d-46e6-aca6-a14af8525cd5",
+      "code": "CSE 4139",
+      "name": "Machine Learning",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 4,
+      "term": "I",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "1b2a9af3-0989-4653-ae4c-64234433d974",
+      "code": "CSE 4140",
+      "name": "Machine Learning Sessional",
+      "credit": 0.75,
+      "course_type": "sessional_0.75",
+      "level": 4,
+      "term": "I",
+      "theory": 0,
+      "sessional": 0.75
+    },
+    {
+      "id": "bd74c97e-d81e-44f8-b884-b6b9ad2c961b",
+      "code": "CSE 4000",
+      "name": "Project / Thesis*",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 4,
+      "term": "II",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "8bff0908-6eb4-44f0-a5c6-ff6c479954b5",
+      "code": "HUM 4273",
+      "name": "Financial, Cost and Managerial Accounting",
+      "credit": 2.0,
+      "course_type": "theory_2.0",
+      "level": 4,
+      "term": "II",
+      "theory": 2.0,
+      "sessional": 0
+    },
+    {
+      "id": "9243c5f5-03e0-4bd9-a91e-f4f1ea8a638b",
+      "code": "IPE 4217",
+      "name": "Industrial Management",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 4,
+      "term": "II",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "83b8d6a7-42b7-439c-8c59-e84a24d655c8",
+      "code": "CSE 4215",
+      "name": "Professional Issues and Ethics in Computer Science",
+      "credit": 2.0,
+      "course_type": "theory_2.0",
+      "level": 4,
+      "term": "II",
+      "theory": 2.0,
+      "sessional": 0
+    },
+    {
+      "id": "4e5e9448-cb82-4e4d-9a4e-777b455f1cdc",
+      "code": "CSE 4245",
+      "name": "Digital Image Processing",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 4,
+      "term": "II",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "a5a075e7-9c06-48ee-bc45-c1207d96329a",
+      "code": "CSE 4246",
+      "name": "Digital Image Processing Sessional",
+      "credit": 0.75,
+      "course_type": "sessional_0.75",
+      "level": 4,
+      "term": "II",
+      "theory": 0,
+      "sessional": 0.75
+    },
+    {
+      "id": "1c22cece-1895-40ff-ba2b-379804012dee",
+      "code": "CSE 4249",
+      "name": "VLSI Design",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 4,
+      "term": "II",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "7d1f37ee-7ca7-46bd-9808-9efb9f96ebfc",
+      "code": "CSE 4250",
+      "name": "VLSI Design Sessional",
+      "credit": 0.75,
+      "course_type": "sessional_0.75",
+      "level": 4,
+      "term": "II",
+      "theory": 0,
+      "sessional": 0.75
+    },
+    {
+      "id": "705d0f6e-a6f3-4242-a477-f22256609c63",
+      "code": "CSE 1271",
+      "name": "Computer Programming",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 4,
+      "term": "II",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "1832c3c0-6074-49a9-9729-8c037ae09fbb",
+      "code": "CSE 1272",
+      "name": "Computer Programming Sessional",
+      "credit": 1.5,
+      "course_type": "sessional_1.5",
+      "level": 4,
+      "term": "II",
+      "theory": 0,
+      "sessional": 1.5
+    },
+    {
+      "id": "a6adaa7e-2c14-493e-9495-d3eac8c619a9",
+      "code": "CSE 1287",
+      "name": "Computer Programming",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 4,
+      "term": "II",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "be8e7d95-64e5-474e-85ea-448f6e65833f",
+      "code": "CSE 1288",
+      "name": "Computer Programming Sessional",
+      "credit": 1.5,
+      "course_type": "sessional_1.5",
+      "level": 4,
+      "term": "II",
+      "theory": 0,
+      "sessional": 1.5
+    },
+    {
+      "id": "208aa70a-31c1-4efc-b2e7-ab41b0cf629c",
+      "code": "CSE 2109",
+      "name": "Computer Programming",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 4,
+      "term": "II",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "84ce8b32-836f-4f5e-926e-8ab6f8c3fcd4",
+      "code": "CSE 2110",
+      "name": "Computer Programming Sessional",
+      "credit": 1.5,
+      "course_type": "sessional_1.5",
+      "level": 4,
+      "term": "II",
+      "theory": 0,
+      "sessional": 1.5
+    },
+    {
+      "id": "aaf3a4ad-924a-45ba-b8ea-cb71430db515",
+      "code": "CSE 2123",
+      "name": "Introduction to Computer Programming",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 4,
+      "term": "II",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "3e1aa0be-58bf-4a60-984a-49e57e78ec3c",
+      "code": "CSE 2124",
+      "name": "Introduction to Computer Programming Sessional",
+      "credit": 1.5,
+      "course_type": "sessional_1.5",
+      "level": 4,
+      "term": "II",
+      "theory": 0,
+      "sessional": 1.5
+    },
+    {
+      "id": "f49a2f65-ef51-4025-9de3-2ff11b7e7ee0",
+      "code": "CSE 1205",
+      "name": "Computer Applications in Business",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 4,
+      "term": "II",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "6ce3f6d5-3cbd-49ac-8a7d-6ff4f81274c4",
+      "code": "CSE 1204",
+      "name": "Computer Applications in Business Sessional",
+      "credit": 1.5,
+      "course_type": "sessional_1.5",
+      "level": 4,
+      "term": "II",
+      "theory": 0,
+      "sessional": 1.5
+    },
+    {
+      "id": "4e2af07f-6b72-4ce0-a740-6f3cb51347b8",
+      "code": "CSE 1202",
+      "name": "Computer Applications in Business",
+      "credit": 3.0,
+      "course_type": "theory_3.0",
+      "level": 4,
+      "term": "II",
+      "theory": 3.0,
+      "sessional": 0
+    },
+    {
+      "id": "41ceed26-f09d-4f8a-96ba-9538fadd5285",
+      "code": "CSE 2110",
+      "name": "Computer Fundamentals Sessional",
+      "credit": 1.5,
+      "course_type": "sessional_1.5",
+      "level": 4,
+      "term": "II",
+      "theory": 0,
+      "sessional": 1.5
+    }
+  ],
+  "assignments": [
+    {
+      "course_code": "CSE 1100",
+      "level": 1,
+      "term": "I",
+      "section_name": "A",
+      "teachers": [
+        "MH",
+        "AHS"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "08:00",
+          "end": "11:00",
+          "room": "311",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 1100",
+      "level": 1,
+      "term": "I",
+      "section_name": "B",
+      "teachers": [
+        "MH",
+        "AS"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "306",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 1101",
+      "level": 1,
+      "term": "I",
+      "section_name": "A",
+      "teachers": [
+        "NHC"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "307",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "308",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "309",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 1101",
+      "level": 1,
+      "term": "I",
+      "section_name": "B",
+      "teachers": [
+        "NHC"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "307",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "308",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "309",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 1102",
+      "level": 1,
+      "term": "I",
+      "section_name": "A",
+      "teachers": [
+        "NHC",
+        "MAM"
+      ],
+      "classes": [
+        {
+          "day": "MON",
+          "start": "11:30",
+          "end": "02:30",
+          "room": "311",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 1102",
+      "level": 1,
+      "term": "I",
+      "section_name": "B",
+      "teachers": [
+        "AHS",
+        "MAM"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "310",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "305",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "EEE 1163",
+      "level": 1,
+      "term": "I",
+      "section_name": "A",
+      "teachers": [
+        "TQA"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "306",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "307",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "308",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "EEE 1163",
+      "level": 1,
+      "term": "I",
+      "section_name": "B",
+      "teachers": [
+        "EEE1"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "306",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "307",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "308",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "EEE 1164",
+      "level": 1,
+      "term": "I",
+      "section_name": "A",
+      "teachers": [
+        "NHS"
+      ],
+      "classes": [
+        {
+          "day": "WED",
+          "start": "08:00",
+          "end": "11:00",
+          "room": "302",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "EEE 1164",
+      "level": 1,
+      "term": "I",
+      "section_name": "B",
+      "teachers": [
+        "MA"
+      ],
+      "classes": [
+        {
+          "day": "MON",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "309",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "310",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "304",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "MATH 1141",
+      "level": 1,
+      "term": "I",
+      "section_name": "A",
+      "teachers": [
+        "MATH1"
+      ],
+      "classes": [
+        {
+          "day": "MON",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "306",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "307",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "MATH 1141",
+      "level": 1,
+      "term": "I",
+      "section_name": "B",
+      "teachers": [
+        "MATH1"
+      ],
+      "classes": [
+        {
+          "day": "MON",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "306",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "307",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "PHY 1131",
+      "level": 1,
+      "term": "I",
+      "section_name": "A",
+      "teachers": [
+        "PHY"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "308",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "309",
+          "week": "EVERY"
+        },
+        {
+          "day": "SUN",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "310",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "PHY 1131",
+      "level": 1,
+      "term": "I",
+      "section_name": "B",
+      "teachers": [
+        "PHY"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "308",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "309",
+          "week": "EVERY"
+        },
+        {
+          "day": "SUN",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "310",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "PHY 1132",
+      "level": 1,
+      "term": "I",
+      "section_name": "A",
+      "teachers": [
+        "PHY"
+      ],
+      "classes": [
+        {
+          "day": "THU",
+          "start": "08:00",
+          "end": "11:00",
+          "room": "302",
+          "week": "EVEN"
+        }
+      ]
+    },
+    {
+      "course_code": "PHY 1132",
+      "level": 1,
+      "term": "I",
+      "section_name": "B",
+      "teachers": [
+        "PHY"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "306",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "ENG 1127",
+      "level": 1,
+      "term": "I",
+      "section_name": "A",
+      "teachers": [
+        "ENG1"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "305",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "ENG 1127",
+      "level": 1,
+      "term": "I",
+      "section_name": "B",
+      "teachers": [
+        "ENG1"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "305",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 1201",
+      "level": 1,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "AHS"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "306",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 1201",
+      "level": 1,
+      "term": "II",
+      "section_name": "B",
+      "teachers": [
+        "AHS"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "306",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 1203",
+      "level": 1,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "AH"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "307",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "308",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "309",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 1203",
+      "level": 1,
+      "term": "II",
+      "section_name": "B",
+      "teachers": [
+        "ASM"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "307",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "308",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "309",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 1204",
+      "level": 1,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "AH",
+        "MH"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "08:00",
+          "end": "11:00",
+          "room": "302",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 1204",
+      "level": 1,
+      "term": "II",
+      "section_name": "B",
+      "teachers": [
+        "ASM",
+        "SG"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "310",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "305",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 1208",
+      "level": 1,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "SG",
+        "MSZ"
+      ],
+      "classes": [
+        {
+          "day": "WED",
+          "start": "08:00",
+          "end": "11:00",
+          "room": "311",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 1208",
+      "level": 1,
+      "term": "II",
+      "section_name": "B",
+      "teachers": [
+        "SG",
+        "MSZ"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "306",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "307",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "308",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "EEE 1269",
+      "level": 1,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "EMH"
+      ],
+      "classes": [
+        {
+          "day": "MON",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "309",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "310",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "304",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "EEE 1269",
+      "level": 1,
+      "term": "II",
+      "section_name": "B",
+      "teachers": [
+        "MA"
+      ],
+      "classes": [
+        {
+          "day": "MON",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "309",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "310",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "304",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "EEE 1270",
+      "level": 1,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "EAS"
+      ],
+      "classes": [
+        {
+          "day": "MON",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "306",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "307",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "EEE 1270",
+      "level": 1,
+      "term": "II",
+      "section_name": "B",
+      "teachers": [
+        "EAS"
+      ],
+      "classes": [
+        {
+          "day": "MON",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "306",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "307",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "ENG 1228",
+      "level": 1,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "ENG2"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "08:00",
+          "end": "11:00",
+          "room": "311",
+          "week": "EVEN"
+        }
+      ]
+    },
+    {
+      "course_code": "ENG 1228",
+      "level": 1,
+      "term": "II",
+      "section_name": "B",
+      "teachers": [
+        "ENG2"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "308",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "309",
+          "week": "EVERY"
+        },
+        {
+          "day": "SUN",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "310",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "MATH 1243",
+      "level": 1,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "MATH2"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "08:00",
+          "end": "11:00",
+          "room": "311",
+          "week": "ODD"
+        }
+      ]
+    },
+    {
+      "course_code": "MATH 1243",
+      "level": 1,
+      "term": "II",
+      "section_name": "B",
+      "teachers": [
+        "MATH2"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "306",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CE 1250",
+      "level": 1,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "PR"
+      ],
+      "classes": [
+        {
+          "day": "THU",
+          "start": "08:00",
+          "end": "11:00",
+          "room": "302",
+          "week": "ODD"
+        }
+      ]
+    },
+    {
+      "course_code": "CE 1250",
+      "level": 1,
+      "term": "II",
+      "section_name": "B",
+      "teachers": [
+        "PR"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "305",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "HUM 1221",
+      "level": 1,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "HUM1"
+      ],
+      "classes": []
+    },
+    {
+      "course_code": "HUM 1221",
+      "level": 1,
+      "term": "II",
+      "section_name": "B",
+      "teachers": [
+        "HUM1"
+      ],
+      "classes": []
+    },
+    {
+      "course_code": "CSE 2100",
+      "level": 2,
+      "term": "I",
+      "section_name": "A",
+      "teachers": [
+        "MAM",
+        "NAO"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "306",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 2100",
+      "level": 2,
+      "term": "I",
+      "section_name": "B",
+      "teachers": [
+        "NAO"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "306",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 2101",
+      "level": 2,
+      "term": "I",
+      "section_name": "A",
+      "teachers": [
+        "MSA"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "307",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "308",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "309",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 2101",
+      "level": 2,
+      "term": "I",
+      "section_name": "B",
+      "teachers": [
+        "SA"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "307",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "308",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "309",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 2102",
+      "level": 2,
+      "term": "I",
+      "section_name": "A",
+      "teachers": [
+        "SA"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "08:00",
+          "end": "11:00",
+          "room": "302",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 2102",
+      "level": 2,
+      "term": "I",
+      "section_name": "B",
+      "teachers": [
+        "MSA"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "310",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "305",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 2103",
+      "level": 2,
+      "term": "I",
+      "section_name": "A",
+      "teachers": [
+        "MZH"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "306",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "307",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "308",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 2103",
+      "level": 2,
+      "term": "I",
+      "section_name": "B",
+      "teachers": [
+        "MZH"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "306",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "307",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "308",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 2104",
+      "level": 2,
+      "term": "I",
+      "section_name": "A",
+      "teachers": [
+        "MZH",
+        "AA"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "08:00",
+          "end": "11:00",
+          "room": "311",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 2104",
+      "level": 2,
+      "term": "I",
+      "section_name": "B",
+      "teachers": [
+        "MZH"
+      ],
+      "classes": [
+        {
+          "day": "MON",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "309",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "310",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "304",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 2105",
+      "level": 2,
+      "term": "I",
+      "section_name": "A",
+      "teachers": [
+        "MO"
+      ],
+      "classes": [
+        {
+          "day": "MON",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "306",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "307",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 2105",
+      "level": 2,
+      "term": "I",
+      "section_name": "B",
+      "teachers": [
+        "MO"
+      ],
+      "classes": [
+        {
+          "day": "MON",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "306",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "307",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 2108",
+      "level": 2,
+      "term": "I",
+      "section_name": "A",
+      "teachers": [
+        "ST",
+        "MSZ"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "08:00",
+          "end": "11:00",
+          "room": "311",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 2108",
+      "level": 2,
+      "term": "I",
+      "section_name": "B",
+      "teachers": [
+        "AA"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "308",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "309",
+          "week": "EVERY"
+        },
+        {
+          "day": "SUN",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "310",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CHEM 2133",
+      "level": 2,
+      "term": "I",
+      "section_name": "A",
+      "teachers": [
+        "CHEM"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "306",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CHEM 2133",
+      "level": 2,
+      "term": "I",
+      "section_name": "B",
+      "teachers": [
+        "CHEM"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "306",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "MATH 2145",
+      "level": 2,
+      "term": "I",
+      "section_name": "A",
+      "teachers": [
+        "MATH4"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "305",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "MATH 2145",
+      "level": 2,
+      "term": "I",
+      "section_name": "B",
+      "teachers": [
+        "MATH4"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "305",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 2201",
+      "level": 2,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "RR"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "306",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 2201",
+      "level": 2,
+      "term": "II",
+      "section_name": "B",
+      "teachers": [
+        "RR"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "306",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 2201",
+      "level": 2,
+      "term": "II",
+      "section_name": "C",
+      "teachers": [
+        "RR"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "306",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 2202",
+      "level": 2,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "MO",
+        "RR"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "08:00",
+          "end": "11:00",
+          "room": "311",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 2202",
+      "level": 2,
+      "term": "II",
+      "section_name": "B",
+      "teachers": [
+        "MO",
+        "RR"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "307",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "308",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "309",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 2202",
+      "level": 2,
+      "term": "II",
+      "section_name": "C",
+      "teachers": [
+        "MO",
+        "RR"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "307",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "308",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "309",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 2203",
+      "level": 2,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "ST"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "310",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "305",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 2203",
+      "level": 2,
+      "term": "II",
+      "section_name": "B",
+      "teachers": [
+        "ST"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "310",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "305",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 2203",
+      "level": 2,
+      "term": "II",
+      "section_name": "C",
+      "teachers": [
+        "ST"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "310",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "305",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 2205",
+      "level": 2,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "AKZ"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "306",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "307",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "308",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 2205",
+      "level": 2,
+      "term": "II",
+      "section_name": "B",
+      "teachers": [
+        "AKZ"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "306",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "307",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "308",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 2205",
+      "level": 2,
+      "term": "II",
+      "section_name": "C",
+      "teachers": [
+        "AKZ"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "306",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "307",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "308",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 2206",
+      "level": 2,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "AKZ",
+        "GR"
+      ],
+      "classes": []
+    },
+    {
+      "course_code": "CSE 2206",
+      "level": 2,
+      "term": "II",
+      "section_name": "B",
+      "teachers": [
+        "AKZ",
+        "GR"
+      ],
+      "classes": [
+        {
+          "day": "MON",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "309",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "310",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "304",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 2206",
+      "level": 2,
+      "term": "II",
+      "section_name": "C",
+      "teachers": [
+        "AKZ",
+        "GR"
+      ],
+      "classes": [
+        {
+          "day": "MON",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "309",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "310",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "304",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "EEE 2269",
+      "level": 2,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "EAS"
+      ],
+      "classes": [
+        {
+          "day": "MON",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "306",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "307",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "EEE 2269",
+      "level": 2,
+      "term": "II",
+      "section_name": "B",
+      "teachers": [
+        "EAS"
+      ],
+      "classes": [
+        {
+          "day": "MON",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "306",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "307",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "EEE 2270",
+      "level": 2,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "EEE2"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "08:00",
+          "end": "11:00",
+          "room": "311",
+          "week": "EVEN"
+        }
+      ]
+    },
+    {
+      "course_code": "EEE 2270",
+      "level": 2,
+      "term": "II",
+      "section_name": "B",
+      "teachers": [
+        "EEE2"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "308",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "309",
+          "week": "EVERY"
+        },
+        {
+          "day": "SUN",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "310",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "MATH 2247",
+      "level": 2,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "MATH3"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "306",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "MATH 2247",
+      "level": 2,
+      "term": "II",
+      "section_name": "B",
+      "teachers": [
+        "MATH3"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "306",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "HUM 2221",
+      "level": 2,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "HUM2"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "HUM 2221",
+      "level": 2,
+      "term": "II",
+      "section_name": "B",
+      "teachers": [
+        "HUM2"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 3100",
+      "level": 3,
+      "term": "I",
+      "section_name": "A",
+      "teachers": [
+        "MAM",
+        "MO"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "306",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 3100",
+      "level": 3,
+      "term": "I",
+      "section_name": "B",
+      "teachers": [
+        "MAM",
+        "MO"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "306",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 3101",
+      "level": 3,
+      "term": "I",
+      "section_name": "A",
+      "teachers": [
+        "SG"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "307",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "308",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "309",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 3101",
+      "level": 3,
+      "term": "I",
+      "section_name": "B",
+      "teachers": [
+        "SG"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "307",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "308",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "309",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 3102",
+      "level": 3,
+      "term": "I",
+      "section_name": "A",
+      "teachers": [
+        "SG",
+        "ASM"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "310",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "305",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 3102",
+      "level": 3,
+      "term": "I",
+      "section_name": "B",
+      "teachers": [
+        "SG",
+        "ASM"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "310",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "305",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 3103",
+      "level": 3,
+      "term": "I",
+      "section_name": "A",
+      "teachers": [
+        "TMM"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "306",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "307",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "308",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 3103",
+      "level": 3,
+      "term": "I",
+      "section_name": "B",
+      "teachers": [
+        "TMM"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "306",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "307",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "308",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 3104",
+      "level": 3,
+      "term": "I",
+      "section_name": "A",
+      "teachers": [
+        "TMM",
+        "NR"
+      ],
+      "classes": [
+        {
+          "day": "MON",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "309",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "310",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "304",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 3104",
+      "level": 3,
+      "term": "I",
+      "section_name": "B",
+      "teachers": [
+        "TMM",
+        "AS"
+      ],
+      "classes": [
+        {
+          "day": "MON",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "309",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "310",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "304",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 3105",
+      "level": 3,
+      "term": "I",
+      "section_name": "A",
+      "teachers": [
+        "MH"
+      ],
+      "classes": [
+        {
+          "day": "MON",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "306",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "307",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 3105",
+      "level": 3,
+      "term": "I",
+      "section_name": "B",
+      "teachers": [
+        "MH"
+      ],
+      "classes": [
+        {
+          "day": "MON",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "306",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "307",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 3107",
+      "level": 3,
+      "term": "I",
+      "section_name": "A",
+      "teachers": [
+        "MAM"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "308",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "309",
+          "week": "EVERY"
+        },
+        {
+          "day": "SUN",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "310",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 3107",
+      "level": 3,
+      "term": "I",
+      "section_name": "B",
+      "teachers": [
+        "MAM"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "308",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "309",
+          "week": "EVERY"
+        },
+        {
+          "day": "SUN",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "310",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 3109",
+      "level": 3,
+      "term": "I",
+      "section_name": "A",
+      "teachers": [
+        "MI"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "306",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 3109",
+      "level": 3,
+      "term": "I",
+      "section_name": "B",
+      "teachers": [
+        "MI"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "306",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 3110",
+      "level": 3,
+      "term": "I",
+      "section_name": "A",
+      "teachers": [
+        "MI",
+        "AA"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "08:00",
+          "end": "11:00",
+          "room": "311",
+          "week": "EVEN"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 3110",
+      "level": 3,
+      "term": "I",
+      "section_name": "B",
+      "teachers": [
+        "MI",
+        "AA"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "305",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "ME 3181",
+      "level": 3,
+      "term": "I",
+      "section_name": "A",
+      "teachers": [
+        "ME1"
+      ],
+      "classes": []
+    },
+    {
+      "course_code": "ME 3181",
+      "level": 3,
+      "term": "I",
+      "section_name": "B",
+      "teachers": [
+        "ME1"
+      ],
+      "classes": []
+    },
+    {
+      "course_code": "CSE 3200",
+      "level": 3,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "ST",
+        "ASM"
+      ],
+      "classes": []
+    },
+    {
+      "course_code": "CSE 3200",
+      "level": 3,
+      "term": "II",
+      "section_name": "B",
+      "teachers": [
+        "ST",
+        "ASM"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "306",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 3201",
+      "level": 3,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "AS"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "307",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "308",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "309",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 3201",
+      "level": 3,
+      "term": "II",
+      "section_name": "B",
+      "teachers": [
+        "AS"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "307",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "308",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "309",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 3202",
+      "level": 3,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "AS",
+        "MI"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "08:00",
+          "end": "11:00",
+          "room": "311",
+          "week": "EVEN"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 3202",
+      "level": 3,
+      "term": "II",
+      "section_name": "B",
+      "teachers": [
+        "AS",
+        "MI"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "310",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "305",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 3203",
+      "level": 3,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "NAO"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "306",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "307",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "308",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 3203",
+      "level": 3,
+      "term": "II",
+      "section_name": "B",
+      "teachers": [
+        "NAO"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "306",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "307",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "308",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 3204",
+      "level": 3,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "SA",
+        "NAO"
+      ],
+      "classes": [
+        {
+          "day": "MON",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "309",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "310",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "304",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 3204",
+      "level": 3,
+      "term": "II",
+      "section_name": "B",
+      "teachers": [
+        "SA",
+        "NAO"
+      ],
+      "classes": [
+        {
+          "day": "MON",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "309",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "310",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "304",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 3205",
+      "level": 3,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "NR"
+      ],
+      "classes": [
+        {
+          "day": "MON",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "306",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "307",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 3205",
+      "level": 3,
+      "term": "II",
+      "section_name": "B",
+      "teachers": [
+        "NR"
+      ],
+      "classes": [
+        {
+          "day": "MON",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "306",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "307",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 3206",
+      "level": 3,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "NR",
+        "MI"
+      ],
+      "classes": []
+    },
+    {
+      "course_code": "CSE 3206",
+      "level": 3,
+      "term": "II",
+      "section_name": "B",
+      "teachers": [
+        "NR",
+        "MI"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "308",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "309",
+          "week": "EVERY"
+        },
+        {
+          "day": "SUN",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "310",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 3207",
+      "level": 3,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "GR"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "306",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 3207",
+      "level": 3,
+      "term": "II",
+      "section_name": "B",
+      "teachers": [
+        "GR"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "306",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 3209",
+      "level": 3,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "MSZ"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "305",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 3209",
+      "level": 3,
+      "term": "II",
+      "section_name": "B",
+      "teachers": [
+        "MSZ"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "305",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 3210",
+      "level": 3,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "AS",
+        "MSZ"
+      ],
+      "classes": []
+    },
+    {
+      "course_code": "CSE 3210",
+      "level": 3,
+      "term": "II",
+      "section_name": "B",
+      "teachers": [
+        "AS",
+        "MSZ"
+      ],
+      "classes": []
+    },
+    {
+      "course_code": "CSE 4000",
+      "level": 4,
+      "term": "I",
+      "section_name": "A",
+      "teachers": [],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "306",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 4000",
+      "level": 4,
+      "term": "I",
+      "section_name": "B",
+      "teachers": [],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "306",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 4100",
+      "level": 4,
+      "term": "I",
+      "section_name": "A",
+      "teachers": [
+        "MAM"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "307",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "308",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "309",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 4100",
+      "level": 4,
+      "term": "I",
+      "section_name": "B",
+      "teachers": [
+        "AS"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "307",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "308",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "309",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 4101",
+      "level": 4,
+      "term": "I",
+      "section_name": "A",
+      "teachers": [
+        "AZ"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "310",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "305",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 4101",
+      "level": 4,
+      "term": "I",
+      "section_name": "B",
+      "teachers": [
+        "AZ"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "310",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "305",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 4102",
+      "level": 4,
+      "term": "I",
+      "section_name": "A",
+      "teachers": [
+        "AZ",
+        "NAO"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "306",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "307",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "308",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 4102",
+      "level": 4,
+      "term": "I",
+      "section_name": "B",
+      "teachers": [
+        "NF1",
+        "NAO"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "306",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "307",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "308",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 4103",
+      "level": 4,
+      "term": "I",
+      "section_name": "A",
+      "teachers": [
+        "AA"
+      ],
+      "classes": [
+        {
+          "day": "MON",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "309",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "310",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "304",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 4103",
+      "level": 4,
+      "term": "I",
+      "section_name": "B",
+      "teachers": [
+        "AA"
+      ],
+      "classes": [
+        {
+          "day": "MON",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "309",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "310",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "304",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 4104",
+      "level": 4,
+      "term": "I",
+      "section_name": "A",
+      "teachers": [
+        "TMM",
+        "AA"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "08:00",
+          "end": "11:00",
+          "room": "311",
+          "week": "ODD"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 4104",
+      "level": 4,
+      "term": "I",
+      "section_name": "B",
+      "teachers": [
+        "TMM",
+        "AA"
+      ],
+      "classes": [
+        {
+          "day": "MON",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "306",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "307",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "HUM 4123",
+      "level": 4,
+      "term": "I",
+      "section_name": "A",
+      "teachers": [
+        "BBA"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "308",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "309",
+          "week": "EVERY"
+        },
+        {
+          "day": "SUN",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "310",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "HUM 4123",
+      "level": 4,
+      "term": "I",
+      "section_name": "B",
+      "teachers": [
+        "BBA"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "308",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "309",
+          "week": "EVERY"
+        },
+        {
+          "day": "SUN",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "310",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 4141",
+      "level": 4,
+      "term": "I",
+      "section_name": "A",
+      "teachers": [
+        "AH"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "306",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 4141",
+      "level": 4,
+      "term": "I",
+      "section_name": "B",
+      "teachers": [
+        "AH"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "306",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 4142",
+      "level": 4,
+      "term": "I",
+      "section_name": "A",
+      "teachers": [
+        "AH",
+        "GR"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "08:00",
+          "end": "11:00",
+          "room": "311",
+          "week": "EVEN"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 4142",
+      "level": 4,
+      "term": "I",
+      "section_name": "B",
+      "teachers": [
+        "AH",
+        "GR"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "305",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 4139",
+      "level": 4,
+      "term": "I",
+      "section_name": "A",
+      "teachers": [
+        "JA"
+      ],
+      "classes": []
+    },
+    {
+      "course_code": "CSE 4139",
+      "level": 4,
+      "term": "I",
+      "section_name": "B",
+      "teachers": [
+        "MSA"
+      ],
+      "classes": []
+    },
+    {
+      "course_code": "CSE 4140",
+      "level": 4,
+      "term": "I",
+      "section_name": "A",
+      "teachers": [
+        "MSA",
+        "AZ"
+      ],
+      "classes": []
+    },
+    {
+      "course_code": "CSE 4140",
+      "level": 4,
+      "term": "I",
+      "section_name": "B",
+      "teachers": [
+        "MSA",
+        "AZ"
+      ],
+      "classes": []
+    },
+    {
+      "course_code": "CSE 4000",
+      "level": 4,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "306",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "HUM 4273",
+      "level": 4,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "AIS"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "307",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "308",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "IPE 4217",
+      "level": 4,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "IPE"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "310",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "305",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 4215",
+      "level": 4,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "NF1"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "306",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "307",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 4245",
+      "level": 4,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "JA"
+      ],
+      "classes": [
+        {
+          "day": "MON",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "309",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "310",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "304",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 4246",
+      "level": 4,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "SA",
+        "JA"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "08:00",
+          "end": "11:00",
+          "room": "311",
+          "week": "EVEN"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 4249",
+      "level": 4,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "NR"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "308",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "309",
+          "week": "EVERY"
+        },
+        {
+          "day": "SUN",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "310",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 4250",
+      "level": 4,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "NR",
+        "SA"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "306",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 1271",
+      "level": 4,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "MAS"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "306",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 1272",
+      "level": 4,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "MAS"
+      ],
+      "classes": [
+        {
+          "day": "SUN",
+          "start": "09:00",
+          "end": "10:00",
+          "room": "307",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "308",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "309",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 1287",
+      "level": 4,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "MAS"
+      ],
+      "classes": [
+        {
+          "day": "MON",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "309",
+          "week": "EVERY"
+        },
+        {
+          "day": "TUE",
+          "start": "10:00",
+          "end": "11:00",
+          "room": "310",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "304",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 1288",
+      "level": 4,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "MAS"
+      ],
+      "classes": [
+        {
+          "day": "MON",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "11:30",
+          "end": "12:30",
+          "room": "306",
+          "week": "EVERY"
+        },
+        {
+          "day": "THU",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "307",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 2109",
+      "level": 4,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "MAS"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "308",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "309",
+          "week": "EVERY"
+        },
+        {
+          "day": "SUN",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "310",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 2110",
+      "level": 4,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "MAS"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "306",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 2123",
+      "level": 4,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "NF1"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "308",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "309",
+          "week": "EVERY"
+        },
+        {
+          "day": "SUN",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "310",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 2124",
+      "level": 4,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "NF1"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "306",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 1205",
+      "level": 4,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "RA"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "308",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "309",
+          "week": "EVERY"
+        },
+        {
+          "day": "SUN",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "310",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 1205",
+      "level": 4,
+      "term": "II",
+      "section_name": "B",
+      "teachers": [
+        "RA"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "308",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "309",
+          "week": "EVERY"
+        },
+        {
+          "day": "SUN",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "310",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 1204",
+      "level": 4,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "RA",
+        "AZ"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "306",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 1204",
+      "level": 4,
+      "term": "II",
+      "section_name": "B",
+      "teachers": [
+        "RA",
+        "NF1"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "306",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 1204",
+      "level": 4,
+      "term": "II",
+      "section_name": "C",
+      "teachers": [
+        "SA",
+        "TUE, 12.30-1.30 - 308"
+      ],
+      "classes": [
+        {
+          "day": "WED",
+          "start": "12:30",
+          "end": "01:30",
+          "room": "309",
+          "week": "EVERY"
+        },
+        {
+          "day": "SUN",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "310",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 1202",
+      "level": 4,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "ASM"
+      ],
+      "classes": []
+    },
+    {
+      "course_code": "CSE 2110",
+      "level": 4,
+      "term": "II",
+      "section_name": "A",
+      "teachers": [
+        "RA",
+        "NF1"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "306",
+          "week": "EVERY"
+        }
+      ]
+    },
+    {
+      "course_code": "CSE 2110",
+      "level": 4,
+      "term": "II",
+      "section_name": "B",
+      "teachers": [
+        "RA"
+      ],
+      "classes": [
+        {
+          "day": "TUE",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "304",
+          "week": "EVERY"
+        },
+        {
+          "day": "WED",
+          "start": "01:30",
+          "end": "02:30",
+          "room": "305",
+          "week": "EVERY"
+        },
+        {
+          "day": "MON",
+          "start": "08:00",
+          "end": "09:00",
+          "room": "306",
+          "week": "EVERY"
+        }
+      ]
+    }
+  ],
+  "periods": [
+    {
+      "id": "6ffe2392-ecc5-4fea-aa03-a1dad7538272",
+      "name": "08:00-09:00",
+      "start": "08:00",
+      "end": "09:00",
+      "duration": 60,
+      "kind": "theory"
+    },
+    {
+      "id": "a3f5a482-4897-4064-b2e6-12041f0faf1d",
+      "name": "09:00-10:00",
+      "start": "09:00",
+      "end": "10:00",
+      "duration": 60,
+      "kind": "theory"
+    },
+    {
+      "id": "1636b405-9a62-4ba4-88b5-5bb4b9b151f2",
+      "name": "10:00-11:00",
+      "start": "10:00",
+      "end": "11:00",
+      "duration": 60,
+      "kind": "theory"
+    },
+    {
+      "id": "bfbe1521-0fa5-4987-af60-6ae330fcb469",
+      "name": "11:30-12:30",
+      "start": "11:30",
+      "end": "12:30",
+      "duration": 60,
+      "kind": "theory"
+    },
+    {
+      "id": "be489c38-e6d5-4035-85f2-6486a8319f22",
+      "name": "12:30-13:30",
+      "start": "12:30",
+      "end": "13:30",
+      "duration": 60,
+      "kind": "theory"
+    },
+    {
+      "id": "93624179-e3e4-4d1e-8151-14d94409e669",
+      "name": "13:30-14:30",
+      "start": "13:30",
+      "end": "14:30",
+      "duration": 60,
+      "kind": "theory"
+    },
+    {
+      "id": "5b3dbdbd-a837-4450-a9c6-51ad77049588",
+      "name": "08:00-11:00",
+      "start": "08:00",
+      "end": "11:00",
+      "duration": 180,
+      "kind": "sessional"
+    },
+    {
+      "id": "62fd6b96-984b-4b75-a518-88c972c8f76e",
+      "name": "11:30-14:30",
+      "start": "11:30",
+      "end": "14:30",
+      "duration": 180,
+      "kind": "sessional"
+    }
+  ],
+  "days": [
+    {
+      "id": "23456d2b-9a79-4bd7-a5ad-94e7d4e47b71",
+      "name": "SUN"
+    },
+    {
+      "id": "4864e8d2-92b4-43ed-9014-be736ef118c7",
+      "name": "MON"
+    },
+    {
+      "id": "e40d4c89-cfd6-4886-bb39-360fddc0c53b",
+      "name": "TUE"
+    },
+    {
+      "id": "f22fcb30-9f2e-4ed8-b6d8-5ffc1a5987e8",
+      "name": "WED"
+    },
+    {
+      "id": "0fb4f393-c423-4957-a46e-882f8d439555",
+      "name": "THU"
+    }
+  ]
+}
