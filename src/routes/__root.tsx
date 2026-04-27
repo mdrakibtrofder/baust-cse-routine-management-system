@@ -35,10 +35,6 @@ export const Route = createRootRoute({
       { property: "og:description", content: "Smart routine management system for CSE department." },
       { property: "og:type", content: "website" },
     ],
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
-    ],
     links: [
       {
         rel: "stylesheet",
