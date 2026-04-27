@@ -135,7 +135,7 @@ function CourseRow({ course, sections, onAssign, alt }: {
       <td className="px-3 py-2 text-center align-top font-medium">{course.credit}</td>
       <td className="px-3 py-2 text-center align-top">
         <Badge variant={course.sessional > 0 ? "default" : "secondary"} className="text-[10px] whitespace-nowrap">
-          {info.classCount}×{info.classDuration}m
+          {info.classCount}×{info.classDuration % 60 === 0 ? `${info.classDuration / 60}h` : `${info.classDuration}m`}
         </Badge>
       </td>
       {sections.map(s => (
