@@ -14,11 +14,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Pencil, Trash2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import type { Section } from "@/lib/types";
+import { useConfirm } from "@/components/ConfirmDialog";
 
 const empty: Omit<Section, "id"> = { level: 1, term: "I", name: "A", total_students: 50 };
 
 export function SectionsPage() {
   const { sections, addSection, updateSection, deleteSection, replaceSections } = useStore();
+  const confirmDialog = useConfirm();
   const [editing, setEditing] = useState<Section | null>(null);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<Omit<Section, "id">>(empty);
@@ -89,8 +91,13 @@ export function SectionsPage() {
                       <Button size="icon" variant="ghost" onClick={() => { setEditing(s); setForm(s); setOpen(true); }}>
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
-                      <Button size="icon" variant="ghost" onClick={() => {
-                        if (confirm("Delete this section?")) { deleteSection(s.id); toast.success("Deleted"); }
+                      <Button size="icon" variant="ghost" onClick={async () => {
+                        const ok = await confirmDialog({
+                          title: `Delete Section ${s.name}?`,
+                          description: `Level ${s.level}, Term ${s.term}, ${s.total_students} students. This cannot be undone.`,
+                          destructive: true, confirmLabel: "Delete",
+                        });
+                        if (ok) { deleteSection(s.id); toast.success("Deleted"); }
                       }}>
                         <Trash2 className="h-3.5 w-3.5 text-destructive" />
                       </Button>

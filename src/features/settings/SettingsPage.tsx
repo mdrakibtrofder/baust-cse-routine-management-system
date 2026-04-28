@@ -8,9 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Trash2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { useConfirm } from "@/components/ConfirmDialog";
 
 export function SettingsPage() {
   const { periods, days, addPeriod, deletePeriod, addDay, deleteDay } = useStore();
+  const confirmDialog = useConfirm();
   const [p, setP] = useState({ start: "08:00", end: "09:00", kind: "theory" as "theory" | "sessional" });
   const [dayName, setDayName] = useState("");
 
@@ -31,7 +33,14 @@ export function SettingsPage() {
               {days.map(d => (
                 <Badge key={d.id} variant="secondary" className="px-3 py-1.5 text-sm gap-2">
                   {d.name}
-                  <button onClick={() => deleteDay(d.id)} className="hover:text-destructive">
+                  <button onClick={async () => {
+                    const ok = await confirmDialog({
+                      title: `Delete day ${d.name}?`,
+                      description: "Existing classes assigned to this day may become invalid.",
+                      destructive: true, confirmLabel: "Delete",
+                    });
+                    if (ok) deleteDay(d.id);
+                  }} className="hover:text-destructive">
                     <Trash2 className="h-3 w-3" />
                   </button>
                 </Badge>
