@@ -459,7 +459,7 @@ export function ClassAssignDialog({
                 </Select>
               </div>
 
-              {/* Embedded room availability table */}
+              {/* Embedded room & teacher availability table */}
               <div className="rounded-lg border overflow-hidden">
                 <button
                   onClick={() => setShowRoomTable((v) => !v)}
@@ -467,26 +467,45 @@ export function ClassAssignDialog({
                 >
                   <span className="flex items-center gap-2">
                     <TableIcon className="h-3.5 w-3.5" />
-                    Room availability — {current.day} (rooms × periods, includes teacher availability)
+                    Room & Teacher Availability
                   </span>
                   {showRoomTable ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
                 </button>
                 {showRoomTable && (
-                  <RoomDayGrid
-                    course={course}
-                    section={section}
-                    teacherIds={teacherIds}
-                    day={current.day}
-                    currentSlotId={current.id}
-                    currentRoomId={current.room_id}
-                    currentStart={current.start}
-                    currentEnd={current.end}
-                    siblingDrafts={drafts.filter((_, i) => i !== safeStep).map((d) => ({
-                      day: d.day, start: d.start, end: d.end, week: d.week,
-                    }))}
-                    week={current.week}
-                    onPick={(roomId, start, end) => setCurrent({ room_id: roomId, start, end })}
-                  />
+                  <div className="p-2 space-y-2">
+                    <div className="flex flex-wrap gap-1">
+                      {data.days.map((d) => (
+                        <button
+                          key={d.id}
+                          type="button"
+                          onClick={() => setCurrent({ day: d.name })}
+                          className={cn(
+                            "px-2.5 py-1 text-[11px] font-semibold rounded-md border transition",
+                            current.day === d.name
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-card hover:bg-muted border-border text-muted-foreground",
+                          )}
+                        >
+                          {d.name}
+                        </button>
+                      ))}
+                    </div>
+                    <RoomDayGrid
+                      course={course}
+                      section={section}
+                      teacherIds={teacherIds}
+                      day={current.day}
+                      currentSlotId={current.id}
+                      currentRoomId={current.room_id}
+                      currentStart={current.start}
+                      currentEnd={current.end}
+                      siblingDrafts={drafts.filter((_, i) => i !== safeStep).map((d) => ({
+                        day: d.day, start: d.start, end: d.end, week: d.week,
+                      }))}
+                      week={current.week}
+                      onPick={(roomId, start, end) => setCurrent({ room_id: roomId, start, end })}
+                    />
+                  </div>
                 )}
               </div>
 
