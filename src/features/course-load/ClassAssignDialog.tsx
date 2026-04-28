@@ -336,7 +336,15 @@ export function ClassAssignDialog({
                       <span className="text-xs text-destructive">Not assigned — set in Course Load grid</span>
                     )}
                     {teachers.map((t) => (
-                      <TeacherChip key={t.id} teacher={t} className="bg-card border rounded px-1.5 py-0.5" />
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => setTeacherDetailsId(t.id)}
+                        className="hover:bg-primary/10 hover:border-primary/40 transition rounded px-1.5 py-0.5 bg-card border cursor-pointer"
+                        title="Click to view teacher details"
+                      >
+                        <TeacherChip teacher={t} />
+                      </button>
                     ))}
                   </div>
                   <Badge variant="outline" className="gap-1">
