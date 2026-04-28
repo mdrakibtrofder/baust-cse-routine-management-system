@@ -88,7 +88,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           >
             <GraduationCap className="h-4 w-4" />
           </div>
-          <div className="font-semibold">Routine Manager</div>
+          <div className="font-semibold flex-1 truncate">Routine Manager</div>
+          <SemesterSelector compact />
         </header>
         <nav className="md:hidden border-b bg-card px-2 py-1 flex gap-1 overflow-x-auto">
           {nav.map((item) => {
