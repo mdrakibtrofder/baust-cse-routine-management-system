@@ -24,7 +24,14 @@ export function weeksOverlap(a: WeekPattern, b: WeekPattern) {
 }
 
 export interface Conflict {
-  type: "room_double" | "room_capacity" | "room_type" | "teacher_double" | "section_double" | "teacher_credit";
+  type:
+    | "room_double"
+    | "room_capacity"
+    | "room_type"
+    | "teacher_double"
+    | "section_double"
+    | "teacher_credit"
+    | "self_duplicate";
   message: string;
 }
 
@@ -36,6 +43,8 @@ export interface ConflictCheckInput {
   candidate: { day: string; start: string; end: string; room_id: string | null; week: WeekPattern };
   /** ignore this slot id when checking (when editing an existing slot) */
   ignoreSlotId?: string;
+  /** Other in-memory drafts for the same course-section (to detect duplicate days/periods within the same class set) */
+  siblingDrafts?: { day: string; start: string; end: string; week: WeekPattern }[];
 }
 
 export function checkConflicts(input: ConflictCheckInput): Conflict[] {
@@ -118,6 +127,20 @@ export function checkConflicts(input: ConflictCheckInput): Conflict[] {
       type: "section_double",
       message: `Section ${section.name} already has ${otherCourse?.code} on ${slot.day} ${slot.start}-${slot.end}.`,
     });
+  }
+
+  // 5. self-duplicate within the same course-section drafts (e.g. 2 of the 3 classes on same day+overlap)
+  if (input.siblingDrafts) {
+    for (const sd of input.siblingDrafts) {
+      if (sd === (candidate as any)) continue;
+      if (sd.day !== candidate.day) continue;
+      if (!timesOverlap(sd.start, sd.end, candidate.start, candidate.end)) continue;
+      if (!weeksOverlap(sd.week, candidate.week)) continue;
+      conflicts.push({
+        type: "self_duplicate",
+        message: `Duplicate slot: another class for this section is already on ${candidate.day} ${sd.start}-${sd.end}.`,
+      });
+    }
   }
 
   return conflicts;
