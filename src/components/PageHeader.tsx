@@ -5,6 +5,7 @@ import { readExcelFile } from "@/lib/excel";
 import { utils, writeFileXLSX } from "xlsx";
 import { toast } from "sonner";
 import { useRef } from "react";
+import { useConfirm } from "@/components/ConfirmDialog";
 
 interface Props {
   title: string;
@@ -27,6 +28,7 @@ export function PageHeader({
 }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const reset = useStore((s) => s.resetToSeed);
+  const confirmDialog = useConfirm();
 
   return (
     <div
@@ -92,8 +94,14 @@ export function PageHeader({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => {
-                if (confirm("Reset all data to Winter 2026 seed? This will overwrite everything.")) {
+              onClick={async () => {
+                const ok = await confirmDialog({
+                  title: "Reset all data?",
+                  description: "This will overwrite ALL teachers, courses, sections, rooms, and class schedules with the Winter 2026 seed data. This cannot be undone.",
+                  destructive: true,
+                  confirmLabel: "Reset everything",
+                });
+                if (ok) {
                   reset();
                   toast.success("Reset complete");
                 }
