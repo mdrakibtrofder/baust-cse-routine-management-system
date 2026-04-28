@@ -5,7 +5,6 @@ import {
   Course,
   Room,
   Section,
-  Teacher,
   WeekPattern,
 } from "./types";
 
@@ -21,6 +20,15 @@ export function timesOverlap(aStart: string, aEnd: string, bStart: string, bEnd:
 export function weeksOverlap(a: WeekPattern, b: WeekPattern) {
   if (a === "EVERY" || b === "EVERY") return true;
   return a === b;
+}
+
+/** Slots scoped to the active semester */
+function semSlots(data: AppData): ClassSlot[] {
+  return data.class_slots.filter((s) => s.semester_id === data.active_semester_id);
+}
+/** course_section_teachers scoped to the active semester */
+function semCST(data: AppData) {
+  return data.course_section_teachers.filter((c) => c.semester_id === data.active_semester_id);
 }
 
 export interface Conflict {
@@ -41,9 +49,7 @@ export interface ConflictCheckInput {
   section: Section;
   teacherIds: string[];
   candidate: { day: string; start: string; end: string; room_id: string | null; week: WeekPattern };
-  /** ignore this slot id when checking (when editing an existing slot) */
   ignoreSlotId?: string;
-  /** Other in-memory drafts for the same course-section (to detect duplicate days/periods within the same class set) */
   siblingDrafts?: { day: string; start: string; end: string; week: WeekPattern }[];
 }
 
@@ -51,8 +57,9 @@ export function checkConflicts(input: ConflictCheckInput): Conflict[] {
   const { data, course, section, teacherIds, candidate, ignoreSlotId } = input;
   const conflicts: Conflict[] = [];
   const info = COURSE_TYPE_INFO[course.course_type];
+  const slots = semSlots(data);
+  const csts = semCST(data);
 
-  // 1. room capacity & type
   if (candidate.room_id) {
     const room = data.rooms.find((r) => r.id === candidate.room_id);
     if (room) {
@@ -74,9 +81,8 @@ export function checkConflicts(input: ConflictCheckInput): Conflict[] {
     }
   }
 
-  // 2. room double-booking
   if (candidate.room_id) {
-    for (const slot of data.class_slots) {
+    for (const slot of slots) {
       if (slot.id === ignoreSlotId) continue;
       if (slot.room_id !== candidate.room_id) continue;
       if (slot.day !== candidate.day) continue;
@@ -92,18 +98,17 @@ export function checkConflicts(input: ConflictCheckInput): Conflict[] {
     }
   }
 
-  // 3. teacher double-booking
   for (const tid of teacherIds) {
-    for (const slot of data.class_slots) {
+    for (const slot of slots) {
       if (slot.id === ignoreSlotId) continue;
       if (slot.day !== candidate.day) continue;
       if (!timesOverlap(slot.start, slot.end, candidate.start, candidate.end)) continue;
       if (!weeksOverlap(slot.week, candidate.week)) continue;
-      const cst = data.course_section_teachers.find(
+      const cst = csts.find(
         (x) => x.course_id === slot.course_id && x.section_id === slot.section_id,
       );
       if (!cst || !cst.teacher_ids.includes(tid)) continue;
-      if (cst.course_id === course.id && cst.section_id === section.id) continue; // same class
+      if (cst.course_id === course.id && cst.section_id === section.id) continue;
       const t = data.teachers.find((x) => x.id === tid);
       const otherCourse = data.courses.find((c) => c.id === slot.course_id);
       const otherSec = data.sections.find((s) => s.id === slot.section_id);
@@ -114,8 +119,7 @@ export function checkConflicts(input: ConflictCheckInput): Conflict[] {
     }
   }
 
-  // 4. section double-booking
-  for (const slot of data.class_slots) {
+  for (const slot of slots) {
     if (slot.id === ignoreSlotId) continue;
     if (slot.section_id !== section.id) continue;
     if (slot.day !== candidate.day) continue;
@@ -129,7 +133,6 @@ export function checkConflicts(input: ConflictCheckInput): Conflict[] {
     });
   }
 
-  // 5. self-duplicate within the same course-section drafts (e.g. 2 of the 3 classes on same day+overlap)
   if (input.siblingDrafts) {
     for (const sd of input.siblingDrafts) {
       if (sd === (candidate as any)) continue;
@@ -146,14 +149,12 @@ export function checkConflicts(input: ConflictCheckInput): Conflict[] {
   return conflicts;
 }
 
-/** Total credit currently assigned to a teacher, factoring co-teaching split for sessional (1 credit each) is not assumed; we count full course credit per assignment. */
 export function teacherAssignedCreditUsed(data: AppData, teacherId: string): number {
   let total = 0;
-  for (const cst of data.course_section_teachers) {
+  for (const cst of semCST(data)) {
     if (!cst.teacher_ids.includes(teacherId)) continue;
     const c = data.courses.find((x) => x.id === cst.course_id);
     if (!c) continue;
-    // For sessional with 2 teachers, split credit equally
     const share = c.sessional > 0 && cst.teacher_ids.length > 1 ? c.credit / cst.teacher_ids.length : c.credit;
     total += share;
   }
@@ -170,7 +171,7 @@ export function teacherWouldExceed(
   const t = data.teachers.find((x) => x.id === teacherId);
   if (!t) return { exceeds: false, current: 0, assigned: 0, addition: 0 };
   const current = teacherAssignedCreditUsed(data, teacherId);
-  const existing = data.course_section_teachers.find(
+  const existing = semCST(data).find(
     (x) => x.course_id === course.id && x.section_id === section.id,
   );
   const alreadyOnIt = existing?.teacher_ids.includes(teacherId);
@@ -184,7 +185,6 @@ export function teacherWouldExceed(
   };
 }
 
-/** Are any of the listed teachers busy on the candidate day/time? */
 export function teachersBusyAt(
   data: AppData,
   teacherIds: string[],
@@ -192,7 +192,8 @@ export function teachersBusyAt(
   ignoreSlotId?: string,
   ignoreCourseSection?: { course_id: string; section_id: string },
 ): { teacherId: string; slot: ClassSlot } | null {
-  for (const slot of data.class_slots) {
+  const csts = semCST(data);
+  for (const slot of semSlots(data)) {
     if (slot.id === ignoreSlotId) continue;
     if (slot.day !== candidate.day) continue;
     if (!timesOverlap(slot.start, slot.end, candidate.start, candidate.end)) continue;
@@ -203,7 +204,7 @@ export function teachersBusyAt(
       slot.section_id === ignoreCourseSection.section_id
     )
       continue;
-    const cst = data.course_section_teachers.find(
+    const cst = csts.find(
       (x) => x.course_id === slot.course_id && x.section_id === slot.section_id,
     );
     if (!cst) continue;
@@ -214,7 +215,6 @@ export function teachersBusyAt(
   return null;
 }
 
-/** Find available rooms for a candidate (matching room kind + capacity + not booked + teachers free) */
 export function findAvailableRooms(
   data: AppData,
   course: Course,
@@ -224,7 +224,6 @@ export function findAvailableRooms(
   teacherIds: string[] = [],
 ): Room[] {
   const info = COURSE_TYPE_INFO[course.course_type];
-  // If teachers are busy, no room is "available" for this slot.
   if (teacherIds.length > 0) {
     const busy = teachersBusyAt(data, teacherIds, candidate, ignoreSlotId, {
       course_id: course.id,
@@ -232,11 +231,12 @@ export function findAvailableRooms(
     });
     if (busy) return [];
   }
+  const slots = semSlots(data);
   return data.rooms.filter((room) => {
     if (info.roomKind === "sessional" && room.room_type !== "Sessional") return false;
     if (info.roomKind === "theory" && room.room_type !== "Theory") return false;
     if (room.capacity < section.total_students) return false;
-    const conflict = data.class_slots.some((slot) => {
+    const conflict = slots.some((slot) => {
       if (slot.id === ignoreSlotId) return false;
       if (slot.room_id !== room.id) return false;
       if (slot.day !== candidate.day) return false;
@@ -246,4 +246,120 @@ export function findAvailableRooms(
     });
     return !conflict;
   });
+}
+
+// ---------- Dependency analysis (for protected deletes) ----------
+
+export interface Dependency {
+  kind: "class_slot" | "assignment";
+  description: string;
+}
+
+/** All dependencies for a teacher across all semesters */
+export function teacherDependencies(data: AppData, teacherId: string): Dependency[] {
+  const deps: Dependency[] = [];
+  for (const cst of data.course_section_teachers) {
+    if (!cst.teacher_ids.includes(teacherId)) continue;
+    const c = data.courses.find((x) => x.id === cst.course_id);
+    const s = data.sections.find((x) => x.id === cst.section_id);
+    const sem = data.semesters.find((x) => x.id === cst.semester_id);
+    deps.push({
+      kind: "assignment",
+      description: `${c?.code ?? "?"} (Sec ${s?.name ?? "?"}) · ${sem?.name ?? cst.semester_id}`,
+    });
+  }
+  return deps;
+}
+
+export function roomDependencies(data: AppData, roomId: string): Dependency[] {
+  const deps: Dependency[] = [];
+  for (const slot of data.class_slots) {
+    if (slot.room_id !== roomId) continue;
+    const c = data.courses.find((x) => x.id === slot.course_id);
+    const s = data.sections.find((x) => x.id === slot.section_id);
+    const sem = data.semesters.find((x) => x.id === slot.semester_id);
+    deps.push({
+      kind: "class_slot",
+      description: `${c?.code ?? "?"} (Sec ${s?.name ?? "?"}) · ${slot.day} ${slot.start}-${slot.end} · ${sem?.name ?? ""}`,
+    });
+  }
+  return deps;
+}
+
+export function sectionDependencies(data: AppData, sectionId: string): Dependency[] {
+  const deps: Dependency[] = [];
+  for (const slot of data.class_slots) {
+    if (slot.section_id !== sectionId) continue;
+    const c = data.courses.find((x) => x.id === slot.course_id);
+    const sem = data.semesters.find((x) => x.id === slot.semester_id);
+    deps.push({
+      kind: "class_slot",
+      description: `${c?.code ?? "?"} · ${slot.day} ${slot.start}-${slot.end} · ${sem?.name ?? ""}`,
+    });
+  }
+  for (const cst of data.course_section_teachers) {
+    if (cst.section_id !== sectionId) continue;
+    const c = data.courses.find((x) => x.id === cst.course_id);
+    const sem = data.semesters.find((x) => x.id === cst.semester_id);
+    deps.push({
+      kind: "assignment",
+      description: `Teacher assignment for ${c?.code ?? "?"} · ${sem?.name ?? ""}`,
+    });
+  }
+  return deps;
+}
+
+export function courseDependencies(data: AppData, courseId: string): Dependency[] {
+  const deps: Dependency[] = [];
+  for (const slot of data.class_slots) {
+    if (slot.course_id !== courseId) continue;
+    const s = data.sections.find((x) => x.id === slot.section_id);
+    const sem = data.semesters.find((x) => x.id === slot.semester_id);
+    deps.push({
+      kind: "class_slot",
+      description: `Sec ${s?.name ?? "?"} · ${slot.day} ${slot.start}-${slot.end} · ${sem?.name ?? ""}`,
+    });
+  }
+  for (const cst of data.course_section_teachers) {
+    if (cst.course_id !== courseId) continue;
+    const s = data.sections.find((x) => x.id === cst.section_id);
+    const sem = data.semesters.find((x) => x.id === cst.semester_id);
+    deps.push({
+      kind: "assignment",
+      description: `Teacher assignment · Sec ${s?.name ?? "?"} · ${sem?.name ?? ""}`,
+    });
+  }
+  return deps;
+}
+
+export function periodDependencies(data: AppData, periodId: string): Dependency[] {
+  const period = data.periods.find((p) => p.id === periodId);
+  if (!period) return [];
+  const deps: Dependency[] = [];
+  for (const slot of data.class_slots) {
+    if (slot.start !== period.start || slot.end !== period.end) continue;
+    const c = data.courses.find((x) => x.id === slot.course_id);
+    const s = data.sections.find((x) => x.id === slot.section_id);
+    const sem = data.semesters.find((x) => x.id === slot.semester_id);
+    deps.push({
+      kind: "class_slot",
+      description: `${c?.code ?? "?"} (Sec ${s?.name ?? "?"}) · ${slot.day} · ${sem?.name ?? ""}`,
+    });
+  }
+  return deps;
+}
+
+export function dayDependencies(data: AppData, dayName: string): Dependency[] {
+  const deps: Dependency[] = [];
+  for (const slot of data.class_slots) {
+    if (slot.day !== dayName) continue;
+    const c = data.courses.find((x) => x.id === slot.course_id);
+    const s = data.sections.find((x) => x.id === slot.section_id);
+    const sem = data.semesters.find((x) => x.id === slot.semester_id);
+    deps.push({
+      kind: "class_slot",
+      description: `${c?.code ?? "?"} (Sec ${s?.name ?? "?"}) · ${slot.start}-${slot.end} · ${sem?.name ?? ""}`,
+    });
+  }
+  return deps;
 }
