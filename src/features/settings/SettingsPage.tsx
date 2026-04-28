@@ -67,7 +67,14 @@ export function SettingsPage() {
                     <Badge variant={p.kind === "sessional" ? "default" : "secondary"} className="text-[10px]">{p.kind}</Badge>
                     <span className="text-xs text-muted-foreground">{p.duration} min</span>
                   </div>
-                  <Button size="icon" variant="ghost" onClick={() => deletePeriod(p.id)}>
+                  <Button size="icon" variant="ghost" onClick={async () => {
+                    const ok = await confirmDialog({
+                      title: `Delete period ${p.start}–${p.end}?`,
+                      description: "Existing classes assigned to this period may become invalid.",
+                      destructive: true, confirmLabel: "Delete",
+                    });
+                    if (ok) deletePeriod(p.id);
+                  }}>
                     <Trash2 className="h-3.5 w-3.5 text-destructive" />
                   </Button>
                 </div>
