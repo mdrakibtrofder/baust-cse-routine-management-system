@@ -8,9 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Trash2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { useConfirm } from "@/components/ConfirmDialog";
 
 export function SettingsPage() {
   const { periods, days, addPeriod, deletePeriod, addDay, deleteDay } = useStore();
+  const confirmDialog = useConfirm();
   const [p, setP] = useState({ start: "08:00", end: "09:00", kind: "theory" as "theory" | "sessional" });
   const [dayName, setDayName] = useState("");
 
@@ -31,7 +33,14 @@ export function SettingsPage() {
               {days.map(d => (
                 <Badge key={d.id} variant="secondary" className="px-3 py-1.5 text-sm gap-2">
                   {d.name}
-                  <button onClick={() => deleteDay(d.id)} className="hover:text-destructive">
+                  <button onClick={async () => {
+                    const ok = await confirmDialog({
+                      title: `Delete day ${d.name}?`,
+                      description: "Existing classes assigned to this day may become invalid.",
+                      destructive: true, confirmLabel: "Delete",
+                    });
+                    if (ok) deleteDay(d.id);
+                  }} className="hover:text-destructive">
                     <Trash2 className="h-3 w-3" />
                   </button>
                 </Badge>
@@ -58,7 +67,14 @@ export function SettingsPage() {
                     <Badge variant={p.kind === "sessional" ? "default" : "secondary"} className="text-[10px]">{p.kind}</Badge>
                     <span className="text-xs text-muted-foreground">{p.duration} min</span>
                   </div>
-                  <Button size="icon" variant="ghost" onClick={() => deletePeriod(p.id)}>
+                  <Button size="icon" variant="ghost" onClick={async () => {
+                    const ok = await confirmDialog({
+                      title: `Delete period ${p.start}–${p.end}?`,
+                      description: "Existing classes assigned to this period may become invalid.",
+                      destructive: true, confirmLabel: "Delete",
+                    });
+                    if (ok) deletePeriod(p.id);
+                  }}>
                     <Trash2 className="h-3.5 w-3.5 text-destructive" />
                   </Button>
                 </div>

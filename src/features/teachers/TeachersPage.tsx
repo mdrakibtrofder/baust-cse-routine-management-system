@@ -15,6 +15,7 @@ import { Pencil, Trash2, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 import { teacherAssignedCreditUsed } from "@/lib/conflicts";
 import type { Teacher } from "@/lib/types";
+import { useConfirm } from "@/components/ConfirmDialog";
 
 const empty: Omit<Teacher, "id"> = {
   short_name: "", name: "", designation: "", department: "CSE",
@@ -24,6 +25,7 @@ const empty: Omit<Teacher, "id"> = {
 export function TeachersPage() {
   const data = useStore();
   const { teachers, addTeacher, updateTeacher, deleteTeacher, replaceTeachers } = data;
+  const confirmDialog = useConfirm();
   const [q, setQ] = useState("");
   const [editing, setEditing] = useState<Teacher | null>(null);
   const [open, setOpen] = useState(false);
@@ -135,11 +137,14 @@ export function TeachersPage() {
                       <Button size="icon" variant="ghost" onClick={() => startEdit(t)}>
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
-                      <Button size="icon" variant="ghost" onClick={() => {
-                        if (confirm(`Delete teacher ${t.short_name}?`)) {
-                          deleteTeacher(t.id);
-                          toast.success("Deleted");
-                        }
+                      <Button size="icon" variant="ghost" onClick={async () => {
+                        const ok = await confirmDialog({
+                          title: `Delete teacher ${t.short_name}?`,
+                          description: `${t.name} (${t.designation || "Faculty"}) will be permanently removed.`,
+                          destructive: true,
+                          confirmLabel: "Delete",
+                        });
+                        if (ok) { deleteTeacher(t.id); toast.success("Deleted"); }
                       }}>
                         <Trash2 className="h-3.5 w-3.5 text-destructive" />
                       </Button>

@@ -39,6 +39,8 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { TeacherChip } from "@/components/TeacherBadge";
+import { TeacherDetailsDialog } from "@/components/TeacherDetailsDialog";
+import { useConfirm } from "@/components/ConfirmDialog";
 
 interface DraftClass {
   id?: string;
@@ -91,6 +93,8 @@ export function ClassAssignDialog({
   const [step, setStep] = useState(0);
   const [showRoomTable, setShowRoomTable] = useState(true);
   const [confirmSave, setConfirmSave] = useState<{ msg: string } | null>(null);
+  const [teacherDetailsId, setTeacherDetailsId] = useState<string | null>(null);
+  const confirmDialog = useConfirm();
 
   useEffect(() => {
     if (!open) return;
@@ -117,6 +121,9 @@ export function ClassAssignDialog({
 
   const conflicts: Conflict[] = useMemo(() => {
     if (drafts.length === 0) return [];
+    const siblings = drafts.filter((_, i) => i !== safeStep).map((d) => ({
+      day: d.day, start: d.start, end: d.end, week: d.week,
+    }));
     return checkConflicts({
       data,
       course,
@@ -124,8 +131,9 @@ export function ClassAssignDialog({
       teacherIds,
       candidate: current,
       ignoreSlotId: current.id,
+      siblingDrafts: siblings,
     });
-  }, [data, course, section, teacherIds, current, drafts.length]);
+  }, [data, course, section, teacherIds, current, drafts, safeStep]);
 
   const availableRooms = useMemo(() => {
     if (drafts.length === 0) return [];
@@ -135,8 +143,13 @@ export function ClassAssignDialog({
   /** Per-class status used for the stepper indicator */
   const draftStatuses = useMemo(
     () =>
-      drafts.map((d) => {
-        const cs = checkConflicts({ data, course, section, teacherIds, candidate: d, ignoreSlotId: d.id });
+      drafts.map((d, idx) => {
+        const siblings = drafts.filter((_, i) => i !== idx).map((x) => ({
+          day: x.day, start: x.start, end: x.end, week: x.week,
+        }));
+        const cs = checkConflicts({
+          data, course, section, teacherIds, candidate: d, ignoreSlotId: d.id, siblingDrafts: siblings,
+        });
         const incomplete = !d.room_id;
         return { conflicts: cs, incomplete };
       }),
@@ -194,15 +207,30 @@ export function ClassAssignDialog({
   };
 
   /** Delete one class (reset its draft to empty) */
-  const deleteOne = (idx: number) => {
+  const deleteOne = async (idx: number) => {
     const d = drafts[idx];
+    const ok = await confirmDialog({
+      title: `Delete Class ${idx + 1}?`,
+      description: d?.room_id
+        ? `This will clear the assigned room and time for Class ${idx + 1}.`
+        : `Reset Class ${idx + 1} to default values.`,
+      destructive: true,
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
     if (d?.id) data.deleteClassSlot(d.id);
     setDrafts((prev) => prev.map((x, i) => (i === idx ? EMPTY_CLASS(info) : x)));
     toast.success(`Class ${idx + 1} cleared`);
   };
 
-  const clearAll = () => {
-    if (!confirm("Clear all classes for this section?")) return;
+  const clearAll = async () => {
+    const ok = await confirmDialog({
+      title: "Clear all classes?",
+      description: `This will remove all ${info.classCount} class assignments for ${course.code} (Section ${section.name}).`,
+      destructive: true,
+      confirmLabel: "Clear all",
+    });
+    if (!ok) return;
     data.deleteClassSlotsForCourseSection(course.id, section.id);
     setDrafts(Array.from({ length: info.classCount }, () => EMPTY_CLASS(info)));
     setStep(0);
@@ -308,7 +336,15 @@ export function ClassAssignDialog({
                       <span className="text-xs text-destructive">Not assigned — set in Course Load grid</span>
                     )}
                     {teachers.map((t) => (
-                      <TeacherChip key={t.id} teacher={t} className="bg-card border rounded px-1.5 py-0.5" />
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => setTeacherDetailsId(t.id)}
+                        className="hover:bg-primary/10 hover:border-primary/40 transition rounded px-1.5 py-0.5 bg-card border cursor-pointer"
+                        title="Click to view teacher details"
+                      >
+                        <TeacherChip teacher={t} />
+                      </button>
                     ))}
                   </div>
                   <Badge variant="outline" className="gap-1">
@@ -417,6 +453,12 @@ export function ClassAssignDialog({
                     teacherIds={teacherIds}
                     day={current.day}
                     currentSlotId={current.id}
+                    currentRoomId={current.room_id}
+                    currentStart={current.start}
+                    currentEnd={current.end}
+                    siblingDrafts={drafts.filter((_, i) => i !== safeStep).map((d) => ({
+                      day: d.day, start: d.start, end: d.end, week: d.week,
+                    }))}
                     week={current.week}
                     onPick={(roomId, start, end) => setCurrent({ room_id: roomId, start, end })}
                   />
@@ -526,18 +568,29 @@ export function ClassAssignDialog({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <TeacherDetailsDialog
+        teacherId={teacherDetailsId}
+        open={!!teacherDetailsId}
+        onOpenChange={(v) => !v && setTeacherDetailsId(null)}
+      />
     </>
   );
 }
 
-/** Inline room × period grid for a given day (also greys-out periods where the
- * assigned teacher(s) are busy elsewhere). */
+/** Inline room × period grid for a given day. Highlights the currently-selected
+ * room/period with a blue border. Busy/conflicting cells are still selectable
+ * (with a confirmation warning) so users can intentionally accept conflicts. */
 function RoomDayGrid({
   course,
   section,
   teacherIds,
   day,
   currentSlotId,
+  currentRoomId,
+  currentStart,
+  currentEnd,
+  siblingDrafts = [],
   week,
   onPick,
 }: {
@@ -546,11 +599,16 @@ function RoomDayGrid({
   teacherIds: string[];
   day: string;
   currentSlotId?: string;
+  currentRoomId?: string | null;
+  currentStart?: string;
+  currentEnd?: string;
+  siblingDrafts?: { day: string; start: string; end: string; week: WeekPattern }[];
   week: WeekPattern;
   onPick: (roomId: string, start: string, end: string) => void;
 }) {
   const data = useStore();
   const info = COURSE_TYPE_INFO[course.course_type];
+  const confirmDialog = useConfirm();
 
   const rooms = data.rooms
     .filter((r) => r.room_type === (info.roomKind === "sessional" ? "Sessional" : "Theory"))
@@ -578,6 +636,13 @@ function RoomDayGrid({
     return map;
   }, [data, periods, teacherIds, day, week, currentSlotId, course.id, section.id]);
 
+  /** Check if any sibling draft already uses this day+period (within the same course-section) */
+  function siblingDuplicate(p: { start: string; end: string }) {
+    return siblingDrafts.some(
+      (sd) => sd.day === day && timesOverlap(sd.start, sd.end, p.start, p.end) && weeksOverlap(sd.week, week),
+    );
+  }
+
   function findBooking(roomId: string, p: { start: string; end: string }) {
     return data.class_slots.find((slot) => {
       if (slot.id === currentSlotId) return false;
@@ -589,6 +654,36 @@ function RoomDayGrid({
     });
   }
 
+  /** Pick handler that warns the user when the cell has known issues */
+  async function handlePick(
+    roomId: string,
+    p: { start: string; end: string },
+    issues: string[],
+  ) {
+    if (issues.length === 0) {
+      onPick(roomId, p.start, p.end);
+      return;
+    }
+    const ok = await confirmDialog({
+      title: "Select with conflict?",
+      description: (
+        <div className="space-y-1.5">
+          <div>This slot has the following issue{issues.length > 1 ? "s" : ""}:</div>
+          <ul className="list-disc pl-5 text-sm">
+            {issues.map((m, i) => (
+              <li key={i} className="text-destructive">{m}</li>
+            ))}
+          </ul>
+          <div className="text-xs text-muted-foreground pt-1">
+            You can still select it — it will appear as a conflict in the error details.
+          </div>
+        </div>
+      ),
+      confirmLabel: "Select anyway",
+    });
+    if (ok) onPick(roomId, p.start, p.end);
+  }
+
   return (
     <div className="overflow-auto max-h-[40vh]">
       <table className="w-full text-xs">
@@ -597,12 +692,14 @@ function RoomDayGrid({
             <th className="text-left px-2 py-1.5 font-medium border-b border-r min-w-[90px]">Room</th>
             {periods.map((p) => {
               const teacherBusy = teacherBusyByPeriod.get(p.id);
+              const dup = siblingDuplicate(p);
               return (
                 <th
                   key={p.id}
                   className={cn(
                     "text-center px-1.5 py-1.5 font-medium border-b border-r min-w-[100px]",
                     teacherBusy && "bg-warning/10",
+                    dup && "bg-destructive/10",
                   )}
                 >
                   <div className="font-mono">
@@ -613,6 +710,9 @@ function RoomDayGrid({
                       teacher busy ({teacherBusy.courseCode})
                     </div>
                   )}
+                  {dup && (
+                    <div className="text-[9px] font-normal text-destructive">duplicate slot</div>
+                  )}
                 </th>
               );
             })}
@@ -621,41 +721,85 @@ function RoomDayGrid({
         <tbody>
           {rooms.map((r) => (
             <tr key={r.id} className="border-b">
-              <td className="px-2 py-1 border-r">
+              <td
+                className={cn(
+                  "px-2 py-1 border-r",
+                  currentRoomId === r.id && "bg-primary/5",
+                )}
+              >
                 <div className="font-mono font-semibold">{r.name}</div>
                 <div className="text-[10px] text-muted-foreground">cap {r.capacity}</div>
               </td>
               {periods.map((p) => {
                 const teacherBusy = teacherBusyByPeriod.get(p.id);
                 const booking = findBooking(r.id, p);
+                const dup = siblingDuplicate(p);
+                const isCurrent =
+                  currentRoomId === r.id &&
+                  currentStart === p.start &&
+                  currentEnd === p.end;
+
+                const issues: string[] = [];
                 if (booking) {
                   const c = data.courses.find((c) => c.id === booking.course_id);
                   const s = data.sections.find((s) => s.id === booking.section_id);
-                  return (
-                    <td key={p.id} className="border-r p-0.5">
-                      <div className="rounded bg-destructive/10 border border-destructive/30 px-1.5 py-1 text-[10px] text-destructive">
-                        <div className="font-semibold">{c?.code}</div>
-                        <div className="opacity-80">Sec {s?.name}</div>
-                      </div>
-                    </td>
+                  issues.push(
+                    `Room ${r.name} is already booked by ${c?.code} (Sec ${s?.name}) ${booking.start}–${booking.end}.`,
                   );
                 }
                 if (teacherBusy) {
-                  return (
-                    <td key={p.id} className="border-r p-0.5">
-                      <div className="rounded bg-warning/10 border border-warning/30 px-1.5 py-1 text-[10px] text-warning-foreground/80">
-                        teacher busy
-                      </div>
-                    </td>
+                  issues.push(
+                    `Teacher already teaches ${teacherBusy.courseCode} (Sec ${teacherBusy.sectionName}) at this time.`,
                   );
                 }
+                if (dup) {
+                  issues.push(
+                    `Another class for this section is already on ${day} ${p.start}–${p.end}.`,
+                  );
+                }
+
+                let inner: React.ReactNode;
+                if (booking) {
+                  const c = data.courses.find((c) => c.id === booking.course_id);
+                  const s = data.sections.find((s) => s.id === booking.section_id);
+                  inner = (
+                    <div className="rounded bg-destructive/10 hover:bg-destructive/20 border border-destructive/30 px-1.5 py-1 text-[10px] text-destructive cursor-pointer transition">
+                      <div className="font-semibold">{c?.code}</div>
+                      <div className="opacity-80">Sec {s?.name}</div>
+                    </div>
+                  );
+                } else if (teacherBusy) {
+                  inner = (
+                    <div className="rounded bg-warning/10 hover:bg-warning/25 border border-warning/30 px-1.5 py-1 text-[10px] text-warning-foreground/80 cursor-pointer transition">
+                      teacher busy
+                    </div>
+                  );
+                } else if (dup) {
+                  inner = (
+                    <div className="rounded bg-destructive/10 hover:bg-destructive/20 border border-destructive/30 px-1.5 py-1 text-[10px] text-destructive cursor-pointer transition">
+                      duplicate
+                    </div>
+                  );
+                } else {
+                  inner = (
+                    <div className="w-full h-full rounded bg-success/10 hover:bg-success/25 border border-success/30 px-1.5 py-1.5 text-[10px] text-success font-medium transition">
+                      Free
+                    </div>
+                  );
+                }
+
                 return (
                   <td key={p.id} className="border-r p-0.5">
                     <button
-                      onClick={() => onPick(r.id, p.start, p.end)}
-                      className="w-full h-full rounded bg-success/10 border border-success/30 hover:bg-success/25 px-1.5 py-1.5 text-[10px] text-success font-medium transition"
+                      type="button"
+                      onClick={() => handlePick(r.id, p, issues)}
+                      className={cn(
+                        "block w-full text-left rounded transition",
+                        isCurrent && "ring-2 ring-blue-500 ring-offset-1 ring-offset-background",
+                      )}
+                      title={issues.length > 0 ? issues.join(" · ") : "Free — click to select"}
                     >
-                      Free
+                      {inner}
                     </button>
                   </td>
                 );

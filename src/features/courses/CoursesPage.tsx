@@ -16,6 +16,7 @@ import { Pencil, Trash2, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 import type { Course, CourseType } from "@/lib/types";
 import { COURSE_TYPE_INFO } from "@/lib/types";
+import { useConfirm } from "@/components/ConfirmDialog";
 
 const empty: Omit<Course, "id"> = {
   code: "", name: "", credit: 3, course_type: "theory_3.0",
@@ -26,6 +27,7 @@ const TYPES: CourseType[] = ["theory_2.0", "theory_3.0", "sessional_1.5", "sessi
 
 export function CoursesPage() {
   const { courses, addCourse, updateCourse, deleteCourse, replaceCourses } = useStore();
+  const confirmDialog = useConfirm();
   const [q, setQ] = useState("");
   const [editing, setEditing] = useState<Course | null>(null);
   const [open, setOpen] = useState(false);
@@ -96,8 +98,13 @@ export function CoursesPage() {
                     <Button size="icon" variant="ghost" onClick={() => { setEditing(c); setForm(c); setOpen(true); }}>
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
-                    <Button size="icon" variant="ghost" onClick={() => {
-                      if (confirm(`Delete course ${c.code}?`)) { deleteCourse(c.id); toast.success("Deleted"); }
+                    <Button size="icon" variant="ghost" onClick={async () => {
+                      const ok = await confirmDialog({
+                        title: `Delete course ${c.code}?`,
+                        description: `${c.name} (Level ${c.level}, Term ${c.term}, ${c.credit} cr) will be permanently removed.`,
+                        destructive: true, confirmLabel: "Delete",
+                      });
+                      if (ok) { deleteCourse(c.id); toast.success("Deleted"); }
                     }}>
                       <Trash2 className="h-3.5 w-3.5 text-destructive" />
                     </Button>

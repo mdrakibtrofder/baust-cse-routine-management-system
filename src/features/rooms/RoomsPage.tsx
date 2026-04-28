@@ -15,11 +15,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Pencil, Trash2, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 import type { Room } from "@/lib/types";
+import { useConfirm } from "@/components/ConfirmDialog";
 
 const empty: Omit<Room, "id"> = { name: "", room_type: "Theory", capacity: 50 };
 
 export function RoomsPage() {
   const { rooms, addRoom, updateRoom, deleteRoom, replaceRooms } = useStore();
+  const confirmDialog = useConfirm();
   const [q, setQ] = useState("");
   const [editing, setEditing] = useState<Room | null>(null);
   const [open, setOpen] = useState(false);
@@ -88,8 +90,13 @@ export function RoomsPage() {
                     <Button size="icon" variant="ghost" onClick={() => { setEditing(r); setForm(r); setOpen(true); }}>
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
-                    <Button size="icon" variant="ghost" onClick={() => {
-                      if (confirm(`Delete room ${r.name}?`)) { deleteRoom(r.id); toast.success("Deleted"); }
+                    <Button size="icon" variant="ghost" onClick={async () => {
+                      const ok = await confirmDialog({
+                        title: `Delete room ${r.name}?`,
+                        description: `${r.room_type} room (capacity ${r.capacity}) will be permanently removed.`,
+                        destructive: true, confirmLabel: "Delete",
+                      });
+                      if (ok) { deleteRoom(r.id); toast.success("Deleted"); }
                     }}>
                       <Trash2 className="h-3.5 w-3.5 text-destructive" />
                     </Button>
