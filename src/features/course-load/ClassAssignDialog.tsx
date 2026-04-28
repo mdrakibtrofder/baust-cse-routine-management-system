@@ -800,8 +800,9 @@ function RoomDayGrid({
                   );
                 }
                 if (teacherBusy) {
+                  const t = data.teachers.find((x) => x.id === teacherBusy.teacherId);
                   issues.push(
-                    `Teacher already teaches ${teacherBusy.courseCode} (Sec ${teacherBusy.sectionName}) at this time.`,
+                    `Teacher ${t?.short_name ?? ""} already teaches ${teacherBusy.courseCode} (Sec ${teacherBusy.sectionName}) at this time.`,
                   );
                 }
                 if (dup) {
@@ -810,32 +811,47 @@ function RoomDayGrid({
                   );
                 }
 
+                const conflictCount = (booking ? 1 : 0) + (teacherBusy ? 1 : 0) + (dup ? 1 : 0);
+                const busyTeacher = teacherBusy
+                  ? data.teachers.find((x) => x.id === teacherBusy.teacherId)
+                  : null;
+
                 let inner: React.ReactNode;
-                if (booking) {
-                  const c = data.courses.find((c) => c.id === booking.course_id);
-                  const s = data.sections.find((s) => s.id === booking.section_id);
-                  inner = (
-                    <div className="rounded bg-destructive/10 hover:bg-destructive/20 border border-destructive/30 px-1.5 py-1 text-[10px] text-destructive cursor-pointer transition">
-                      <div className="font-semibold">{c?.code}</div>
-                      <div className="opacity-80">Sec {s?.name}</div>
-                    </div>
-                  );
-                } else if (teacherBusy) {
-                  inner = (
-                    <div className="rounded bg-warning/10 hover:bg-warning/25 border border-warning/30 px-1.5 py-1 text-[10px] text-warning-foreground/80 cursor-pointer transition">
-                      teacher busy
-                    </div>
-                  );
-                } else if (dup) {
-                  inner = (
-                    <div className="rounded bg-destructive/10 hover:bg-destructive/20 border border-destructive/30 px-1.5 py-1 text-[10px] text-destructive cursor-pointer transition">
-                      duplicate
-                    </div>
-                  );
-                } else {
+                if (conflictCount === 0) {
                   inner = (
                     <div className="w-full h-full rounded bg-success/10 hover:bg-success/25 border border-success/30 px-1.5 py-1.5 text-[10px] text-success font-medium transition">
                       Free
+                    </div>
+                  );
+                } else {
+                  // Use deeper red as the number of overlapping conflicts grows.
+                  const tone =
+                    conflictCount >= 2
+                      ? "bg-red-700/30 hover:bg-red-700/40 border-red-800 text-red-950 dark:text-red-100"
+                      : "bg-destructive/10 hover:bg-destructive/20 border-destructive/40 text-destructive";
+                  const bookedCourse = booking
+                    ? data.courses.find((c) => c.id === booking.course_id)
+                    : null;
+                  const bookedSec = booking
+                    ? data.sections.find((s) => s.id === booking.section_id)
+                    : null;
+                  inner = (
+                    <div className={cn("rounded border px-1.5 py-1 text-[10px] cursor-pointer transition", tone)}>
+                      {booking && (
+                        <div className="font-semibold">
+                          {bookedCourse?.code} · Sec {bookedSec?.name}
+                        </div>
+                      )}
+                      {busyTeacher && (
+                        <div className="font-mono">
+                          {busyTeacher.short_name}{" "}
+                          <span className="opacity-70">busy</span>
+                        </div>
+                      )}
+                      {dup && !booking && !busyTeacher && <div>duplicate</div>}
+                      {dup && (booking || busyTeacher) && (
+                        <div className="opacity-80">+ duplicate</div>
+                      )}
                     </div>
                   );
                 }
