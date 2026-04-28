@@ -8,14 +8,15 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
+  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Trash2, Plus, Search } from "lucide-react";
+import { Pencil, Trash2, Plus, Search, ArrowRightLeft } from "lucide-react";
 import { toast } from "sonner";
-import { teacherAssignedCreditUsed } from "@/lib/conflicts";
+import { teacherAssignedCreditUsed, teacherDependencies } from "@/lib/conflicts";
 import type { Teacher } from "@/lib/types";
 import { useConfirm } from "@/components/ConfirmDialog";
+import { TeacherMoveDialog } from "@/components/TeacherMoveDialog";
 
 const empty: Omit<Teacher, "id"> = {
   short_name: "", name: "", designation: "", department: "CSE",
@@ -30,6 +31,7 @@ export function TeachersPage() {
   const [editing, setEditing] = useState<Teacher | null>(null);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<Omit<Teacher, "id">>(empty);
+  const [moveTarget, setMoveTarget] = useState<Teacher | null>(null);
 
   const filtered = useMemo(
     () => teachers.filter(t =>
@@ -49,9 +51,18 @@ export function TeachersPage() {
     setForm(empty);
     setOpen(true);
   };
+
+  /** Uniqueness check: short_name must be unique (case-insensitive) */
+  const shortDuplicate = (sn: string, ignoreId?: string) =>
+    teachers.some(t => t.id !== ignoreId && t.short_name.trim().toLowerCase() === sn.trim().toLowerCase());
+
   const submit = () => {
     if (!form.short_name.trim() || !form.name.trim()) {
       toast.error("Short name and full name required");
+      return;
+    }
+    if (shortDuplicate(form.short_name, editing?.id)) {
+      toast.error(`Short name "${form.short_name}" is already used by another teacher`);
       return;
     }
     if (editing) {
@@ -64,21 +75,51 @@ export function TeachersPage() {
     setOpen(false);
   };
 
+  const tryDelete = async (t: Teacher) => {
+    const deps = teacherDependencies(data, t.id);
+    if (deps.length > 0) {
+      // Offer migration instead of blocking outright
+      const ok = await confirmDialog({
+        title: `${t.short_name} has ${deps.length} active assignment${deps.length === 1 ? "" : "s"}`,
+        description: `You can't simply delete this teacher because their classes/assignments depend on them. Move all of ${t.short_name}'s classes to another teacher? The original record will be kept.`,
+        confirmLabel: "Move classes…",
+      });
+      if (ok) setMoveTarget(t);
+      return;
+    }
+    const ok = await confirmDialog({
+      title: `Delete teacher ${t.short_name}?`,
+      description: `${t.name} (${t.designation || "Faculty"}) has no assignments and will be permanently removed.`,
+      destructive: true,
+      confirmLabel: "Delete",
+    });
+    if (ok) { deleteTeacher(t.id); toast.success("Deleted"); }
+  };
+
   return (
     <div>
       <PageHeader
         title="Teachers"
         subtitle={`${teachers.length} teachers · assigned credits & status`}
         onImport={(rows) => {
-          const list: Teacher[] = rows.map(r => ({
-            id: crypto.randomUUID(),
-            short_name: String(r["Short Name"] ?? r.short_name ?? "").trim(),
-            name: String(r["Full Name"] ?? r.name ?? "").trim(),
-            designation: String(r["Designation"] ?? r.designation ?? "").trim(),
-            department: String(r["Department"] ?? r.department ?? "").trim(),
-            status: String(r["Status"] ?? r.status ?? "").trim(),
-            assigned_credit: Number(r["Credits"] ?? r["assigned_credit"] ?? 0) || 0,
-          })).filter(t => t.short_name);
+          const seen = new Set<string>();
+          const list: Teacher[] = [];
+          for (const r of rows) {
+            const sn = String(r["Short Name"] ?? r.short_name ?? "").trim();
+            if (!sn) continue;
+            const key = sn.toLowerCase();
+            if (seen.has(key)) continue;
+            seen.add(key);
+            list.push({
+              id: crypto.randomUUID(),
+              short_name: sn,
+              name: String(r["Full Name"] ?? r.name ?? "").trim(),
+              designation: String(r["Designation"] ?? r.designation ?? "").trim(),
+              department: String(r["Department"] ?? r.department ?? "").trim(),
+              status: String(r["Status"] ?? r.status ?? "").trim(),
+              assigned_credit: Number(r["Credits"] ?? r["assigned_credit"] ?? 0) || 0,
+            });
+          }
           replaceTeachers(list);
         }}
         exportRows={() => teachers.map(t => ({
@@ -111,13 +152,14 @@ export function TeachersPage() {
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Credits</TableHead>
                 <TableHead className="text-right">Used</TableHead>
-                <TableHead className="text-right w-24">Actions</TableHead>
+                <TableHead className="text-right w-28">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.map(t => {
                 const used = teacherAssignedCreditUsed(data, t.id);
                 const over = t.assigned_credit > 0 && used > t.assigned_credit + 0.001;
+                const depCount = teacherDependencies(data, t.id).length;
                 return (
                   <TableRow key={t.id}>
                     <TableCell className="font-mono font-medium">{t.short_name}</TableCell>
@@ -134,18 +176,16 @@ export function TeachersPage() {
                       </span>
                     </TableCell>
                     <TableCell className="text-right">
+                      {depCount > 0 && (
+                        <Button size="icon" variant="ghost" title={`Move ${depCount} assignment(s) to another teacher`}
+                          onClick={() => setMoveTarget(t)}>
+                          <ArrowRightLeft className="h-3.5 w-3.5 text-warning" />
+                        </Button>
+                      )}
                       <Button size="icon" variant="ghost" onClick={() => startEdit(t)}>
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
-                      <Button size="icon" variant="ghost" onClick={async () => {
-                        const ok = await confirmDialog({
-                          title: `Delete teacher ${t.short_name}?`,
-                          description: `${t.name} (${t.designation || "Faculty"}) will be permanently removed.`,
-                          destructive: true,
-                          confirmLabel: "Delete",
-                        });
-                        if (ok) { deleteTeacher(t.id); toast.success("Deleted"); }
-                      }}>
+                      <Button size="icon" variant="ghost" onClick={() => tryDelete(t)}>
                         <Trash2 className="h-3.5 w-3.5 text-destructive" />
                       </Button>
                     </TableCell>
@@ -166,6 +206,9 @@ export function TeachersPage() {
             <div>
               <Label>Short name</Label>
               <Input value={form.short_name} onChange={(e) => setForm({ ...form, short_name: e.target.value })} />
+              {form.short_name && shortDuplicate(form.short_name, editing?.id) && (
+                <p className="text-[11px] text-destructive mt-1">Short name already in use</p>
+              )}
             </div>
             <div>
               <Label>Department</Label>
@@ -197,6 +240,14 @@ export function TeachersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <TeacherMoveDialog
+        open={!!moveTarget}
+        onOpenChange={(v) => !v && setMoveTarget(null)}
+        fromTeacher={moveTarget}
+        dependencies={moveTarget ? teacherDependencies(data, moveTarget.id) : []}
+        onMoved={() => toast.success("Classes moved. Old teacher record kept.")}
+      />
     </div>
   );
 }
