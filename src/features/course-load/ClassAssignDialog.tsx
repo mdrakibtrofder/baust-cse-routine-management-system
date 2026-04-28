@@ -750,8 +750,8 @@ function RoomDayGrid({
                   key={p.id}
                   className={cn(
                     "text-center px-1.5 py-1.5 font-medium border-b border-r min-w-[100px]",
-                    teacherBusy && "bg-warning/10",
-                    dup && "bg-destructive/10",
+                    (teacherBusy || dup) && "bg-destructive/10",
+                    teacherBusy && dup && "bg-red-700/20",
                   )}
                 >
                   <div className="font-mono">
