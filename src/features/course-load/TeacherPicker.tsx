@@ -9,6 +9,7 @@ import type { Course, Section } from "@/lib/types";
 import { COURSE_TYPE_INFO } from "@/lib/types";
 import { teacherWouldExceed } from "@/lib/conflicts";
 import { cn } from "@/lib/utils";
+import { RankPill } from "@/components/TeacherBadge";
 
 export function TeacherPicker({ course, section, slotIndex }: {
   course: Course; section: Section; slotIndex: number;
@@ -53,8 +54,8 @@ export function TeacherPicker({ course, section, slotIndex }: {
         >
           {selected ? (
             <>
+              <RankPill designation={selected.designation} />
               <span className="font-mono font-medium">{selected.short_name}</span>
-              <span className="text-muted-foreground text-[10px]">{selected.designation.split(" ").map(w => w[0]).join("")}</span>
             </>
           ) : (
             <span>+ T{slotIndex + 1}</span>
@@ -91,6 +92,7 @@ export function TeacherPicker({ course, section, slotIndex }: {
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
+                    <RankPill designation={t.designation} />
                     <span className="font-mono font-semibold">{t.short_name}</span>
                     <span className="text-muted-foreground truncate">{t.name}</span>
                   </div>
