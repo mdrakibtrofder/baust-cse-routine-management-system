@@ -48,15 +48,15 @@ export function TeacherDetailsDialog({
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
           <InfoCard icon={Building2} label="Department" value={teacher.department || "—"} />
-          <InfoCard icon={Briefcase} label="Status" value={teacher.status || "—"} />
+          <InfoCard icon={Briefcase} label="Designation" value={teacher.designation || "—"} />
           <InfoCard
             icon={Award}
-            label="Assigned Credit"
+            label="Total Credit"
             value={`${teacher.assigned_credit}`}
           />
           <InfoCard
             icon={BookOpen}
-            label="Used / Remaining"
+            label="Assigned / Remaining"
             value={
               <span>
                 <span

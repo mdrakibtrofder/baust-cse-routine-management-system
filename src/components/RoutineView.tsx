@@ -71,17 +71,17 @@ export function RoutineView({
 
       <div className="rounded-xl overflow-hidden border bg-card shadow-sm">
         <div className="overflow-auto">
-          <table className="w-full border-collapse text-xs">
+          <table className="w-full border-collapse text-xs [&_th]:border [&_td]:border [&_th]:border-border [&_td]:border-border">
             <thead>
               <tr style={{ background: "var(--gradient-primary)", color: "var(--primary-foreground)" }}>
-                <th className="text-left px-3 py-3 font-semibold sticky left-0 z-10" style={{ background: "var(--primary)" }}>
+                <th className="text-left px-3 py-3 font-semibold sticky left-0 z-10 border-r-2 border-primary-foreground/20" style={{ background: "var(--primary)" }}>
                   Day
                 </th>
                 {periods.map((p) => (
                   <th
                     key={p.id}
                     className={cn(
-                      "px-2 py-3 text-center font-semibold whitespace-nowrap min-w-[110px]",
+                      "px-2 py-3 text-center font-semibold whitespace-nowrap min-w-[110px] border-l border-primary-foreground/20",
                       isBreak(p.id) && "bg-amber-400/90 text-amber-950",
                     )}
                   >

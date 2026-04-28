@@ -108,7 +108,7 @@ export function RoomsPage() {
                 <TableHead>Room</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead className="text-right">Capacity</TableHead>
-                <TableHead className="text-right">Used</TableHead>
+                <TableHead className="text-right">Assigned</TableHead>
                 <TableHead className="text-right w-24">Actions</TableHead>
               </TableRow>
             </TableHeader>
