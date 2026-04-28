@@ -24,14 +24,18 @@ export function TeacherDetailsDialog({
   const used = teacherAssignedCreditUsed(data, teacher.id);
   const remaining = teacher.assigned_credit - used;
 
-  // collect all course-section assignments
+  // collect all course-section assignments for the active semester
+  const sem = data.active_semester_id;
   const assignments = data.course_section_teachers
-    .filter((cst) => cst.teacher_ids.includes(teacher.id))
+    .filter((cst) => cst.semester_id === sem && cst.teacher_ids.includes(teacher.id))
     .map((cst) => {
       const course = data.courses.find((c) => c.id === cst.course_id);
       const section = data.sections.find((s) => s.id === cst.section_id);
       const slots = data.class_slots.filter(
-        (sl) => sl.course_id === cst.course_id && sl.section_id === cst.section_id,
+        (sl) =>
+          sl.semester_id === sem &&
+          sl.course_id === cst.course_id &&
+          sl.section_id === cst.section_id,
       );
       return { cst, course, section, slots };
     })

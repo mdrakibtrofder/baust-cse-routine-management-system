@@ -161,11 +161,11 @@ function SectionCell({ course, section, onAssign }: {
   const data = useStore();
   const info = COURSE_TYPE_INFO[course.course_type];
   const cst = data.course_section_teachers.find(
-    x => x.course_id === course.id && x.section_id === section.id
+    x => x.semester_id === data.active_semester_id && x.course_id === course.id && x.section_id === section.id
   );
   const teacherIds = cst?.teacher_ids ?? [];
   const slots = data.class_slots
-    .filter(s => s.course_id === course.id && s.section_id === section.id)
+    .filter(s => s.semester_id === data.active_semester_id && s.course_id === course.id && s.section_id === section.id)
     .sort((a, b) => a.day.localeCompare(b.day) || a.start.localeCompare(b.start));
 
   // gather conflicts on existing slots
