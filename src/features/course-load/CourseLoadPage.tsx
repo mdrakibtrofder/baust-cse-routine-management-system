@@ -3,7 +3,7 @@ import { useStore } from "@/lib/store";
 import { PageHeader } from "@/components/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, AlertCircle, Check } from "lucide-react";
+import { Calendar, AlertCircle, Check, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Course, Section } from "@/lib/types";
 import { COURSE_TYPE_INFO } from "@/lib/types";
@@ -90,8 +90,12 @@ function LevelTermBlock({ level, term, courses, sections, onAssign }: {
         </div>
         <div className="flex gap-1">
           {sections.map(s => (
-            <Badge key={s.id} variant="secondary" className="bg-white/20 text-white border-white/30 hover:bg-white/30">
-              {s.name} · {s.total_students}
+            <Badge key={s.id} variant="secondary" className="bg-white/20 text-white border-white/30 hover:bg-white/30 gap-1.5">
+              <span>Section {s.name}</span>
+              <span className="inline-flex items-center gap-0.5 opacity-90">
+                <Users className="h-3 w-3" />
+                {s.total_students}
+              </span>
             </Badge>
           ))}
         </div>
@@ -104,10 +108,16 @@ function LevelTermBlock({ level, term, courses, sections, onAssign }: {
               <th className="text-left px-3 py-2 font-medium">Code</th>
               <th className="text-left px-3 py-2 font-medium min-w-[200px]">Title</th>
               <th className="text-center px-3 py-2 font-medium">Credit</th>
-              <th className="text-center px-3 py-2 font-medium">Type</th>
+              <th className="text-center px-3 py-2 font-medium">Total Hours</th>
               {sections.map(s => (
                 <th key={s.id} className="text-left px-3 py-2 font-medium border-l min-w-[260px]">
-                  Section {s.name}
+                  <div className="flex items-center gap-2">
+                    <span>Section {s.name}</span>
+                    <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground font-normal">
+                      <Users className="h-3 w-3" />
+                      {s.total_students}
+                    </span>
+                  </div>
                 </th>
               ))}
             </tr>
@@ -190,10 +200,13 @@ function SectionCell({ course, section, onAssign }: {
         >
           {slots.length === 0 ? (
             <span className="flex items-center gap-1.5">
-              <Calendar className="h-3 w-3" /> Assign {info.classCount} class{info.classCount > 1 ? "es" : ""}
+              <Calendar className="h-3 w-3" /> Class Schedule — assign {info.classCount} class{info.classCount > 1 ? "es" : ""}
             </span>
           ) : (
             <div className="space-y-0.5">
+              <div className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                <Calendar className="h-3 w-3" /> Class Schedule
+              </div>
               {slots.map(slot => {
                 const room = data.rooms.find(r => r.id === slot.room_id);
                 return (

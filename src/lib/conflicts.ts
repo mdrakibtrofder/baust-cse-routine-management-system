@@ -161,15 +161,54 @@ export function teacherWouldExceed(
   };
 }
 
-/** Find available rooms for a candidate (matching room kind + capacity + not booked) */
+/** Are any of the listed teachers busy on the candidate day/time? */
+export function teachersBusyAt(
+  data: AppData,
+  teacherIds: string[],
+  candidate: { day: string; start: string; end: string; week: WeekPattern },
+  ignoreSlotId?: string,
+  ignoreCourseSection?: { course_id: string; section_id: string },
+): { teacherId: string; slot: ClassSlot } | null {
+  for (const slot of data.class_slots) {
+    if (slot.id === ignoreSlotId) continue;
+    if (slot.day !== candidate.day) continue;
+    if (!timesOverlap(slot.start, slot.end, candidate.start, candidate.end)) continue;
+    if (!weeksOverlap(slot.week, candidate.week)) continue;
+    if (
+      ignoreCourseSection &&
+      slot.course_id === ignoreCourseSection.course_id &&
+      slot.section_id === ignoreCourseSection.section_id
+    )
+      continue;
+    const cst = data.course_section_teachers.find(
+      (x) => x.course_id === slot.course_id && x.section_id === slot.section_id,
+    );
+    if (!cst) continue;
+    for (const tid of teacherIds) {
+      if (cst.teacher_ids.includes(tid)) return { teacherId: tid, slot };
+    }
+  }
+  return null;
+}
+
+/** Find available rooms for a candidate (matching room kind + capacity + not booked + teachers free) */
 export function findAvailableRooms(
   data: AppData,
   course: Course,
   section: Section,
   candidate: { day: string; start: string; end: string; week: WeekPattern },
   ignoreSlotId?: string,
+  teacherIds: string[] = [],
 ): Room[] {
   const info = COURSE_TYPE_INFO[course.course_type];
+  // If teachers are busy, no room is "available" for this slot.
+  if (teacherIds.length > 0) {
+    const busy = teachersBusyAt(data, teacherIds, candidate, ignoreSlotId, {
+      course_id: course.id,
+      section_id: section.id,
+    });
+    if (busy) return [];
+  }
   return data.rooms.filter((room) => {
     if (info.roomKind === "sessional" && room.room_type !== "Sessional") return false;
     if (info.roomKind === "theory" && room.room_type !== "Theory") return false;
