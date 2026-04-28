@@ -1,4 +1,5 @@
-import { read, utils } from "xlsx";
+import pkg from "xlsx";
+const { read, utils, writeFileXLSX } = pkg;
 
 export async function readExcelFile(file: File): Promise<Record<string, any>[]> {
   const buf = await file.arrayBuffer();

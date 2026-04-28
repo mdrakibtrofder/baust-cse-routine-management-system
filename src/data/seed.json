@@ -1811,8 +1811,8 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "08:00",
-          "end": "11:00",
+          "start": "08:00 AM",
+          "end": "11:00 AM",
           "room": "311",
           "week": "EVERY"
         }
@@ -1830,22 +1830,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "306",
           "week": "EVERY"
         }
@@ -1862,22 +1862,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "307",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "308",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "309",
           "week": "EVERY"
         }
@@ -1894,22 +1894,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "307",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "308",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "309",
           "week": "EVERY"
         }
@@ -1927,8 +1927,8 @@
       "classes": [
         {
           "day": "MON",
-          "start": "11:30",
-          "end": "02:30",
+          "start": "11:30 AM",
+          "end": "02:30 AM",
           "room": "311",
           "week": "EVERY"
         }
@@ -1946,22 +1946,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "310",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "305",
           "week": "EVERY"
         }
@@ -1978,22 +1978,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "306",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "307",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "308",
           "week": "EVERY"
         }
@@ -2010,22 +2010,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "306",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "307",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "308",
           "week": "EVERY"
         }
@@ -2042,8 +2042,8 @@
       "classes": [
         {
           "day": "WED",
-          "start": "08:00",
-          "end": "11:00",
+          "start": "08:00 AM",
+          "end": "11:00 AM",
           "room": "302",
           "week": "EVERY"
         }
@@ -2060,22 +2060,22 @@
       "classes": [
         {
           "day": "MON",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "309",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "310",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "304",
           "week": "EVERY"
         }
@@ -2092,22 +2092,22 @@
       "classes": [
         {
           "day": "MON",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "306",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "307",
           "week": "EVERY"
         }
@@ -2124,22 +2124,22 @@
       "classes": [
         {
           "day": "MON",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "306",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "307",
           "week": "EVERY"
         }
@@ -2156,22 +2156,22 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "308",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "309",
           "week": "EVERY"
         },
         {
           "day": "SUN",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "310",
           "week": "EVERY"
         }
@@ -2188,22 +2188,22 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "308",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "309",
           "week": "EVERY"
         },
         {
           "day": "SUN",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "310",
           "week": "EVERY"
         }
@@ -2220,8 +2220,8 @@
       "classes": [
         {
           "day": "THU",
-          "start": "08:00",
-          "end": "11:00",
+          "start": "08:00 AM",
+          "end": "11:00 AM",
           "room": "302",
           "week": "EVEN"
         }
@@ -2238,22 +2238,22 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "306",
           "week": "EVERY"
         }
@@ -2270,22 +2270,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "305",
           "week": "EVERY"
         }
@@ -2302,22 +2302,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "305",
           "week": "EVERY"
         }
@@ -2334,22 +2334,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "306",
           "week": "EVERY"
         }
@@ -2366,22 +2366,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "306",
           "week": "EVERY"
         }
@@ -2398,22 +2398,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "307",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "308",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "309",
           "week": "EVERY"
         }
@@ -2430,22 +2430,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "307",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "308",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "309",
           "week": "EVERY"
         }
@@ -2463,8 +2463,8 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "08:00",
-          "end": "11:00",
+          "start": "08:00 AM",
+          "end": "11:00 AM",
           "room": "302",
           "week": "EVERY"
         }
@@ -2482,22 +2482,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "310",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "305",
           "week": "EVERY"
         }
@@ -2515,8 +2515,8 @@
       "classes": [
         {
           "day": "WED",
-          "start": "08:00",
-          "end": "11:00",
+          "start": "08:00 AM",
+          "end": "11:00 AM",
           "room": "311",
           "week": "EVERY"
         }
@@ -2534,22 +2534,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "306",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "307",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "308",
           "week": "EVERY"
         }
@@ -2566,22 +2566,22 @@
       "classes": [
         {
           "day": "MON",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "309",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "310",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "304",
           "week": "EVERY"
         }
@@ -2598,22 +2598,22 @@
       "classes": [
         {
           "day": "MON",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "309",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "310",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "304",
           "week": "EVERY"
         }
@@ -2630,22 +2630,22 @@
       "classes": [
         {
           "day": "MON",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "306",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "307",
           "week": "EVERY"
         }
@@ -2662,22 +2662,22 @@
       "classes": [
         {
           "day": "MON",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "306",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "307",
           "week": "EVERY"
         }
@@ -2694,8 +2694,8 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "08:00",
-          "end": "11:00",
+          "start": "08:00 AM",
+          "end": "11:00 AM",
           "room": "311",
           "week": "EVEN"
         }
@@ -2712,22 +2712,22 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "308",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "309",
           "week": "EVERY"
         },
         {
           "day": "SUN",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "310",
           "week": "EVERY"
         }
@@ -2744,8 +2744,8 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "08:00",
-          "end": "11:00",
+          "start": "08:00 AM",
+          "end": "11:00 AM",
           "room": "311",
           "week": "ODD"
         }
@@ -2762,22 +2762,22 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "306",
           "week": "EVERY"
         }
@@ -2794,8 +2794,8 @@
       "classes": [
         {
           "day": "THU",
-          "start": "08:00",
-          "end": "11:00",
+          "start": "08:00 AM",
+          "end": "11:00 AM",
           "room": "302",
           "week": "ODD"
         }
@@ -2812,22 +2812,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "305",
           "week": "EVERY"
         }
@@ -2865,22 +2865,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "306",
           "week": "EVERY"
         }
@@ -2897,22 +2897,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "306",
           "week": "EVERY"
         }
@@ -2929,22 +2929,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "307",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "308",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "309",
           "week": "EVERY"
         }
@@ -2961,22 +2961,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "307",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "308",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "309",
           "week": "EVERY"
         }
@@ -2993,8 +2993,8 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "08:00",
-          "end": "11:00",
+          "start": "08:00 AM",
+          "end": "11:00 AM",
           "room": "302",
           "week": "EVERY"
         }
@@ -3011,22 +3011,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "310",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "305",
           "week": "EVERY"
         }
@@ -3043,22 +3043,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "306",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "307",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "308",
           "week": "EVERY"
         }
@@ -3075,22 +3075,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "306",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "307",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "308",
           "week": "EVERY"
         }
@@ -3108,8 +3108,8 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "08:00",
-          "end": "11:00",
+          "start": "08:00 AM",
+          "end": "11:00 AM",
           "room": "311",
           "week": "EVERY"
         }
@@ -3126,22 +3126,22 @@
       "classes": [
         {
           "day": "MON",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "309",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "310",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "304",
           "week": "EVERY"
         }
@@ -3158,22 +3158,22 @@
       "classes": [
         {
           "day": "MON",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "306",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "307",
           "week": "EVERY"
         }
@@ -3190,22 +3190,22 @@
       "classes": [
         {
           "day": "MON",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "306",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "307",
           "week": "EVERY"
         }
@@ -3223,8 +3223,8 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "08:00",
-          "end": "11:00",
+          "start": "08:00 AM",
+          "end": "11:00 AM",
           "room": "311",
           "week": "EVERY"
         }
@@ -3241,22 +3241,22 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "308",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "309",
           "week": "EVERY"
         },
         {
           "day": "SUN",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "310",
           "week": "EVERY"
         }
@@ -3273,22 +3273,22 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "306",
           "week": "EVERY"
         }
@@ -3305,22 +3305,22 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "306",
           "week": "EVERY"
         }
@@ -3337,22 +3337,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "305",
           "week": "EVERY"
         }
@@ -3369,22 +3369,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "305",
           "week": "EVERY"
         }
@@ -3401,22 +3401,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "306",
           "week": "EVERY"
         }
@@ -3433,22 +3433,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "306",
           "week": "EVERY"
         }
@@ -3465,22 +3465,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "306",
           "week": "EVERY"
         }
@@ -3498,8 +3498,8 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "08:00",
-          "end": "11:00",
+          "start": "08:00 AM",
+          "end": "11:00 AM",
           "room": "311",
           "week": "EVERY"
         }
@@ -3517,22 +3517,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "307",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "308",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "309",
           "week": "EVERY"
         }
@@ -3550,22 +3550,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "307",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "308",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "309",
           "week": "EVERY"
         }
@@ -3582,22 +3582,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "310",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "305",
           "week": "EVERY"
         }
@@ -3614,22 +3614,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "310",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "305",
           "week": "EVERY"
         }
@@ -3646,22 +3646,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "310",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "305",
           "week": "EVERY"
         }
@@ -3678,22 +3678,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "306",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "307",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "308",
           "week": "EVERY"
         }
@@ -3710,22 +3710,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "306",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "307",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "308",
           "week": "EVERY"
         }
@@ -3742,22 +3742,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "306",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "307",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "308",
           "week": "EVERY"
         }
@@ -3786,22 +3786,22 @@
       "classes": [
         {
           "day": "MON",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "309",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "310",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "304",
           "week": "EVERY"
         }
@@ -3819,22 +3819,22 @@
       "classes": [
         {
           "day": "MON",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "309",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "310",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "304",
           "week": "EVERY"
         }
@@ -3851,22 +3851,22 @@
       "classes": [
         {
           "day": "MON",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "306",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "307",
           "week": "EVERY"
         }
@@ -3883,22 +3883,22 @@
       "classes": [
         {
           "day": "MON",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "306",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "307",
           "week": "EVERY"
         }
@@ -3915,8 +3915,8 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "08:00",
-          "end": "11:00",
+          "start": "08:00 AM",
+          "end": "11:00 AM",
           "room": "311",
           "week": "EVEN"
         }
@@ -3933,22 +3933,22 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "308",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "309",
           "week": "EVERY"
         },
         {
           "day": "SUN",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "310",
           "week": "EVERY"
         }
@@ -3965,22 +3965,22 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "306",
           "week": "EVERY"
         }
@@ -3997,22 +3997,22 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "306",
           "week": "EVERY"
         }
@@ -4029,15 +4029,15 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         }
@@ -4054,15 +4054,15 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         }
@@ -4080,22 +4080,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "306",
           "week": "EVERY"
         }
@@ -4113,22 +4113,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "306",
           "week": "EVERY"
         }
@@ -4145,22 +4145,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "307",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "308",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "309",
           "week": "EVERY"
         }
@@ -4177,22 +4177,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "307",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "308",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "309",
           "week": "EVERY"
         }
@@ -4210,22 +4210,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "310",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "305",
           "week": "EVERY"
         }
@@ -4243,22 +4243,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "310",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "305",
           "week": "EVERY"
         }
@@ -4275,22 +4275,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "306",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "307",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "308",
           "week": "EVERY"
         }
@@ -4307,22 +4307,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "306",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "307",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "308",
           "week": "EVERY"
         }
@@ -4340,22 +4340,22 @@
       "classes": [
         {
           "day": "MON",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "309",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "310",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "304",
           "week": "EVERY"
         }
@@ -4373,22 +4373,22 @@
       "classes": [
         {
           "day": "MON",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "309",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "310",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "304",
           "week": "EVERY"
         }
@@ -4405,22 +4405,22 @@
       "classes": [
         {
           "day": "MON",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "306",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "307",
           "week": "EVERY"
         }
@@ -4437,22 +4437,22 @@
       "classes": [
         {
           "day": "MON",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "306",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "307",
           "week": "EVERY"
         }
@@ -4469,22 +4469,22 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "308",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "309",
           "week": "EVERY"
         },
         {
           "day": "SUN",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "310",
           "week": "EVERY"
         }
@@ -4501,22 +4501,22 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "308",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "309",
           "week": "EVERY"
         },
         {
           "day": "SUN",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "310",
           "week": "EVERY"
         }
@@ -4533,22 +4533,22 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "306",
           "week": "EVERY"
         }
@@ -4565,22 +4565,22 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "306",
           "week": "EVERY"
         }
@@ -4598,8 +4598,8 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "08:00",
-          "end": "11:00",
+          "start": "08:00 AM",
+          "end": "11:00 AM",
           "room": "311",
           "week": "EVEN"
         }
@@ -4617,22 +4617,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "305",
           "week": "EVERY"
         }
@@ -4681,22 +4681,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "306",
           "week": "EVERY"
         }
@@ -4713,22 +4713,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "307",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "308",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "309",
           "week": "EVERY"
         }
@@ -4745,22 +4745,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "307",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "308",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "309",
           "week": "EVERY"
         }
@@ -4778,8 +4778,8 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "08:00",
-          "end": "11:00",
+          "start": "08:00 AM",
+          "end": "11:00 AM",
           "room": "311",
           "week": "EVEN"
         }
@@ -4797,22 +4797,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "310",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "305",
           "week": "EVERY"
         }
@@ -4829,22 +4829,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "306",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "307",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "308",
           "week": "EVERY"
         }
@@ -4861,22 +4861,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "306",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "307",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "308",
           "week": "EVERY"
         }
@@ -4894,22 +4894,22 @@
       "classes": [
         {
           "day": "MON",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "309",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "310",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "304",
           "week": "EVERY"
         }
@@ -4927,22 +4927,22 @@
       "classes": [
         {
           "day": "MON",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "309",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "310",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "304",
           "week": "EVERY"
         }
@@ -4959,22 +4959,22 @@
       "classes": [
         {
           "day": "MON",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "306",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "307",
           "week": "EVERY"
         }
@@ -4991,22 +4991,22 @@
       "classes": [
         {
           "day": "MON",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "306",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "307",
           "week": "EVERY"
         }
@@ -5035,22 +5035,22 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "308",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "309",
           "week": "EVERY"
         },
         {
           "day": "SUN",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "310",
           "week": "EVERY"
         }
@@ -5067,22 +5067,22 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "306",
           "week": "EVERY"
         }
@@ -5099,22 +5099,22 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "306",
           "week": "EVERY"
         }
@@ -5131,22 +5131,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "305",
           "week": "EVERY"
         }
@@ -5163,22 +5163,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "305",
           "week": "EVERY"
         }
@@ -5215,22 +5215,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "306",
           "week": "EVERY"
         }
@@ -5245,22 +5245,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "306",
           "week": "EVERY"
         }
@@ -5277,22 +5277,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "307",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "308",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "309",
           "week": "EVERY"
         }
@@ -5309,22 +5309,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "307",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "308",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "309",
           "week": "EVERY"
         }
@@ -5341,22 +5341,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "310",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "305",
           "week": "EVERY"
         }
@@ -5373,22 +5373,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "310",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "305",
           "week": "EVERY"
         }
@@ -5406,22 +5406,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "306",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "307",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "308",
           "week": "EVERY"
         }
@@ -5439,22 +5439,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "306",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "307",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "308",
           "week": "EVERY"
         }
@@ -5471,22 +5471,22 @@
       "classes": [
         {
           "day": "MON",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "309",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "310",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "304",
           "week": "EVERY"
         }
@@ -5503,22 +5503,22 @@
       "classes": [
         {
           "day": "MON",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "309",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "310",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "304",
           "week": "EVERY"
         }
@@ -5536,8 +5536,8 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "08:00",
-          "end": "11:00",
+          "start": "08:00 AM",
+          "end": "11:00 AM",
           "room": "311",
           "week": "ODD"
         }
@@ -5555,22 +5555,22 @@
       "classes": [
         {
           "day": "MON",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "306",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "307",
           "week": "EVERY"
         }
@@ -5587,22 +5587,22 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "308",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "309",
           "week": "EVERY"
         },
         {
           "day": "SUN",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "310",
           "week": "EVERY"
         }
@@ -5619,22 +5619,22 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "308",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "309",
           "week": "EVERY"
         },
         {
           "day": "SUN",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "310",
           "week": "EVERY"
         }
@@ -5651,22 +5651,22 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "306",
           "week": "EVERY"
         }
@@ -5683,22 +5683,22 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "306",
           "week": "EVERY"
         }
@@ -5716,8 +5716,8 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "08:00",
-          "end": "11:00",
+          "start": "08:00 AM",
+          "end": "11:00 AM",
           "room": "311",
           "week": "EVEN"
         }
@@ -5735,22 +5735,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "305",
           "week": "EVERY"
         }
@@ -5807,22 +5807,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "306",
           "week": "EVERY"
         }
@@ -5839,15 +5839,15 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "307",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "308",
           "week": "EVERY"
         }
@@ -5864,22 +5864,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "310",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "305",
           "week": "EVERY"
         }
@@ -5896,15 +5896,15 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "306",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "307",
           "week": "EVERY"
         }
@@ -5921,22 +5921,22 @@
       "classes": [
         {
           "day": "MON",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "309",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "310",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "304",
           "week": "EVERY"
         }
@@ -5954,8 +5954,8 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "08:00",
-          "end": "11:00",
+          "start": "08:00 AM",
+          "end": "11:00 AM",
           "room": "311",
           "week": "EVEN"
         }
@@ -5972,22 +5972,22 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "308",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "309",
           "week": "EVERY"
         },
         {
           "day": "SUN",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "310",
           "week": "EVERY"
         }
@@ -6005,22 +6005,22 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "306",
           "week": "EVERY"
         }
@@ -6037,22 +6037,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "306",
           "week": "EVERY"
         }
@@ -6069,22 +6069,22 @@
       "classes": [
         {
           "day": "SUN",
-          "start": "09:00",
-          "end": "10:00",
+          "start": "09:00 AM",
+          "end": "10:00 AM",
           "room": "307",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "308",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "309",
           "week": "EVERY"
         }
@@ -6101,22 +6101,22 @@
       "classes": [
         {
           "day": "MON",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "309",
           "week": "EVERY"
         },
         {
           "day": "TUE",
-          "start": "10:00",
-          "end": "11:00",
+          "start": "10:00 AM",
+          "end": "11:00 AM",
           "room": "310",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "304",
           "week": "EVERY"
         }
@@ -6133,22 +6133,22 @@
       "classes": [
         {
           "day": "MON",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "11:30",
-          "end": "12:30",
+          "start": "11:30 AM",
+          "end": "12:30 PM",
           "room": "306",
           "week": "EVERY"
         },
         {
           "day": "THU",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "307",
           "week": "EVERY"
         }
@@ -6165,22 +6165,22 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "308",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "309",
           "week": "EVERY"
         },
         {
           "day": "SUN",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "310",
           "week": "EVERY"
         }
@@ -6197,22 +6197,22 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "306",
           "week": "EVERY"
         }
@@ -6229,22 +6229,22 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "308",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "309",
           "week": "EVERY"
         },
         {
           "day": "SUN",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "310",
           "week": "EVERY"
         }
@@ -6261,22 +6261,22 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "306",
           "week": "EVERY"
         }
@@ -6293,22 +6293,22 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "308",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "309",
           "week": "EVERY"
         },
         {
           "day": "SUN",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "310",
           "week": "EVERY"
         }
@@ -6325,22 +6325,22 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "308",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "309",
           "week": "EVERY"
         },
         {
           "day": "SUN",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "310",
           "week": "EVERY"
         }
@@ -6358,22 +6358,22 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "306",
           "week": "EVERY"
         }
@@ -6391,22 +6391,22 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "306",
           "week": "EVERY"
         }
@@ -6424,15 +6424,15 @@
       "classes": [
         {
           "day": "WED",
-          "start": "12:30",
-          "end": "01:30",
+          "start": "12:30 PM",
+          "end": "01:30 AM",
           "room": "309",
           "week": "EVERY"
         },
         {
           "day": "SUN",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "310",
           "week": "EVERY"
         }
@@ -6460,22 +6460,22 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "306",
           "week": "EVERY"
         }
@@ -6492,22 +6492,22 @@
       "classes": [
         {
           "day": "TUE",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "304",
           "week": "EVERY"
         },
         {
           "day": "WED",
-          "start": "01:30",
-          "end": "02:30",
+          "start": "01:30 AM",
+          "end": "02:30 AM",
           "room": "305",
           "week": "EVERY"
         },
         {
           "day": "MON",
-          "start": "08:00",
-          "end": "09:00",
+          "start": "08:00 AM",
+          "end": "09:00 AM",
           "room": "306",
           "week": "EVERY"
         }
@@ -6517,65 +6517,65 @@
   "periods": [
     {
       "id": "6ffe2392-ecc5-4fea-aa03-a1dad7538272",
-      "name": "08:00-09:00",
-      "start": "08:00",
-      "end": "09:00",
+      "name": "08:00 AM-09:00 AM",
+      "start": "08:00 AM",
+      "end": "09:00 AM",
       "duration": 60,
       "kind": "theory"
     },
     {
       "id": "a3f5a482-4897-4064-b2e6-12041f0faf1d",
-      "name": "09:00-10:00",
-      "start": "09:00",
-      "end": "10:00",
+      "name": "09:00 AM-10:00 AM",
+      "start": "09:00 AM",
+      "end": "10:00 AM",
       "duration": 60,
       "kind": "theory"
     },
     {
       "id": "1636b405-9a62-4ba4-88b5-5bb4b9b151f2",
-      "name": "10:00-11:00",
-      "start": "10:00",
-      "end": "11:00",
+      "name": "10:00 AM-11:00 AM",
+      "start": "10:00 AM",
+      "end": "11:00 AM",
       "duration": 60,
       "kind": "theory"
     },
     {
       "id": "bfbe1521-0fa5-4987-af60-6ae330fcb469",
-      "name": "11:30-12:30",
-      "start": "11:30",
-      "end": "12:30",
+      "name": "11:30 AM-12:30 PM",
+      "start": "11:30 AM",
+      "end": "12:30 PM",
       "duration": 60,
       "kind": "theory"
     },
     {
       "id": "be489c38-e6d5-4035-85f2-6486a8319f22",
-      "name": "12:30-13:30",
-      "start": "12:30",
-      "end": "13:30",
+      "name": "12:30 PM-01:30 PM",
+      "start": "12:30 PM",
+      "end": "01:30 PM",
       "duration": 60,
       "kind": "theory"
     },
     {
       "id": "93624179-e3e4-4d1e-8151-14d94409e669",
-      "name": "13:30-14:30",
-      "start": "13:30",
-      "end": "14:30",
+      "name": "01:30 PM-02:30 PM",
+      "start": "01:30 PM",
+      "end": "02:30 PM",
       "duration": 60,
       "kind": "theory"
     },
     {
       "id": "5b3dbdbd-a837-4450-a9c6-51ad77049588",
-      "name": "08:00-11:00",
-      "start": "08:00",
-      "end": "11:00",
+      "name": "08:00 AM-11:00 AM",
+      "start": "08:00 AM",
+      "end": "11:00 AM",
       "duration": 180,
       "kind": "sessional"
     },
     {
       "id": "62fd6b96-984b-4b75-a518-88c972c8f76e",
-      "name": "11:30-14:30",
-      "start": "11:30",
-      "end": "14:30",
+      "name": "11:30 AM-02:30 PM",
+      "start": "11:30 AM",
+      "end": "02:30 PM",
       "duration": 180,
       "kind": "sessional"
     }
