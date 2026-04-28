@@ -11,12 +11,13 @@ import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Trash2, Plus, Search, ArrowRightLeft } from "lucide-react";
+import { Pencil, Trash2, Plus, Search, ArrowRightLeft, CalendarDays } from "lucide-react";
 import { toast } from "sonner";
 import { teacherAssignedCreditUsed, teacherDependencies } from "@/lib/conflicts";
 import type { Teacher } from "@/lib/types";
 import { useConfirm } from "@/components/ConfirmDialog";
 import { TeacherMoveDialog } from "@/components/TeacherMoveDialog";
+import { RoutineDialog } from "@/components/RoutineDialog";
 
 const empty: Omit<Teacher, "id"> = {
   short_name: "", name: "", designation: "", department: "CSE",
@@ -32,6 +33,7 @@ export function TeachersPage() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<Omit<Teacher, "id">>(empty);
   const [moveTarget, setMoveTarget] = useState<Teacher | null>(null);
+  const [routineFor, setRoutineFor] = useState<Teacher | null>(null);
 
   const filtered = useMemo(
     () => teachers.filter(t =>
@@ -176,6 +178,10 @@ export function TeachersPage() {
                       </span>
                     </TableCell>
                     <TableCell className="text-right">
+                      <Button size="icon" variant="ghost" title="View routine"
+                        onClick={() => setRoutineFor(t)}>
+                        <CalendarDays className="h-3.5 w-3.5 text-primary" />
+                      </Button>
                       {depCount > 0 && (
                         <Button size="icon" variant="ghost" title={`Move ${depCount} assignment(s) to another teacher`}
                           onClick={() => setMoveTarget(t)}>
@@ -247,6 +253,14 @@ export function TeachersPage() {
         fromTeacher={moveTarget}
         dependencies={moveTarget ? teacherDependencies(data, moveTarget.id) : []}
         onMoved={() => toast.success("Classes moved. Old teacher record kept.")}
+      />
+
+      <RoutineDialog
+        open={!!routineFor}
+        onOpenChange={(v) => !v && setRoutineFor(null)}
+        scope={routineFor ? { kind: "teacher", teacher_id: routineFor.id } : null}
+        title={routineFor ? `${routineFor.short_name} — ${routineFor.name}` : ""}
+        subtitle={routineFor?.designation}
       />
     </div>
   );
