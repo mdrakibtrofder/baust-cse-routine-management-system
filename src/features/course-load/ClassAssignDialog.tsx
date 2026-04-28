@@ -562,6 +562,12 @@ export function ClassAssignDialog({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <TeacherDetailsDialog
+        teacherId={teacherDetailsId}
+        open={!!teacherDetailsId}
+        onOpenChange={(v) => !v && setTeacherDetailsId(null)}
+      />
     </>
   );
 }
