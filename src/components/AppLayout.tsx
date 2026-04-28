@@ -9,6 +9,7 @@ import {
   GraduationCap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ConfirmProvider } from "@/components/ConfirmDialog";
 
 const nav = [
   { to: "/", label: "Course Load", icon: LayoutGrid },
@@ -22,6 +23,7 @@ const nav = [
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const loc = useLocation();
   return (
+    <ConfirmProvider>
     <div className="min-h-screen bg-background flex">
       <aside className="hidden md:flex w-64 shrink-0 border-r bg-card flex-col">
         <div className="px-5 py-5 border-b">
@@ -103,5 +105,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <main className="flex-1 min-w-0">{children}</main>
       </div>
     </div>
+    </ConfirmProvider>
   );
 }
