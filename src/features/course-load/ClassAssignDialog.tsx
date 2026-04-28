@@ -39,6 +39,8 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { TeacherChip } from "@/components/TeacherBadge";
+import { TeacherDetailsDialog } from "@/components/TeacherDetailsDialog";
+import { useConfirm } from "@/components/ConfirmDialog";
 
 interface DraftClass {
   id?: string;
@@ -91,6 +93,8 @@ export function ClassAssignDialog({
   const [step, setStep] = useState(0);
   const [showRoomTable, setShowRoomTable] = useState(true);
   const [confirmSave, setConfirmSave] = useState<{ msg: string } | null>(null);
+  const [teacherDetailsId, setTeacherDetailsId] = useState<string | null>(null);
+  const confirmDialog = useConfirm();
 
   useEffect(() => {
     if (!open) return;
@@ -117,6 +121,9 @@ export function ClassAssignDialog({
 
   const conflicts: Conflict[] = useMemo(() => {
     if (drafts.length === 0) return [];
+    const siblings = drafts.filter((_, i) => i !== safeStep).map((d) => ({
+      day: d.day, start: d.start, end: d.end, week: d.week,
+    }));
     return checkConflicts({
       data,
       course,
@@ -124,8 +131,9 @@ export function ClassAssignDialog({
       teacherIds,
       candidate: current,
       ignoreSlotId: current.id,
+      siblingDrafts: siblings,
     });
-  }, [data, course, section, teacherIds, current, drafts.length]);
+  }, [data, course, section, teacherIds, current, drafts, safeStep]);
 
   const availableRooms = useMemo(() => {
     if (drafts.length === 0) return [];
@@ -135,8 +143,13 @@ export function ClassAssignDialog({
   /** Per-class status used for the stepper indicator */
   const draftStatuses = useMemo(
     () =>
-      drafts.map((d) => {
-        const cs = checkConflicts({ data, course, section, teacherIds, candidate: d, ignoreSlotId: d.id });
+      drafts.map((d, idx) => {
+        const siblings = drafts.filter((_, i) => i !== idx).map((x) => ({
+          day: x.day, start: x.start, end: x.end, week: x.week,
+        }));
+        const cs = checkConflicts({
+          data, course, section, teacherIds, candidate: d, ignoreSlotId: d.id, siblingDrafts: siblings,
+        });
         const incomplete = !d.room_id;
         return { conflicts: cs, incomplete };
       }),
