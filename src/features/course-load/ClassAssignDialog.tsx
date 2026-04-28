@@ -207,15 +207,30 @@ export function ClassAssignDialog({
   };
 
   /** Delete one class (reset its draft to empty) */
-  const deleteOne = (idx: number) => {
+  const deleteOne = async (idx: number) => {
     const d = drafts[idx];
+    const ok = await confirmDialog({
+      title: `Delete Class ${idx + 1}?`,
+      description: d?.room_id
+        ? `This will clear the assigned room and time for Class ${idx + 1}.`
+        : `Reset Class ${idx + 1} to default values.`,
+      destructive: true,
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
     if (d?.id) data.deleteClassSlot(d.id);
     setDrafts((prev) => prev.map((x, i) => (i === idx ? EMPTY_CLASS(info) : x)));
     toast.success(`Class ${idx + 1} cleared`);
   };
 
-  const clearAll = () => {
-    if (!confirm("Clear all classes for this section?")) return;
+  const clearAll = async () => {
+    const ok = await confirmDialog({
+      title: "Clear all classes?",
+      description: `This will remove all ${info.classCount} class assignments for ${course.code} (Section ${section.name}).`,
+      destructive: true,
+      confirmLabel: "Clear all",
+    });
+    if (!ok) return;
     data.deleteClassSlotsForCourseSection(course.id, section.id);
     setDrafts(Array.from({ length: info.classCount }, () => EMPTY_CLASS(info)));
     setStep(0);
