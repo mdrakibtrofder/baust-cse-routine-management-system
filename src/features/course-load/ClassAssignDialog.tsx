@@ -262,13 +262,26 @@ export function ClassAssignDialog({
               <span>
                 {course.code} — {course.name}
               </span>
+              <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
+                Level {course.level} · Term {course.term}
+              </Badge>
+            </DialogTitle>
+            <div className="flex items-center gap-2 flex-wrap mt-2">
               <Badge variant="outline">Section {section.name}</Badge>
               <Badge>{info.label}</Badge>
               <Badge variant="secondary" className="gap-1">
                 <Users className="h-3 w-3" />
                 {section.total_students} students
               </Badge>
-            </DialogTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                className="ml-auto h-7 text-xs"
+                onClick={() => setShowSectionRoutine(true)}
+              >
+                <CalendarDays className="h-3.5 w-3.5 mr-1" /> Full section routine
+              </Button>
+            </div>
             <div className="text-xs text-muted-foreground mt-1">
               {info.classCount} class{info.classCount > 1 ? "es" : ""} per week ·{" "}
               {info.classDuration % 60 === 0 ? `${info.classDuration / 60}h` : `${info.classDuration}m`} ·{" "}
