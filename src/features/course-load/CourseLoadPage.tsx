@@ -10,12 +10,14 @@ import { COURSE_TYPE_INFO } from "@/lib/types";
 import { TeacherPicker } from "./TeacherPicker";
 import { ClassAssignDialog } from "./ClassAssignDialog";
 import { checkConflicts } from "@/lib/conflicts";
+import { RoutineDialog } from "@/components/RoutineDialog";
 
 const TERM_ORDER = ["I", "II"];
 
 export function CourseLoadPage() {
   const data = useStore();
   const [openAssign, setOpenAssign] = useState<{ course: Course; section: Section } | null>(null);
+  const [routineSection, setRoutineSection] = useState<Section | null>(null);
 
   const grouped = useMemo(() => {
     const map = new Map<string, { level: number; term: string; courses: Course[]; sections: Section[] }>();
@@ -56,6 +58,7 @@ export function CourseLoadPage() {
             courses={g.courses}
             sections={g.sections}
             onAssign={(c, s) => setOpenAssign({ course: c, section: s })}
+            onSectionRoutine={(s) => setRoutineSection(s)}
           />
         ))}
       </div>
@@ -67,13 +70,21 @@ export function CourseLoadPage() {
           section={openAssign.section}
         />
       )}
+      <RoutineDialog
+        open={!!routineSection}
+        onOpenChange={(v) => !v && setRoutineSection(null)}
+        scope={routineSection ? { kind: "section", section_id: routineSection.id } : null}
+        title={routineSection ? `Section ${routineSection.name} · Level ${routineSection.level}, Term ${routineSection.term}` : ""}
+        subtitle="Full section routine"
+      />
     </div>
   );
 }
 
-function LevelTermBlock({ level, term, courses, sections, onAssign }: {
+function LevelTermBlock({ level, term, courses, sections, onAssign, onSectionRoutine }: {
   level: number; term: string; courses: Course[]; sections: Section[];
   onAssign: (c: Course, s: Section) => void;
+  onSectionRoutine: (s: Section) => void;
 }) {
   const totalCredit = courses.reduce((s, c) => s + c.credit, 0);
   return (
@@ -90,13 +101,18 @@ function LevelTermBlock({ level, term, courses, sections, onAssign }: {
         </div>
         <div className="flex gap-1">
           {sections.map(s => (
-            <Badge key={s.id} variant="secondary" className="bg-white/20 text-white border-white/30 hover:bg-white/30 gap-1.5">
+            <button
+              key={s.id}
+              onClick={() => onSectionRoutine(s)}
+              title="View full section routine"
+              className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-medium bg-white/20 text-white border border-white/30 hover:bg-white/30 transition"
+            >
               <span>Section {s.name}</span>
               <span className="inline-flex items-center gap-0.5 opacity-90">
                 <Users className="h-3 w-3" />
                 {s.total_students}
               </span>
-            </Badge>
+            </button>
           ))}
         </div>
       </div>
