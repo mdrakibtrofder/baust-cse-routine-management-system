@@ -57,9 +57,10 @@ export interface Day {
   name: string; // SUN..THU
 }
 
-/** A single class meeting for one section of one course */
+/** A single class meeting for one section of one course (scoped per semester) */
 export interface ClassSlot {
   id: string;
+  semester_id: string;
   course_id: string;
   section_id: string;
   day: string; // SUN
@@ -69,12 +70,20 @@ export interface ClassSlot {
   week: WeekPattern;
 }
 
-/** Mapping: which teachers teach which course-section */
+/** Mapping: which teachers teach which course-section (scoped per semester) */
 export interface CourseSectionTeacher {
   id: string;
+  semester_id: string;
   course_id: string;
   section_id: string;
   teacher_ids: string[]; // 1 for theory, 2 for sessional
+}
+
+export interface Semester {
+  id: string;
+  name: string; // e.g. "Winter 2026"
+  year: number;
+  season: "Winter" | "Summer";
 }
 
 export interface AppData {
@@ -86,6 +95,8 @@ export interface AppData {
   days: Day[];
   class_slots: ClassSlot[];
   course_section_teachers: CourseSectionTeacher[];
+  semesters: Semester[];
+  active_semester_id: string;
 }
 
 export const COURSE_TYPE_INFO: Record<
