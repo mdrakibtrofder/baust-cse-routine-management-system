@@ -453,6 +453,12 @@ export function ClassAssignDialog({
                     teacherIds={teacherIds}
                     day={current.day}
                     currentSlotId={current.id}
+                    currentRoomId={current.room_id}
+                    currentStart={current.start}
+                    currentEnd={current.end}
+                    siblingDrafts={drafts.filter((_, i) => i !== safeStep).map((d) => ({
+                      day: d.day, start: d.start, end: d.end, week: d.week,
+                    }))}
                     week={current.week}
                     onPick={(roomId, start, end) => setCurrent({ room_id: roomId, start, end })}
                   />
