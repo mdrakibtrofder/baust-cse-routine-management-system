@@ -11,12 +11,13 @@ import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Pencil, Trash2, Plus } from "lucide-react";
+import { Pencil, Trash2, Plus, CalendarDays } from "lucide-react";
 import { toast } from "sonner";
 import type { Section } from "@/lib/types";
 import { useConfirm } from "@/components/ConfirmDialog";
 import { sectionDependencies } from "@/lib/conflicts";
 import { BlockedDeleteDialog } from "@/components/BlockedDeleteDialog";
+import { RoutineDialog } from "@/components/RoutineDialog";
 
 const empty: Omit<Section, "id"> = { level: 1, term: "I", name: "A", total_students: 50 };
 
@@ -28,6 +29,7 @@ export function SectionsPage() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<Omit<Section, "id">>(empty);
   const [blocked, setBlocked] = useState<{ section: Section; deps: ReturnType<typeof sectionDependencies> } | null>(null);
+  const [routineFor, setRoutineFor] = useState<Section | null>(null);
 
   const grouped = useMemo(() => {
     const m = new Map<string, Section[]>();
@@ -118,6 +120,10 @@ export function SectionsPage() {
                     <TableCell className="font-medium">Section {s.name}</TableCell>
                     <TableCell className="text-right">{s.total_students}</TableCell>
                     <TableCell className="text-right">
+                      <Button size="icon" variant="ghost" title="View routine"
+                        onClick={() => setRoutineFor(s)}>
+                        <CalendarDays className="h-3.5 w-3.5 text-primary" />
+                      </Button>
                       <Button size="icon" variant="ghost" onClick={() => { setEditing(s); setForm(s); setOpen(true); }}>
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
