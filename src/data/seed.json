@@ -638,15 +638,6 @@
       "department": "",
       "status": "",
       "assigned_credit": 0
-    },
-    {
-      "id": "e83244f6-401e-47c1-ba29-b9afe03fd712",
-      "short_name": "NF1",
-      "name": "NF1",
-      "designation": "Faculty",
-      "department": "",
-      "status": "",
-      "assigned_credit": 0
     }
   ],
   "rooms": [
@@ -5442,7 +5433,7 @@
       "term": "I",
       "section_name": "B",
       "teachers": [
-        "NF1",
+        "MRT",
         "NAO"
       ],
       "classes": [
@@ -5900,7 +5891,7 @@
       "term": "II",
       "section_name": "A",
       "teachers": [
-        "NF1"
+        "MRT"
       ],
       "classes": [
         {
@@ -6233,7 +6224,7 @@
       "term": "II",
       "section_name": "A",
       "teachers": [
-        "NF1"
+        "MRT"
       ],
       "classes": [
         {
@@ -6265,7 +6256,7 @@
       "term": "II",
       "section_name": "A",
       "teachers": [
-        "NF1"
+        "MRT"
       ],
       "classes": [
         {
@@ -6395,7 +6386,7 @@
       "section_name": "B",
       "teachers": [
         "RA",
-        "NF1"
+        "MRT"
       ],
       "classes": [
         {
@@ -6464,7 +6455,7 @@
       "section_name": "A",
       "teachers": [
         "RA",
-        "NF1"
+        "MRT"
       ],
       "classes": [
         {
