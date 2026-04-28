@@ -184,6 +184,14 @@ export function SectionsPage() {
         dependencies={blocked?.deps ?? []}
         hint="Remove this section's classes and teacher assignments first."
       />
+
+      <RoutineDialog
+        open={!!routineFor}
+        onOpenChange={(v) => !v && setRoutineFor(null)}
+        scope={routineFor ? { kind: "section", section_id: routineFor.id } : null}
+        title={routineFor ? `Section ${routineFor.name}` : ""}
+        subtitle={routineFor ? `Level ${routineFor.level}, Term ${routineFor.term} · ${routineFor.total_students} students` : ""}
+      />
     </div>
   );
 }
