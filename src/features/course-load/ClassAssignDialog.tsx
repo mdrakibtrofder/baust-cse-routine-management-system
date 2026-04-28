@@ -758,8 +758,8 @@ function RoomDayGrid({
                     {p.start}–{p.end}
                   </div>
                   {teacherBusy && (
-                    <div className="text-[9px] font-normal text-warning">
-                      teacher busy ({teacherBusy.courseCode})
+                    <div className="text-[9px] font-normal text-destructive font-mono">
+                      {data.teachers.find((t) => t.id === teacherBusy.teacherId)?.short_name} busy ({teacherBusy.courseCode})
                     </div>
                   )}
                   {dup && (
