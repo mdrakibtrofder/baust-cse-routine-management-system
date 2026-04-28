@@ -102,7 +102,7 @@ export function TeachersPage() {
     <div>
       <PageHeader
         title="Teachers"
-        subtitle={`${teachers.length} teachers · assigned credits & status`}
+        subtitle={`${teachers.length} teachers · total credits & status`}
         onImport={(rows) => {
           const seen = new Set<string>();
           const list: Teacher[] = [];
@@ -152,8 +152,8 @@ export function TeachersPage() {
                 <TableHead>Designation</TableHead>
                 <TableHead>Dept</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="text-right">Credits</TableHead>
-                <TableHead className="text-right">Used</TableHead>
+                <TableHead className="text-right">Total Credit</TableHead>
+                <TableHead className="text-right">Assigned</TableHead>
                 <TableHead className="text-right w-28">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -233,7 +233,7 @@ export function TeachersPage() {
               <Input value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} />
             </div>
             <div className="col-span-2">
-              <Label>Assigned credit</Label>
+              <Label>Total credit</Label>
               <Input type="number" step="0.25" value={form.assigned_credit}
                 onChange={(e) => setForm({ ...form, assigned_credit: Number(e.target.value) || 0 })} />
             </div>

@@ -447,7 +447,7 @@ export function ClassAssignDialog({
                           <SelectItem key={r.id} value={r.id}>
                             <span className="flex items-center gap-2">
                               <span className="font-mono">{r.name}</span>
-                              <span className="text-xs text-muted-foreground">cap {r.capacity}</span>
+                              <span className="text-xs text-muted-foreground">Capacity {r.capacity}</span>
                               {!capOk && <Badge variant="destructive" className="text-[10px]">small</Badge>}
                               {!ok && capOk && <Badge variant="outline" className="text-[10px]">busy</Badge>}
                               {ok && capOk && <Check className="h-3 w-3 text-success" />}
@@ -780,7 +780,7 @@ function RoomDayGrid({
                 )}
               >
                 <div className="font-mono font-semibold">{r.name}</div>
-                <div className="text-[10px] text-muted-foreground">cap {r.capacity}</div>
+                <div className="text-[10px] text-muted-foreground">Capacity {r.capacity}</div>
               </td>
               {periods.map((p) => {
                 const teacherBusy = teacherBusyByPeriod.get(p.id);

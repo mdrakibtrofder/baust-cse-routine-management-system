@@ -102,7 +102,7 @@ export function TeacherPicker({ course, section, slotIndex }: {
                   <div className="text-[10px] text-muted-foreground flex items-center gap-1.5 mt-0.5">
                     <span>{t.designation}</span>
                     {t.status && <Badge variant="outline" className="text-[9px] py-0 h-3.5">{t.status}</Badge>}
-                    <span className={cn(exceed.exceeds && "text-destructive font-semibold")}>
+                    <span className={cn(exceed.exceeds && "text-destructive font-semibold")} title="Assigned / Total">
                       {exceed.current.toFixed(2)}/{exceed.assigned} cr
                     </span>
                     {exceed.exceeds && <AlertCircle className="h-3 w-3 text-destructive" />}
