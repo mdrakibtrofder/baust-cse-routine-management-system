@@ -1,11 +1,10 @@
 import { useStore } from "@/lib/store";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { Mail, Briefcase, Building2, Award, BookOpen, Calendar } from "lucide-react";
+import { Briefcase, Building2, Award, BookOpen } from "lucide-react";
 import { teacherAssignedCreditUsed } from "@/lib/conflicts";
 import { rankInfoFor } from "@/lib/teacher-rank";
-import { RankPill } from "@/components/TeacherBadge";
 import { cn } from "@/lib/utils";
+import { RoutineView } from "@/components/RoutineView";
 
 export function TeacherDetailsDialog({
   teacherId,
