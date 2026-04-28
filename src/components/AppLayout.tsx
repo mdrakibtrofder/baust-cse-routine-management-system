@@ -7,6 +7,7 @@ import {
   BookOpen,
   Settings,
   GraduationCap,
+  CalendarDays,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ConfirmProvider } from "@/components/ConfirmDialog";
@@ -15,6 +16,7 @@ import { useStore } from "@/lib/store";
 
 const nav = [
   { to: "/", label: "Course Load", icon: LayoutGrid },
+  { to: "/routine", label: "Routine View", icon: CalendarDays },
   { to: "/teachers", label: "Teachers", icon: Users },
   { to: "/courses", label: "Courses", icon: BookOpen },
   { to: "/sections", label: "Sections", icon: Boxes },
