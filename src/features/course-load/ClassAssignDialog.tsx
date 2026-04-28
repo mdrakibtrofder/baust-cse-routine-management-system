@@ -26,6 +26,7 @@ import {
   Users,
   ChevronDown,
   ChevronUp,
+  CalendarDays,
 } from "lucide-react";
 import { COURSE_TYPE_INFO, type Course, type Section, type WeekPattern } from "@/lib/types";
 import {
@@ -40,6 +41,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { TeacherChip } from "@/components/TeacherBadge";
 import { TeacherDetailsDialog } from "@/components/TeacherDetailsDialog";
+import { RoutineDialog } from "@/components/RoutineDialog";
 import { useConfirm } from "@/components/ConfirmDialog";
 
 interface DraftClass {
@@ -103,6 +105,7 @@ export function ClassAssignDialog({
   const [showRoomTable, setShowRoomTable] = useState(true);
   const [confirmSave, setConfirmSave] = useState<{ msg: string } | null>(null);
   const [teacherDetailsId, setTeacherDetailsId] = useState<string | null>(null);
+  const [showSectionRoutine, setShowSectionRoutine] = useState(false);
   const confirmDialog = useConfirm();
 
   useEffect(() => {
@@ -262,13 +265,26 @@ export function ClassAssignDialog({
               <span>
                 {course.code} — {course.name}
               </span>
+              <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
+                Level {course.level} · Term {course.term}
+              </Badge>
+            </DialogTitle>
+            <div className="flex items-center gap-2 flex-wrap mt-2">
               <Badge variant="outline">Section {section.name}</Badge>
               <Badge>{info.label}</Badge>
               <Badge variant="secondary" className="gap-1">
                 <Users className="h-3 w-3" />
                 {section.total_students} students
               </Badge>
-            </DialogTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                className="ml-auto h-7 text-xs"
+                onClick={() => setShowSectionRoutine(true)}
+              >
+                <CalendarDays className="h-3.5 w-3.5 mr-1" /> Full section routine
+              </Button>
+            </div>
             <div className="text-xs text-muted-foreground mt-1">
               {info.classCount} class{info.classCount > 1 ? "es" : ""} per week ·{" "}
               {info.classDuration % 60 === 0 ? `${info.classDuration / 60}h` : `${info.classDuration}m`} ·{" "}
@@ -443,7 +459,7 @@ export function ClassAssignDialog({
                 </Select>
               </div>
 
-              {/* Embedded room availability table */}
+              {/* Embedded room & teacher availability table */}
               <div className="rounded-lg border overflow-hidden">
                 <button
                   onClick={() => setShowRoomTable((v) => !v)}
@@ -451,26 +467,45 @@ export function ClassAssignDialog({
                 >
                   <span className="flex items-center gap-2">
                     <TableIcon className="h-3.5 w-3.5" />
-                    Room availability — {current.day} (rooms × periods, includes teacher availability)
+                    Room & Teacher Availability
                   </span>
                   {showRoomTable ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
                 </button>
                 {showRoomTable && (
-                  <RoomDayGrid
-                    course={course}
-                    section={section}
-                    teacherIds={teacherIds}
-                    day={current.day}
-                    currentSlotId={current.id}
-                    currentRoomId={current.room_id}
-                    currentStart={current.start}
-                    currentEnd={current.end}
-                    siblingDrafts={drafts.filter((_, i) => i !== safeStep).map((d) => ({
-                      day: d.day, start: d.start, end: d.end, week: d.week,
-                    }))}
-                    week={current.week}
-                    onPick={(roomId, start, end) => setCurrent({ room_id: roomId, start, end })}
-                  />
+                  <div className="p-2 space-y-2">
+                    <div className="flex flex-wrap gap-1">
+                      {data.days.map((d) => (
+                        <button
+                          key={d.id}
+                          type="button"
+                          onClick={() => setCurrent({ day: d.name })}
+                          className={cn(
+                            "px-2.5 py-1 text-[11px] font-semibold rounded-md border transition",
+                            current.day === d.name
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-card hover:bg-muted border-border text-muted-foreground",
+                          )}
+                        >
+                          {d.name}
+                        </button>
+                      ))}
+                    </div>
+                    <RoomDayGrid
+                      course={course}
+                      section={section}
+                      teacherIds={teacherIds}
+                      day={current.day}
+                      currentSlotId={current.id}
+                      currentRoomId={current.room_id}
+                      currentStart={current.start}
+                      currentEnd={current.end}
+                      siblingDrafts={drafts.filter((_, i) => i !== safeStep).map((d) => ({
+                        day: d.day, start: d.start, end: d.end, week: d.week,
+                      }))}
+                      week={current.week}
+                      onPick={(roomId, start, end) => setCurrent({ room_id: roomId, start, end })}
+                    />
+                  </div>
                 )}
               </div>
 
@@ -582,6 +617,14 @@ export function ClassAssignDialog({
         teacherId={teacherDetailsId}
         open={!!teacherDetailsId}
         onOpenChange={(v) => !v && setTeacherDetailsId(null)}
+      />
+
+      <RoutineDialog
+        open={showSectionRoutine}
+        onOpenChange={setShowSectionRoutine}
+        scope={{ kind: "section", section_id: section.id }}
+        title={`Section ${section.name} · Level ${section.level}, Term ${section.term}`}
+        subtitle={`${course.code} — ${course.name}`}
       />
     </>
   );
@@ -707,16 +750,16 @@ function RoomDayGrid({
                   key={p.id}
                   className={cn(
                     "text-center px-1.5 py-1.5 font-medium border-b border-r min-w-[100px]",
-                    teacherBusy && "bg-warning/10",
-                    dup && "bg-destructive/10",
+                    (teacherBusy || dup) && "bg-destructive/10",
+                    teacherBusy && dup && "bg-red-700/20",
                   )}
                 >
                   <div className="font-mono">
                     {p.start}–{p.end}
                   </div>
                   {teacherBusy && (
-                    <div className="text-[9px] font-normal text-warning">
-                      teacher busy ({teacherBusy.courseCode})
+                    <div className="text-[9px] font-normal text-destructive font-mono">
+                      {data.teachers.find((t) => t.id === teacherBusy.teacherId)?.short_name} busy ({teacherBusy.courseCode})
                     </div>
                   )}
                   {dup && (
@@ -757,8 +800,9 @@ function RoomDayGrid({
                   );
                 }
                 if (teacherBusy) {
+                  const t = data.teachers.find((x) => x.id === teacherBusy.teacherId);
                   issues.push(
-                    `Teacher already teaches ${teacherBusy.courseCode} (Sec ${teacherBusy.sectionName}) at this time.`,
+                    `Teacher ${t?.short_name ?? ""} already teaches ${teacherBusy.courseCode} (Sec ${teacherBusy.sectionName}) at this time.`,
                   );
                 }
                 if (dup) {
@@ -767,32 +811,47 @@ function RoomDayGrid({
                   );
                 }
 
+                const conflictCount = (booking ? 1 : 0) + (teacherBusy ? 1 : 0) + (dup ? 1 : 0);
+                const busyTeacher = teacherBusy
+                  ? data.teachers.find((x) => x.id === teacherBusy.teacherId)
+                  : null;
+
                 let inner: React.ReactNode;
-                if (booking) {
-                  const c = data.courses.find((c) => c.id === booking.course_id);
-                  const s = data.sections.find((s) => s.id === booking.section_id);
-                  inner = (
-                    <div className="rounded bg-destructive/10 hover:bg-destructive/20 border border-destructive/30 px-1.5 py-1 text-[10px] text-destructive cursor-pointer transition">
-                      <div className="font-semibold">{c?.code}</div>
-                      <div className="opacity-80">Sec {s?.name}</div>
-                    </div>
-                  );
-                } else if (teacherBusy) {
-                  inner = (
-                    <div className="rounded bg-warning/10 hover:bg-warning/25 border border-warning/30 px-1.5 py-1 text-[10px] text-warning-foreground/80 cursor-pointer transition">
-                      teacher busy
-                    </div>
-                  );
-                } else if (dup) {
-                  inner = (
-                    <div className="rounded bg-destructive/10 hover:bg-destructive/20 border border-destructive/30 px-1.5 py-1 text-[10px] text-destructive cursor-pointer transition">
-                      duplicate
-                    </div>
-                  );
-                } else {
+                if (conflictCount === 0) {
                   inner = (
                     <div className="w-full h-full rounded bg-success/10 hover:bg-success/25 border border-success/30 px-1.5 py-1.5 text-[10px] text-success font-medium transition">
                       Free
+                    </div>
+                  );
+                } else {
+                  // Use deeper red as the number of overlapping conflicts grows.
+                  const tone =
+                    conflictCount >= 2
+                      ? "bg-red-700/30 hover:bg-red-700/40 border-red-800 text-red-950 dark:text-red-100"
+                      : "bg-destructive/10 hover:bg-destructive/20 border-destructive/40 text-destructive";
+                  const bookedCourse = booking
+                    ? data.courses.find((c) => c.id === booking.course_id)
+                    : null;
+                  const bookedSec = booking
+                    ? data.sections.find((s) => s.id === booking.section_id)
+                    : null;
+                  inner = (
+                    <div className={cn("rounded border px-1.5 py-1 text-[10px] cursor-pointer transition", tone)}>
+                      {booking && (
+                        <div className="font-semibold">
+                          {bookedCourse?.code} · Sec {bookedSec?.name}
+                        </div>
+                      )}
+                      {busyTeacher && (
+                        <div className="font-mono">
+                          {busyTeacher.short_name}{" "}
+                          <span className="opacity-70">busy</span>
+                        </div>
+                      )}
+                      {dup && !booking && !busyTeacher && <div>duplicate</div>}
+                      {dup && (booking || busyTeacher) && (
+                        <div className="opacity-80">+ duplicate</div>
+                      )}
                     </div>
                   );
                 }

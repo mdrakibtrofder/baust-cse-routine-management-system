@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TeachersRouteImport } from './routes/teachers'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SectionsRouteImport } from './routes/sections'
+import { Route as RoutineRouteImport } from './routes/routine'
 import { Route as RoomsRouteImport } from './routes/rooms'
 import { Route as CoursesRouteImport } from './routes/courses'
 import { Route as IndexRouteImport } from './routes/index'
@@ -29,6 +30,11 @@ const SettingsRoute = SettingsRouteImport.update({
 const SectionsRoute = SectionsRouteImport.update({
   id: '/sections',
   path: '/sections',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RoutineRoute = RoutineRouteImport.update({
+  id: '/routine',
+  path: '/routine',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RoomsRoute = RoomsRouteImport.update({
@@ -51,6 +57,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/courses': typeof CoursesRoute
   '/rooms': typeof RoomsRoute
+  '/routine': typeof RoutineRoute
   '/sections': typeof SectionsRoute
   '/settings': typeof SettingsRoute
   '/teachers': typeof TeachersRoute
@@ -59,6 +66,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/courses': typeof CoursesRoute
   '/rooms': typeof RoomsRoute
+  '/routine': typeof RoutineRoute
   '/sections': typeof SectionsRoute
   '/settings': typeof SettingsRoute
   '/teachers': typeof TeachersRoute
@@ -68,6 +76,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/courses': typeof CoursesRoute
   '/rooms': typeof RoomsRoute
+  '/routine': typeof RoutineRoute
   '/sections': typeof SectionsRoute
   '/settings': typeof SettingsRoute
   '/teachers': typeof TeachersRoute
@@ -78,16 +87,18 @@ export interface FileRouteTypes {
     | '/'
     | '/courses'
     | '/rooms'
+    | '/routine'
     | '/sections'
     | '/settings'
     | '/teachers'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/courses' | '/rooms' | '/sections' | '/settings' | '/teachers'
+  to: '/' | '/courses' | '/rooms' | '/routine' | '/sections' | '/settings' | '/teachers'
   id:
     | '__root__'
     | '/'
     | '/courses'
     | '/rooms'
+    | '/routine'
     | '/sections'
     | '/settings'
     | '/teachers'
@@ -97,6 +108,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CoursesRoute: typeof CoursesRoute
   RoomsRoute: typeof RoomsRoute
+  RoutineRoute: typeof RoutineRoute
   SectionsRoute: typeof SectionsRoute
   SettingsRoute: typeof SettingsRoute
   TeachersRoute: typeof TeachersRoute
@@ -123,6 +135,13 @@ declare module '@tanstack/react-router' {
       path: '/sections'
       fullPath: '/sections'
       preLoaderRoute: typeof SectionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/routine': {
+      id: '/routine'
+      path: '/routine'
+      fullPath: '/routine'
+      preLoaderRoute: typeof RoutineRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/rooms': {
@@ -153,6 +172,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CoursesRoute: CoursesRoute,
   RoomsRoute: RoomsRoute,
+  RoutineRoute: RoutineRoute,
   SectionsRoute: SectionsRoute,
   SettingsRoute: SettingsRoute,
   TeachersRoute: TeachersRoute,
@@ -160,3 +180,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
