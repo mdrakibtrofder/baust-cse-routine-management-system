@@ -618,6 +618,14 @@ export function ClassAssignDialog({
         open={!!teacherDetailsId}
         onOpenChange={(v) => !v && setTeacherDetailsId(null)}
       />
+
+      <RoutineDialog
+        open={showSectionRoutine}
+        onOpenChange={setShowSectionRoutine}
+        scope={{ kind: "section", section_id: section.id }}
+        title={`Section ${section.name} · Level ${section.level}, Term ${section.term}`}
+        subtitle={`${course.code} — ${course.name}`}
+      />
     </>
   );
 }
