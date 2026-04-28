@@ -15,15 +15,19 @@ import { Pencil, Trash2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import type { Section } from "@/lib/types";
 import { useConfirm } from "@/components/ConfirmDialog";
+import { sectionDependencies } from "@/lib/conflicts";
+import { BlockedDeleteDialog } from "@/components/BlockedDeleteDialog";
 
 const empty: Omit<Section, "id"> = { level: 1, term: "I", name: "A", total_students: 50 };
 
 export function SectionsPage() {
-  const { sections, addSection, updateSection, deleteSection, replaceSections } = useStore();
+  const data = useStore();
+  const { sections, addSection, updateSection, deleteSection, replaceSections } = data;
   const confirmDialog = useConfirm();
   const [editing, setEditing] = useState<Section | null>(null);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<Omit<Section, "id">>(empty);
+  const [blocked, setBlocked] = useState<{ section: Section; deps: ReturnType<typeof sectionDependencies> } | null>(null);
 
   const grouped = useMemo(() => {
     const m = new Map<string, Section[]>();
@@ -35,11 +39,29 @@ export function SectionsPage() {
     return m;
   }, [sections]);
 
+  /** Section name must be unique within (level, term) */
+  const dup = (name: string, level: number, term: string, ignoreId?: string) =>
+    sections.some(s => s.id !== ignoreId && s.level === level && s.term === term &&
+      s.name.trim().toLowerCase() === name.trim().toLowerCase());
+
   const submit = () => {
     if (!form.name.trim()) return toast.error("Section name required");
+    if (dup(form.name, form.level, form.term, editing?.id))
+      return toast.error(`Section ${form.name} already exists in Level ${form.level}, Term ${form.term}`);
     if (editing) { updateSection(editing.id, form); toast.success("Updated"); }
     else { addSection(form); toast.success("Added"); }
     setOpen(false);
+  };
+
+  const tryDelete = async (s: Section) => {
+    const deps = sectionDependencies(data, s.id);
+    if (deps.length > 0) { setBlocked({ section: s, deps }); return; }
+    const ok = await confirmDialog({
+      title: `Delete Section ${s.name}?`,
+      description: `Level ${s.level}, Term ${s.term}, ${s.total_students} students. No dependencies. This cannot be undone.`,
+      destructive: true, confirmLabel: "Delete",
+    });
+    if (ok) { deleteSection(s.id); toast.success("Deleted"); }
   };
 
   return (
@@ -48,13 +70,21 @@ export function SectionsPage() {
         title="Sections"
         subtitle={`${sections.length} sections across all level-terms`}
         onImport={(rows) => {
-          const list: Section[] = rows.map(r => ({
-            id: crypto.randomUUID(),
-            level: Number(r["Section Level"] ?? r.level) || 1,
-            term: String(r["Section Term"] ?? r.term ?? "I").trim(),
-            name: String(r["Section"] ?? r.name ?? "A").trim(),
-            total_students: Number(r["Total Students"] ?? r.total_students) || 0,
-          })).filter(s => s.name);
+          const seen = new Set<string>();
+          const list: Section[] = [];
+          for (const r of rows) {
+            const level = Number(r["Section Level"] ?? r.level) || 1;
+            const term = String(r["Section Term"] ?? r.term ?? "I").trim();
+            const name = String(r["Section"] ?? r.name ?? "A").trim();
+            if (!name) continue;
+            const key = `${level}|${term}|${name.toLowerCase()}`;
+            if (seen.has(key)) continue;
+            seen.add(key);
+            list.push({
+              id: crypto.randomUUID(), level, term, name,
+              total_students: Number(r["Total Students"] ?? r.total_students) || 0,
+            });
+          }
           replaceSections(list);
         }}
         exportRows={() => sections.map(s => ({
@@ -91,14 +121,7 @@ export function SectionsPage() {
                       <Button size="icon" variant="ghost" onClick={() => { setEditing(s); setForm(s); setOpen(true); }}>
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
-                      <Button size="icon" variant="ghost" onClick={async () => {
-                        const ok = await confirmDialog({
-                          title: `Delete Section ${s.name}?`,
-                          description: `Level ${s.level}, Term ${s.term}, ${s.total_students} students. This cannot be undone.`,
-                          destructive: true, confirmLabel: "Delete",
-                        });
-                        if (ok) { deleteSection(s.id); toast.success("Deleted"); }
-                      }}>
+                      <Button size="icon" variant="ghost" onClick={() => tryDelete(s)}>
                         <Trash2 className="h-3.5 w-3.5 text-destructive" />
                       </Button>
                     </TableCell>
@@ -128,7 +151,13 @@ export function SectionsPage() {
                 <SelectContent><SelectItem value="I">I</SelectItem><SelectItem value="II">II</SelectItem></SelectContent>
               </Select>
             </div>
-            <div><Label>Section name</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+            <div>
+              <Label>Section name</Label>
+              <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              {form.name && dup(form.name, form.level, form.term, editing?.id) && (
+                <p className="text-[11px] text-destructive mt-1">Already exists in this level-term</p>
+              )}
+            </div>
             <div><Label>Total students</Label><Input type="number" value={form.total_students}
               onChange={(e) => setForm({ ...form, total_students: Number(e.target.value) || 0 })} /></div>
           </div>
@@ -140,6 +169,15 @@ export function SectionsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <BlockedDeleteDialog
+        open={!!blocked}
+        onOpenChange={(v) => !v && setBlocked(null)}
+        title="this section"
+        entityLabel={blocked ? `Section ${blocked.section.name} (L${blocked.section.level} T${blocked.section.term})` : ""}
+        dependencies={blocked?.deps ?? []}
+        hint="Remove this section's classes and teacher assignments first."
+      />
     </div>
   );
 }

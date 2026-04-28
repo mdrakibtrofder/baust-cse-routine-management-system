@@ -16,7 +16,10 @@ export function TeacherPicker({ course, section, slotIndex }: {
 }) {
   const data = useStore();
   const cst = data.course_section_teachers.find(
-    (x) => x.course_id === course.id && x.section_id === section.id,
+    (x) =>
+      x.semester_id === data.active_semester_id &&
+      x.course_id === course.id &&
+      x.section_id === section.id,
   );
   const teacherIds = cst?.teacher_ids ?? [];
   const required = COURSE_TYPE_INFO[course.course_type].teachersRequired;

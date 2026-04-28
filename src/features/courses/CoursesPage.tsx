@@ -17,6 +17,8 @@ import { toast } from "sonner";
 import type { Course, CourseType } from "@/lib/types";
 import { COURSE_TYPE_INFO } from "@/lib/types";
 import { useConfirm } from "@/components/ConfirmDialog";
+import { courseDependencies } from "@/lib/conflicts";
+import { BlockedDeleteDialog } from "@/components/BlockedDeleteDialog";
 
 const empty: Omit<Course, "id"> = {
   code: "", name: "", credit: 3, course_type: "theory_3.0",
@@ -26,23 +28,41 @@ const empty: Omit<Course, "id"> = {
 const TYPES: CourseType[] = ["theory_2.0", "theory_3.0", "sessional_1.5", "sessional_0.75"];
 
 export function CoursesPage() {
-  const { courses, addCourse, updateCourse, deleteCourse, replaceCourses } = useStore();
+  const data = useStore();
+  const { courses, addCourse, updateCourse, deleteCourse } = data;
   const confirmDialog = useConfirm();
   const [q, setQ] = useState("");
   const [editing, setEditing] = useState<Course | null>(null);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<Omit<Course, "id">>(empty);
+  const [blocked, setBlocked] = useState<{ course: Course; deps: ReturnType<typeof courseDependencies> } | null>(null);
 
   const filtered = useMemo(
     () => courses.filter(c => `${c.code} ${c.name}`.toLowerCase().includes(q.toLowerCase())),
     [courses, q]
   );
 
+  /** Course code must be unique (case-insensitive, global) */
+  const dup = (code: string, ignoreId?: string) =>
+    courses.some(c => c.id !== ignoreId && c.code.trim().toLowerCase() === code.trim().toLowerCase());
+
   const submit = () => {
     if (!form.code.trim() || !form.name.trim()) return toast.error("Code and name required");
+    if (dup(form.code, editing?.id)) return toast.error(`Course code "${form.code}" already exists`);
     if (editing) { updateCourse(editing.id, form); toast.success("Updated"); }
     else { addCourse(form); toast.success("Added"); }
     setOpen(false);
+  };
+
+  const tryDelete = async (c: Course) => {
+    const deps = courseDependencies(data, c.id);
+    if (deps.length > 0) { setBlocked({ course: c, deps }); return; }
+    const ok = await confirmDialog({
+      title: `Delete course ${c.code}?`,
+      description: `${c.name} (Level ${c.level}, Term ${c.term}, ${c.credit} cr) has no schedule. This cannot be undone.`,
+      destructive: true, confirmLabel: "Delete",
+    });
+    if (ok) { deleteCourse(c.id); toast.success("Deleted"); }
   };
 
   return (
@@ -98,14 +118,7 @@ export function CoursesPage() {
                     <Button size="icon" variant="ghost" onClick={() => { setEditing(c); setForm(c); setOpen(true); }}>
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
-                    <Button size="icon" variant="ghost" onClick={async () => {
-                      const ok = await confirmDialog({
-                        title: `Delete course ${c.code}?`,
-                        description: `${c.name} (Level ${c.level}, Term ${c.term}, ${c.credit} cr) will be permanently removed.`,
-                        destructive: true, confirmLabel: "Delete",
-                      });
-                      if (ok) { deleteCourse(c.id); toast.success("Deleted"); }
-                    }}>
+                    <Button size="icon" variant="ghost" onClick={() => tryDelete(c)}>
                       <Trash2 className="h-3.5 w-3.5 text-destructive" />
                     </Button>
                   </TableCell>
@@ -120,7 +133,13 @@ export function CoursesPage() {
         <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>{editing ? "Edit course" : "Add course"}</DialogTitle></DialogHeader>
           <div className="grid grid-cols-2 gap-3">
-            <div><Label>Code</Label><Input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} /></div>
+            <div>
+              <Label>Code</Label>
+              <Input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} />
+              {form.code && dup(form.code, editing?.id) && (
+                <p className="text-[11px] text-destructive mt-1">Code already in use</p>
+              )}
+            </div>
             <div>
               <Label>Type</Label>
               <Select value={form.course_type} onValueChange={(v: CourseType) => {
@@ -164,6 +183,15 @@ export function CoursesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <BlockedDeleteDialog
+        open={!!blocked}
+        onOpenChange={(v) => !v && setBlocked(null)}
+        title="this course"
+        entityLabel={blocked ? `${blocked.course.code} — ${blocked.course.name}` : ""}
+        dependencies={blocked?.deps ?? []}
+        hint="Clear all schedules and teacher assignments for this course in Course Load."
+      />
     </div>
   );
 }

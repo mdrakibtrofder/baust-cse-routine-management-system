@@ -76,7 +76,10 @@ export function ClassAssignDialog({
 }) {
   const data = useStore();
   const cst = data.course_section_teachers.find(
-    (x) => x.course_id === course.id && x.section_id === section.id,
+    (x) =>
+      x.semester_id === data.active_semester_id &&
+      x.course_id === course.id &&
+      x.section_id === section.id,
   );
   const teacherIds = cst?.teacher_ids ?? [];
   const teachers = teacherIds.map((tid) => data.teachers.find((t) => t.id === tid)).filter(Boolean) as NonNullable<
@@ -85,8 +88,14 @@ export function ClassAssignDialog({
   const info = courseInfo(course);
 
   const existing = useMemo(
-    () => data.class_slots.filter((s) => s.course_id === course.id && s.section_id === section.id),
-    [data.class_slots, course.id, section.id],
+    () =>
+      data.class_slots.filter(
+        (s) =>
+          s.semester_id === data.active_semester_id &&
+          s.course_id === course.id &&
+          s.section_id === section.id,
+      ),
+    [data.class_slots, data.active_semester_id, course.id, section.id],
   );
 
   const [drafts, setDrafts] = useState<DraftClass[]>([]);

@@ -12,9 +12,10 @@ import type {
   ClassSlot,
   CourseSectionTeacher,
   CourseType,
+  Semester,
 } from "./types";
 
-const STORAGE_KEY = "rms-data-v1";
+const STORAGE_KEY = "rms-data-v2";
 
 function uid() {
   return crypto.randomUUID();
@@ -29,7 +30,17 @@ function classifyType(theory: number, sessional: number, credit: number): Course
   return "theory_2.0";
 }
 
-/** Build initial AppData from the bundled seed.json (mapping section letters / teacher shorts / room names to ids) */
+/** Generate Winter+Summer semesters from 2026 to 2056 */
+function buildSemesters(): { semesters: Semester[]; activeId: string } {
+  const list: Semester[] = [];
+  for (let y = 2026; y <= 2056; y++) {
+    list.push({ id: `sem-winter-${y}`, name: `Winter ${y}`, year: y, season: "Winter" });
+    list.push({ id: `sem-summer-${y}`, name: `Summer ${y}`, year: y, season: "Summer" });
+  }
+  return { semesters: list, activeId: "sem-winter-2026" };
+}
+
+/** Build initial AppData from the bundled seed.json */
 function buildSeedData(): AppData {
   const teachers: Teacher[] = seed.teachers as Teacher[];
   const rooms: Room[] = seed.rooms as Room[];
@@ -49,6 +60,8 @@ function buildSeedData(): AppData {
     sessional: c.sessional,
   }));
 
+  const { semesters, activeId } = buildSemesters();
+
   const teacherByShort = new Map(teachers.map((t) => [t.short_name, t.id]));
   const roomByName = new Map(rooms.map((r) => [r.name, r.id]));
   const courseByCodeLT = new Map(courses.map((c) => [`${c.code}|${c.level}|${c.term}`, c.id]));
@@ -66,12 +79,13 @@ function buildSeedData(): AppData {
       .filter((x): x is string => !!x);
     const key = `${cid}|${sid}`;
     if (!cst_map.has(key)) {
-      cst_map.set(key, { id: uid(), course_id: cid, section_id: sid, teacher_ids });
+      cst_map.set(key, { id: uid(), semester_id: activeId, course_id: cid, section_id: sid, teacher_ids });
     }
     for (const cls of a.classes as any[]) {
       const room_id = cls.room ? roomByName.get(cls.room) ?? null : null;
       class_slots.push({
         id: uid(),
+        semester_id: activeId,
         course_id: cid,
         section_id: sid,
         day: cls.day,
@@ -92,14 +106,20 @@ function buildSeedData(): AppData {
     days,
     class_slots,
     course_section_teachers: Array.from(cst_map.values()),
+    semesters,
+    active_semester_id: activeId,
   };
 }
 
 interface StoreState extends AppData {
+  // semesters
+  setActiveSemester: (id: string) => void;
   // teachers
   addTeacher: (t: Omit<Teacher, "id">) => void;
   updateTeacher: (id: string, t: Partial<Teacher>) => void;
   deleteTeacher: (id: string) => void;
+  /** Move all assignments+slots from one teacher to another (across all semesters), then delete the old teacher */
+  moveTeacherAssignments: (fromId: string, toId: string) => void;
   // rooms
   addRoom: (r: Omit<Room, "id">) => void;
   updateRoom: (id: string, r: Partial<Room>) => void;
@@ -114,14 +134,15 @@ interface StoreState extends AppData {
   deleteCourse: (id: string) => void;
   // periods / days
   addPeriod: (p: Omit<Period, "id">) => void;
+  /** When period times change, propagate to all class_slots whose times match the OLD period times */
   updatePeriod: (id: string, p: Partial<Period>) => void;
   deletePeriod: (id: string) => void;
   addDay: (name: string) => void;
   deleteDay: (id: string) => void;
-  // assignments
+  // assignments (active semester implied)
   setCourseSectionTeachers: (course_id: string, section_id: string, teacher_ids: string[]) => void;
-  // class slots
-  upsertClassSlot: (slot: Omit<ClassSlot, "id"> & { id?: string }) => string;
+  // class slots (active semester implied)
+  upsertClassSlot: (slot: Omit<ClassSlot, "id" | "semester_id"> & { id?: string; semester_id?: string }) => string;
   deleteClassSlot: (id: string) => void;
   deleteClassSlotsForCourseSection: (course_id: string, section_id: string) => void;
   // bulk
@@ -134,8 +155,10 @@ interface StoreState extends AppData {
 
 export const useStore = create<StoreState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       ...buildSeedData(),
+
+      setActiveSemester: (id) => set(() => ({ active_semester_id: id })),
 
       addTeacher: (t) =>
         set((s) => ({ teachers: [...s.teachers, { ...t, id: uid() }] })),
@@ -145,6 +168,19 @@ export const useStore = create<StoreState>()(
         })),
       deleteTeacher: (id) =>
         set((s) => ({ teachers: s.teachers.filter((x) => x.id !== id) })),
+      moveTeacherAssignments: (fromId, toId) =>
+        set((s) => {
+          if (fromId === toId) return {};
+          // Replace fromId with toId in every course_section_teachers entry (across all semesters).
+          const next_cst = s.course_section_teachers.map((cst) => {
+            if (!cst.teacher_ids.includes(fromId)) return cst;
+            const ids = cst.teacher_ids.map((t) => (t === fromId ? toId : t));
+            // de-dup in case toId already on it
+            return { ...cst, teacher_ids: Array.from(new Set(ids)) };
+          });
+          // Old teacher record is intentionally KEPT (per project rule).
+          return { course_section_teachers: next_cst };
+        }),
 
       addRoom: (r) => set((s) => ({ rooms: [...s.rooms, { ...r, id: uid() }] })),
       updateRoom: (id, r) =>
@@ -169,10 +205,27 @@ export const useStore = create<StoreState>()(
         set((s) => ({ courses: s.courses.filter((x) => x.id !== id) })),
 
       addPeriod: (p) => set((s) => ({ periods: [...s.periods, { ...p, id: uid() }] })),
-      updatePeriod: (id, p) =>
-        set((s) => ({
-          periods: s.periods.map((x) => (x.id === id ? { ...x, ...p } : x)),
-        })),
+      updatePeriod: (id, patch) =>
+        set((s) => {
+          const old = s.periods.find((p) => p.id === id);
+          if (!old) return {};
+          const next = { ...old, ...patch };
+          // Propagate start/end changes to class_slots that exactly matched the old times.
+          const startChanged = patch.start !== undefined && patch.start !== old.start;
+          const endChanged = patch.end !== undefined && patch.end !== old.end;
+          let class_slots = s.class_slots;
+          if (startChanged || endChanged) {
+            class_slots = s.class_slots.map((slot) =>
+              slot.start === old.start && slot.end === old.end
+                ? { ...slot, start: next.start, end: next.end }
+                : slot,
+            );
+          }
+          return {
+            periods: s.periods.map((p) => (p.id === id ? next : p)),
+            class_slots,
+          };
+        }),
       deletePeriod: (id) =>
         set((s) => ({ periods: s.periods.filter((x) => x.id !== id) })),
 
@@ -181,14 +234,15 @@ export const useStore = create<StoreState>()(
 
       setCourseSectionTeachers: (course_id, section_id, teacher_ids) =>
         set((s) => {
+          const sem = s.active_semester_id;
           const idx = s.course_section_teachers.findIndex(
-            (x) => x.course_id === course_id && x.section_id === section_id,
+            (x) => x.semester_id === sem && x.course_id === course_id && x.section_id === section_id,
           );
           if (idx === -1) {
             return {
               course_section_teachers: [
                 ...s.course_section_teachers,
-                { id: uid(), course_id, section_id, teacher_ids },
+                { id: uid(), semester_id: sem, course_id, section_id, teacher_ids },
               ],
             };
           }
@@ -199,13 +253,23 @@ export const useStore = create<StoreState>()(
 
       upsertClassSlot: (slot) => {
         const id = slot.id ?? uid();
+        const sem = slot.semester_id ?? get().active_semester_id;
         set((s) => {
           const exists = s.class_slots.findIndex((x) => x.id === id);
-          if (exists === -1) {
-            return { class_slots: [...s.class_slots, { ...slot, id }] };
-          }
+          const full: ClassSlot = {
+            id,
+            semester_id: sem,
+            course_id: slot.course_id,
+            section_id: slot.section_id,
+            day: slot.day,
+            start: slot.start,
+            end: slot.end,
+            room_id: slot.room_id,
+            week: slot.week,
+          };
+          if (exists === -1) return { class_slots: [...s.class_slots, full] };
           const next = [...s.class_slots];
-          next[exists] = { ...next[exists], ...slot, id };
+          next[exists] = full;
           return { class_slots: next };
         });
         return id;
@@ -213,11 +277,14 @@ export const useStore = create<StoreState>()(
       deleteClassSlot: (id) =>
         set((s) => ({ class_slots: s.class_slots.filter((x) => x.id !== id) })),
       deleteClassSlotsForCourseSection: (course_id, section_id) =>
-        set((s) => ({
-          class_slots: s.class_slots.filter(
-            (x) => !(x.course_id === course_id && x.section_id === section_id),
-          ),
-        })),
+        set((s) => {
+          const sem = s.active_semester_id;
+          return {
+            class_slots: s.class_slots.filter(
+              (x) => !(x.semester_id === sem && x.course_id === course_id && x.section_id === section_id),
+            ),
+          };
+        }),
 
       resetToSeed: () => set(() => buildSeedData()),
       replaceTeachers: (list) => set(() => ({ teachers: list })),
@@ -228,3 +295,14 @@ export const useStore = create<StoreState>()(
     { name: STORAGE_KEY },
   ),
 );
+
+// ---------- Helpers (selector-style; not part of the store API) ----------
+
+/** Get class_slots for the active semester */
+export function activeClassSlots(s: AppData): ClassSlot[] {
+  return s.class_slots.filter((x) => x.semester_id === s.active_semester_id);
+}
+/** Get course_section_teachers for the active semester */
+export function activeCST(s: AppData): CourseSectionTeacher[] {
+  return s.course_section_teachers.filter((x) => x.semester_id === s.active_semester_id);
+}

@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ConfirmProvider } from "@/components/ConfirmDialog";
+import { SemesterSelector } from "@/components/SemesterSelector";
+import { useStore } from "@/lib/store";
 
 const nav = [
   { to: "/", label: "Course Load", icon: LayoutGrid },
@@ -22,6 +24,9 @@ const nav = [
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const loc = useLocation();
+  const activeSemester = useStore((s) =>
+    s.semesters.find((x) => x.id === s.active_semester_id),
+  );
   return (
     <ConfirmProvider>
     <div className="min-h-screen bg-background flex">
@@ -36,9 +41,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
             <div>
               <div className="font-semibold text-sm leading-tight">Routine Manager</div>
-              <div className="text-[11px] text-muted-foreground">CSE · Winter 2026</div>
+              <div className="text-[11px] text-muted-foreground">CSE · {activeSemester?.name ?? "—"}</div>
             </div>
           </Link>
+        </div>
+        <div className="px-3 pt-3">
+          <SemesterSelector />
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1">
           {nav.map((item) => {
@@ -80,7 +88,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           >
             <GraduationCap className="h-4 w-4" />
           </div>
-          <div className="font-semibold">Routine Manager</div>
+          <div className="font-semibold flex-1 truncate">Routine Manager</div>
+          <SemesterSelector compact />
         </header>
         <nav className="md:hidden border-b bg-card px-2 py-1 flex gap-1 overflow-x-auto">
           {nav.map((item) => {
