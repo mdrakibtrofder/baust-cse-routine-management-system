@@ -26,6 +26,7 @@ import {
   Users,
   ChevronDown,
   ChevronUp,
+  CalendarDays,
 } from "lucide-react";
 import { COURSE_TYPE_INFO, type Course, type Section, type WeekPattern } from "@/lib/types";
 import {
@@ -40,6 +41,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { TeacherChip } from "@/components/TeacherBadge";
 import { TeacherDetailsDialog } from "@/components/TeacherDetailsDialog";
+import { RoutineDialog } from "@/components/RoutineDialog";
 import { useConfirm } from "@/components/ConfirmDialog";
 
 interface DraftClass {
@@ -103,6 +105,7 @@ export function ClassAssignDialog({
   const [showRoomTable, setShowRoomTable] = useState(true);
   const [confirmSave, setConfirmSave] = useState<{ msg: string } | null>(null);
   const [teacherDetailsId, setTeacherDetailsId] = useState<string | null>(null);
+  const [showSectionRoutine, setShowSectionRoutine] = useState(false);
   const confirmDialog = useConfirm();
 
   useEffect(() => {
