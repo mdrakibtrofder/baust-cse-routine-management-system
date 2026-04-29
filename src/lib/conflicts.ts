@@ -293,6 +293,7 @@ export function findAvailableRooms(
     if (info.roomKind === "sessional" && room.room_type !== "Sessional") return false;
     if (info.roomKind === "theory" && room.room_type !== "Theory") return false;
     if (room.capacity < section.total_students) return false;
+    if (roomUnavailableAt(data, room.id, candidate)) return false;
     const conflict = slots.some((slot) => {
       if (slot.id === ignoreSlotId) return false;
       if (slot.room_id !== room.id) return false;
