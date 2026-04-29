@@ -22,6 +22,38 @@ export function weeksOverlap(a: WeekPattern, b: WeekPattern) {
   return a === b;
 }
 
+/** Returns the first matching teacher-unavailability rule, or null */
+export function teacherUnavailableAt(
+  data: AppData,
+  teacherId: string,
+  candidate: { day: string; start: string; end: string },
+) {
+  return (
+    data.teacher_unavailability.find(
+      (u) =>
+        u.teacher_id === teacherId &&
+        u.day === candidate.day &&
+        timesOverlap(u.start, u.end, candidate.start, candidate.end),
+    ) ?? null
+  );
+}
+
+/** Returns the first matching room-unavailability rule, or null */
+export function roomUnavailableAt(
+  data: AppData,
+  roomId: string,
+  candidate: { day: string; start: string; end: string },
+) {
+  return (
+    data.room_unavailability.find(
+      (u) =>
+        u.room_id === roomId &&
+        u.days.includes(candidate.day) &&
+        timesOverlap(u.start, u.end, candidate.start, candidate.end),
+    ) ?? null
+  );
+}
+
 /** Slots scoped to the active semester */
 function semSlots(data: AppData): ClassSlot[] {
   return data.class_slots.filter((s) => s.semester_id === data.active_semester_id);
@@ -39,7 +71,9 @@ export interface Conflict {
     | "teacher_double"
     | "section_double"
     | "teacher_credit"
-    | "self_duplicate";
+    | "self_duplicate"
+    | "teacher_unavailable"
+    | "room_unavailable";
   message: string;
 }
 
@@ -119,6 +153,29 @@ export function checkConflicts(input: ConflictCheckInput): Conflict[] {
     }
   }
 
+  // Teacher unavailability
+  for (const tid of teacherIds) {
+    const u = teacherUnavailableAt(data, tid, candidate);
+    if (u) {
+      const t = data.teachers.find((x) => x.id === tid);
+      conflicts.push({
+        type: "teacher_unavailable",
+        message: `${t?.short_name ?? "Teacher"} is unavailable on ${u.day} ${u.start}-${u.end}${u.reason ? ` (${u.reason})` : ""}.`,
+      });
+    }
+  }
+
+  // Room unavailability
+  if (candidate.room_id) {
+    const u = roomUnavailableAt(data, candidate.room_id, candidate);
+    if (u) {
+      const r = data.rooms.find((x) => x.id === candidate.room_id);
+      conflicts.push({
+        type: "room_unavailable",
+        message: `Room ${r?.name ?? ""} is unavailable on ${candidate.day} ${u.start}-${u.end}${u.reason ? ` (${u.reason})` : ""}.`,
+      });
+    }
+  }
   for (const slot of slots) {
     if (slot.id === ignoreSlotId) continue;
     if (slot.section_id !== section.id) continue;
@@ -236,6 +293,7 @@ export function findAvailableRooms(
     if (info.roomKind === "sessional" && room.room_type !== "Sessional") return false;
     if (info.roomKind === "theory" && room.room_type !== "Theory") return false;
     if (room.capacity < section.total_students) return false;
+    if (roomUnavailableAt(data, room.id, candidate)) return false;
     const conflict = slots.some((slot) => {
       if (slot.id === ignoreSlotId) return false;
       if (slot.room_id !== room.id) return false;
