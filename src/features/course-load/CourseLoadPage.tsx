@@ -11,6 +11,7 @@ import { TeacherPicker } from "./TeacherPicker";
 import { ClassAssignDialog } from "./ClassAssignDialog";
 import { checkConflicts } from "@/lib/conflicts";
 import { RoutineDialog } from "@/components/RoutineDialog";
+import { CourseDetailsDialog } from "@/components/CourseDetailsDialog";
 
 const TERM_ORDER = ["I", "II"];
 
@@ -18,6 +19,7 @@ export function CourseLoadPage() {
   const data = useStore();
   const [openAssign, setOpenAssign] = useState<{ course: Course; section: Section } | null>(null);
   const [routineSection, setRoutineSection] = useState<Section | null>(null);
+  const [courseDetails, setCourseDetails] = useState<Course | null>(null);
 
   const grouped = useMemo(() => {
     const map = new Map<string, { level: number; term: string; courses: Course[]; sections: Section[] }>();
@@ -59,6 +61,7 @@ export function CourseLoadPage() {
             sections={g.sections}
             onAssign={(c, s) => setOpenAssign({ course: c, section: s })}
             onSectionRoutine={(s) => setRoutineSection(s)}
+            onCourseDetails={(c) => setCourseDetails(c)}
           />
         ))}
       </div>
@@ -77,14 +80,20 @@ export function CourseLoadPage() {
         title={routineSection ? `Section ${routineSection.name} · Level ${routineSection.level}, Term ${routineSection.term}` : ""}
         subtitle="Full section routine"
       />
+      <CourseDetailsDialog
+        course={courseDetails}
+        open={!!courseDetails}
+        onOpenChange={(v) => !v && setCourseDetails(null)}
+      />
     </div>
   );
 }
 
-function LevelTermBlock({ level, term, courses, sections, onAssign, onSectionRoutine }: {
+function LevelTermBlock({ level, term, courses, sections, onAssign, onSectionRoutine, onCourseDetails }: {
   level: number; term: string; courses: Course[]; sections: Section[];
   onAssign: (c: Course, s: Section) => void;
   onSectionRoutine: (s: Section) => void;
+  onCourseDetails: (c: Course) => void;
 }) {
   const totalCredit = courses.reduce((s, c) => s + c.credit, 0);
   return (
@@ -140,7 +149,7 @@ function LevelTermBlock({ level, term, courses, sections, onAssign, onSectionRou
           </thead>
           <tbody>
             {courses.map((c, idx) => (
-              <CourseRow key={c.id} course={c} sections={sections} onAssign={onAssign} alt={idx % 2 === 1} />
+              <CourseRow key={c.id} course={c} sections={sections} onAssign={onAssign} alt={idx % 2 === 1} onCourseDetails={onCourseDetails} />
             ))}
           </tbody>
         </table>
@@ -149,15 +158,24 @@ function LevelTermBlock({ level, term, courses, sections, onAssign, onSectionRou
   );
 }
 
-function CourseRow({ course, sections, onAssign, alt }: {
+function CourseRow({ course, sections, onAssign, alt, onCourseDetails }: {
   course: Course; sections: Section[]; onAssign: (c: Course, s: Section) => void; alt: boolean;
+  onCourseDetails: (c: Course) => void;
 }) {
   const data = useStore();
   const info = COURSE_TYPE_INFO[course.course_type];
   return (
     <tr className={cn("border-b", alt && "bg-muted/20")}>
-      <td className="px-3 py-2 font-mono text-xs font-medium align-top">{course.code}</td>
-      <td className="px-3 py-2 align-top">{course.name}</td>
+      <td className="px-3 py-2 align-top">
+        <button onClick={() => onCourseDetails(course)} className="font-mono text-xs font-medium hover:text-primary hover:underline" title="View course details">
+          {course.code}
+        </button>
+      </td>
+      <td className="px-3 py-2 align-top">
+        <button onClick={() => onCourseDetails(course)} className="text-left hover:text-primary hover:underline" title="View course details">
+          {course.name}
+        </button>
+      </td>
       <td className="px-3 py-2 text-center align-top font-medium">{course.credit}</td>
       <td className="px-3 py-2 text-center align-top">
         <Badge variant={course.sessional > 0 ? "default" : "secondary"} className="text-[10px] whitespace-nowrap">
