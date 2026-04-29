@@ -33,6 +33,8 @@ import {
   checkConflicts,
   findAvailableRooms,
   teachersBusyAt,
+  teacherUnavailableAt,
+  roomUnavailableAt,
   timesOverlap,
   weeksOverlap,
   type Conflict,
