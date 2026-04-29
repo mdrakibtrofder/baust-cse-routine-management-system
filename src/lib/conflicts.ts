@@ -71,7 +71,9 @@ export interface Conflict {
     | "teacher_double"
     | "section_double"
     | "teacher_credit"
-    | "self_duplicate";
+    | "self_duplicate"
+    | "teacher_unavailable"
+    | "room_unavailable";
   message: string;
 }
 
