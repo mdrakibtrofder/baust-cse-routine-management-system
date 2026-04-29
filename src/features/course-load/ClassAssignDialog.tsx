@@ -272,12 +272,24 @@ export function ClassAssignDialog({
               </Badge>
             </DialogTitle>
             <div className="flex items-center gap-2 flex-wrap mt-2">
-              <Badge variant="outline">Section {section.name}</Badge>
+              <button
+                type="button"
+                onClick={() => setShowSectionRoutine(true)}
+                title="Click to view full section routine"
+                className="inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium hover:bg-primary/10 hover:border-primary/40 transition"
+              >
+                Section {section.name}
+              </button>
               <Badge>{info.label}</Badge>
-              <Badge variant="secondary" className="gap-1">
+              <button
+                type="button"
+                onClick={() => setShowSectionRoutine(true)}
+                title="Click to view full section routine"
+                className="inline-flex items-center gap-1 rounded-md bg-secondary px-2 py-0.5 text-xs font-medium hover:bg-primary/10 transition"
+              >
                 <Users className="h-3 w-3" />
                 {section.total_students} students
-              </Badge>
+              </button>
               <Button
                 variant="outline"
                 size="sm"
