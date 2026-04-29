@@ -1,9 +1,12 @@
 import { useMemo } from "react";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
-import { BookOpen, MapPin, Coffee, FlaskConical } from "lucide-react";
+import { BookOpen, MapPin, Coffee, FlaskConical, FileSpreadsheet, FileText, FileType } from "lucide-react";
 import { COURSE_TYPE_INFO, type ClassSlot } from "@/lib/types";
 import { timesOverlap } from "@/lib/conflicts";
+import { Button } from "@/components/ui/button";
+import { exportRoutineExcel, exportRoutinePdf, exportRoutineDocx } from "@/lib/routine-export";
+import { toast } from "sonner";
 
 const DEFAULT_DEPT = "CSE";
 
