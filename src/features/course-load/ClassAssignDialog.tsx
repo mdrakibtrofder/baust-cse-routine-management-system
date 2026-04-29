@@ -386,10 +386,15 @@ export function ClassAssignDialog({
                       </button>
                     ))}
                   </div>
-                  <Badge variant="outline" className="gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setShowSectionRoutine(true)}
+                    title="Click to view full section routine"
+                    className="inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs hover:bg-primary/10 hover:border-primary/40 transition"
+                  >
                     <Users className="h-3 w-3" />
                     Section {section.name}: {section.total_students}
-                  </Badge>
+                  </button>
                 </div>
               </div>
 
