@@ -65,12 +65,28 @@ export function RoutineView({
 
   return (
     <div className="space-y-3">
-      {(title || subtitle) && (
-        <div>
-          {title && <h2 className="text-lg font-semibold">{title}</h2>}
-          {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
+      <div className="flex items-start justify-between gap-2 flex-wrap">
+        {(title || subtitle) && (
+          <div>
+            {title && <h2 className="text-lg font-semibold">{title}</h2>}
+            {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
+          </div>
+        )}
+        <div className="flex gap-1.5 ml-auto">
+          <Button size="sm" variant="outline" className="h-7 text-xs"
+            onClick={() => { try { exportRoutinePdf(data, scope, title || "Routine", title || "routine"); } catch (e: any) { toast.error(e.message); } }}>
+            <FileText className="h-3.5 w-3.5 mr-1" /> PDF
+          </Button>
+          <Button size="sm" variant="outline" className="h-7 text-xs"
+            onClick={() => { try { exportRoutineExcel(data, scope, title || "routine"); } catch (e: any) { toast.error(e.message); } }}>
+            <FileSpreadsheet className="h-3.5 w-3.5 mr-1" /> Excel
+          </Button>
+          <Button size="sm" variant="outline" className="h-7 text-xs"
+            onClick={async () => { try { await exportRoutineDocx(data, scope, title || "Routine", title || "routine"); } catch (e: any) { toast.error(e.message); } }}>
+            <FileType className="h-3.5 w-3.5 mr-1" /> DOCX
+          </Button>
         </div>
-      )}
+      </div>
 
       <div className="rounded-xl overflow-hidden border bg-card shadow-sm">
         <div className="overflow-auto">
