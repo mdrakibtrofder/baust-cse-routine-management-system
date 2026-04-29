@@ -153,6 +153,29 @@ export function checkConflicts(input: ConflictCheckInput): Conflict[] {
     }
   }
 
+  // Teacher unavailability
+  for (const tid of teacherIds) {
+    const u = teacherUnavailableAt(data, tid, candidate);
+    if (u) {
+      const t = data.teachers.find((x) => x.id === tid);
+      conflicts.push({
+        type: "teacher_unavailable",
+        message: `${t?.short_name ?? "Teacher"} is unavailable on ${u.day} ${u.start}-${u.end}${u.reason ? ` (${u.reason})` : ""}.`,
+      });
+    }
+  }
+
+  // Room unavailability
+  if (candidate.room_id) {
+    const u = roomUnavailableAt(data, candidate.room_id, candidate);
+    if (u) {
+      const r = data.rooms.find((x) => x.id === candidate.room_id);
+      conflicts.push({
+        type: "room_unavailable",
+        message: `Room ${r?.name ?? ""} is unavailable on ${candidate.day} ${u.start}-${u.end}${u.reason ? ` (${u.reason})` : ""}.`,
+      });
+    }
+  }
   for (const slot of slots) {
     if (slot.id === ignoreSlotId) continue;
     if (slot.section_id !== section.id) continue;
