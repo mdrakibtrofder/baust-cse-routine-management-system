@@ -22,6 +22,38 @@ export function weeksOverlap(a: WeekPattern, b: WeekPattern) {
   return a === b;
 }
 
+/** Returns the first matching teacher-unavailability rule, or null */
+export function teacherUnavailableAt(
+  data: AppData,
+  teacherId: string,
+  candidate: { day: string; start: string; end: string },
+) {
+  return (
+    data.teacher_unavailability.find(
+      (u) =>
+        u.teacher_id === teacherId &&
+        u.day === candidate.day &&
+        timesOverlap(u.start, u.end, candidate.start, candidate.end),
+    ) ?? null
+  );
+}
+
+/** Returns the first matching room-unavailability rule, or null */
+export function roomUnavailableAt(
+  data: AppData,
+  roomId: string,
+  candidate: { day: string; start: string; end: string },
+) {
+  return (
+    data.room_unavailability.find(
+      (u) =>
+        u.room_id === roomId &&
+        u.days.includes(candidate.day) &&
+        timesOverlap(u.start, u.end, candidate.start, candidate.end),
+    ) ?? null
+  );
+}
+
 /** Slots scoped to the active semester */
 function semSlots(data: AppData): ClassSlot[] {
   return data.class_slots.filter((s) => s.semester_id === data.active_semester_id);
