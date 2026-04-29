@@ -86,6 +86,27 @@ export interface Semester {
   season: "Winter" | "Summer";
 }
 
+/** A recurring weekly window when a teacher is unavailable */
+export interface TeacherUnavailability {
+  id: string;
+  teacher_id: string;
+  day: string; // SUN..THU
+  start: string; // HH:MM
+  end: string; // HH:MM
+  reason?: string;
+}
+
+/** A recurring weekly window when a room is unavailable.
+ *  `days` lets one entry cover multiple days (e.g. SUN+WED). */
+export interface RoomUnavailability {
+  id: string;
+  room_id: string;
+  days: string[]; // ["SUN","WED"]
+  start: string;
+  end: string;
+  reason?: string;
+}
+
 export interface AppData {
   teachers: Teacher[];
   rooms: Room[];
@@ -97,6 +118,8 @@ export interface AppData {
   course_section_teachers: CourseSectionTeacher[];
   semesters: Semester[];
   active_semester_id: string;
+  teacher_unavailability: TeacherUnavailability[];
+  room_unavailability: RoomUnavailability[];
 }
 
 export const COURSE_TYPE_INFO: Record<
