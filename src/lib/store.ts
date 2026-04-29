@@ -13,6 +13,8 @@ import type {
   CourseSectionTeacher,
   CourseType,
   Semester,
+  TeacherUnavailability,
+  RoomUnavailability,
 } from "./types";
 
 const STORAGE_KEY = "rms-data-v2";
@@ -108,6 +110,8 @@ function buildSeedData(): AppData {
     course_section_teachers: Array.from(cst_map.values()),
     semesters,
     active_semester_id: activeId,
+    teacher_unavailability: [],
+    room_unavailability: [],
   };
 }
 
