@@ -1,11 +1,14 @@
 import { useMemo } from "react";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
-import { BookOpen, MapPin, Coffee, FlaskConical, FileSpreadsheet, FileText, FileType } from "lucide-react";
+import { BookOpen, MapPin, Coffee, FlaskConical, FileSpreadsheet, FileText, FileType, FileJson, Image as ImageIcon } from "lucide-react";
 import { COURSE_TYPE_INFO, type ClassSlot } from "@/lib/types";
 import { timesOverlap } from "@/lib/conflicts";
 import { Button } from "@/components/ui/button";
-import { exportRoutineExcel, exportRoutinePdf, exportRoutineDocx } from "@/lib/routine-export";
+import {
+  exportRoutineExcel, exportRoutinePdf, exportRoutineDocx,
+  exportRoutineJson, exportRoutineImage,
+} from "@/lib/routine-export";
 import { toast } from "sonner";
 
 const DEFAULT_DEPT = "CSE";
@@ -72,18 +75,26 @@ export function RoutineView({
             {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
           </div>
         )}
-        <div className="flex gap-1.5 ml-auto">
+        <div className="flex gap-1.5 ml-auto flex-wrap">
           <Button size="sm" variant="outline" className="h-7 text-xs"
-            onClick={() => { try { exportRoutinePdf(data, scope, title || "Routine", title || "routine"); } catch (e: any) { toast.error(e.message); } }}>
+            onClick={() => { try { exportRoutinePdf(data, scope); } catch (e: any) { toast.error(e.message); } }}>
             <FileText className="h-3.5 w-3.5 mr-1" /> PDF
           </Button>
           <Button size="sm" variant="outline" className="h-7 text-xs"
-            onClick={() => { try { exportRoutineExcel(data, scope, title || "routine"); } catch (e: any) { toast.error(e.message); } }}>
+            onClick={() => { try { exportRoutineExcel(data, scope); } catch (e: any) { toast.error(e.message); } }}>
             <FileSpreadsheet className="h-3.5 w-3.5 mr-1" /> Excel
           </Button>
           <Button size="sm" variant="outline" className="h-7 text-xs"
-            onClick={async () => { try { await exportRoutineDocx(data, scope, title || "Routine", title || "routine"); } catch (e: any) { toast.error(e.message); } }}>
+            onClick={async () => { try { await exportRoutineDocx(data, scope); } catch (e: any) { toast.error(e.message); } }}>
             <FileType className="h-3.5 w-3.5 mr-1" /> DOCX
+          </Button>
+          <Button size="sm" variant="outline" className="h-7 text-xs"
+            onClick={() => { try { exportRoutineJson(data, scope); } catch (e: any) { toast.error(e.message); } }}>
+            <FileJson className="h-3.5 w-3.5 mr-1" /> JSON
+          </Button>
+          <Button size="sm" variant="outline" className="h-7 text-xs"
+            onClick={() => { try { exportRoutineImage(data, scope); } catch (e: any) { toast.error(e.message); } }}>
+            <ImageIcon className="h-3.5 w-3.5 mr-1" /> Image
           </Button>
         </div>
       </div>
