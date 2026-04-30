@@ -9,6 +9,7 @@ import { Trash2, Plus, Pencil, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { useConfirm } from "@/components/ConfirmDialog";
+import { fmtRange12 } from "@/lib/utils";
 import { periodDependencies, dayDependencies } from "@/lib/conflicts";
 import { BlockedDeleteDialog } from "@/components/BlockedDeleteDialog";
 import type { Period } from "@/lib/types";
@@ -47,7 +48,7 @@ export function SettingsPage() {
       start: editing.start, end: editing.end, duration: dur,
       name: `${editing.start}-${editing.end}`,
     });
-    toast.success(`Period updated. Existing classes at ${old.start}-${old.end} were shifted to ${editing.start}-${editing.end}.`);
+    toast.success(`Period updated. Existing classes at ${fmtRange12(old.start, old.end)} were shifted to ${fmtRange12(editing.start, editing.end)}.`);
     setEditing(null);
   };
 
@@ -55,7 +56,7 @@ export function SettingsPage() {
     const deps = periodDependencies(data, p.id);
     if (deps.length > 0) { setBlockedPeriod({ period: p, deps }); return; }
     const ok = await confirmDialog({
-      title: `Delete period ${p.start}–${p.end}?`,
+      title: `Delete period ${fmtRange12(p.start, p.end)}?`,
       description: "No classes use this period. It will be permanently removed.",
       destructive: true, confirmLabel: "Delete",
     });
@@ -130,7 +131,7 @@ export function SettingsPage() {
                     ) : (
                       <>
                         <div className="flex items-center gap-3 flex-1">
-                          <span className="font-mono">{p.start}–{p.end}</span>
+                          <span className="font-mono">{fmtRange12(p.start, p.end)}</span>
                           <Badge variant={p.kind === "sessional" ? "default" : "secondary"} className="text-[10px]">{p.kind}</Badge>
                           <span className="text-xs text-muted-foreground">{p.duration} min</span>
                           {deps.length > 0 && (
@@ -175,7 +176,7 @@ export function SettingsPage() {
         open={!!blockedPeriod}
         onOpenChange={(v) => !v && setBlockedPeriod(null)}
         title="this period"
-        entityLabel={blockedPeriod ? `Period ${blockedPeriod.period.start}–${blockedPeriod.period.end}` : ""}
+        entityLabel={blockedPeriod ? `Period ${fmtRange12(blockedPeriod.period.start, blockedPeriod.period.end)}` : ""}
         dependencies={blockedPeriod?.deps ?? []}
         hint="Reschedule the listed classes to a different period first."
       />
