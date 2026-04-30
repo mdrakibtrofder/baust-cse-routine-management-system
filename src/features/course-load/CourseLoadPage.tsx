@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, AlertCircle, Check, Users } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, fmtRange12 } from "@/lib/utils";
 import type { Course, Section } from "@/lib/types";
 import { COURSE_TYPE_INFO } from "@/lib/types";
 import { TeacherPicker } from "./TeacherPicker";
