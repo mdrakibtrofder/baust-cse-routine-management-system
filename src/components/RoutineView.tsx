@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useStore } from "@/lib/store";
-import { cn } from "@/lib/utils";
+import { cn, fmtTime12, fmtRange12 } from "@/lib/utils";
 import { BookOpen, MapPin, Coffee, FlaskConical, FileSpreadsheet, FileText, FileType, FileJson, Image as ImageIcon } from "lucide-react";
 import { COURSE_TYPE_INFO, type ClassSlot } from "@/lib/types";
 import { timesOverlap } from "@/lib/conflicts";
@@ -115,8 +115,9 @@ export function RoutineView({
                       isBreak(p.id) && "bg-amber-400/90 text-amber-950",
                     )}
                   >
-                    <div>{formatTime(p.start)} -</div>
-                    <div>{formatTime(p.end)}</div>
+                    <div>{fmtTime12(p.start)}</div>
+                    <div className="opacity-70">to</div>
+                    <div>{fmtTime12(p.end)}</div>
                   </th>
                 ))}
               </tr>
@@ -138,7 +139,7 @@ export function RoutineView({
                           <Coffee className="h-4 w-4 mx-auto text-amber-700" />
                           <div className="text-[10px] font-bold text-amber-900 mt-1">BREAK</div>
                           <div className="text-[9px] text-amber-700">
-                            {formatTime(p.start)} - {formatTime(p.end)}
+                            {fmtRange12(p.start, p.end)}
                           </div>
                         </td>
                       );
@@ -240,14 +241,6 @@ function RoutineCell({ slot }: { slot: ClassSlot }) {
       </div>
     </div>
   );
-}
-
-function formatTime(t: string) {
-  // "08:00" -> "08.00 AM"
-  const [h, m] = t.split(":").map(Number);
-  const ampm = h >= 12 ? "PM" : "AM";
-  const hh = h % 12 === 0 ? 12 : h % 12;
-  return `${String(hh).padStart(2, "0")}.${String(m).padStart(2, "0")} ${ampm}`;
 }
 
 function dayLong(d: string) {
