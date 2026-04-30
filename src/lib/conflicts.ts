@@ -7,6 +7,7 @@ import {
   Section,
   WeekPattern,
 } from "./types";
+import { fmtRange12 } from "./utils";
 
 function toMin(t: string) {
   const [h, m] = t.split(":").map(Number);
@@ -127,7 +128,7 @@ export function checkConflicts(input: ConflictCheckInput): Conflict[] {
       const room = data.rooms.find((r) => r.id === candidate.room_id);
       conflicts.push({
         type: "room_double",
-        message: `Room ${room?.name} already booked ${slot.day} ${slot.start}-${slot.end} by ${otherCourse?.code} (Sec ${otherSec?.name}).`,
+        message: `Room ${room?.name} already booked ${slot.day} ${fmtRange12(slot.start, slot.end)} by ${otherCourse?.code} (Sec ${otherSec?.name}).`,
       });
     }
   }
@@ -148,7 +149,7 @@ export function checkConflicts(input: ConflictCheckInput): Conflict[] {
       const otherSec = data.sections.find((s) => s.id === slot.section_id);
       conflicts.push({
         type: "teacher_double",
-        message: `Teacher ${t?.short_name} already teaches ${otherCourse?.code} (Sec ${otherSec?.name}) on ${slot.day} ${slot.start}-${slot.end}.`,
+        message: `Teacher ${t?.short_name} already teaches ${otherCourse?.code} (Sec ${otherSec?.name}) on ${slot.day} ${fmtRange12(slot.start, slot.end)}.`,
       });
     }
   }
@@ -160,7 +161,7 @@ export function checkConflicts(input: ConflictCheckInput): Conflict[] {
       const t = data.teachers.find((x) => x.id === tid);
       conflicts.push({
         type: "teacher_unavailable",
-        message: `${t?.short_name ?? "Teacher"} is unavailable on ${u.day} ${u.start}-${u.end}${u.reason ? ` (${u.reason})` : ""}.`,
+        message: `${t?.short_name ?? "Teacher"} is unavailable on ${u.day} ${fmtRange12(u.start, u.end)}${u.reason ? ` (${u.reason})` : ""}.`,
       });
     }
   }
@@ -172,7 +173,7 @@ export function checkConflicts(input: ConflictCheckInput): Conflict[] {
       const r = data.rooms.find((x) => x.id === candidate.room_id);
       conflicts.push({
         type: "room_unavailable",
-        message: `Room ${r?.name ?? ""} is unavailable on ${candidate.day} ${u.start}-${u.end}${u.reason ? ` (${u.reason})` : ""}.`,
+        message: `Room ${r?.name ?? ""} is unavailable on ${candidate.day} ${fmtRange12(u.start, u.end)}${u.reason ? ` (${u.reason})` : ""}.`,
       });
     }
   }
@@ -186,7 +187,7 @@ export function checkConflicts(input: ConflictCheckInput): Conflict[] {
     const otherCourse = data.courses.find((c) => c.id === slot.course_id);
     conflicts.push({
       type: "section_double",
-      message: `Section ${section.name} already has ${otherCourse?.code} on ${slot.day} ${slot.start}-${slot.end}.`,
+      message: `Section ${section.name} already has ${otherCourse?.code} on ${slot.day} ${fmtRange12(slot.start, slot.end)}.`,
     });
   }
 
@@ -198,7 +199,7 @@ export function checkConflicts(input: ConflictCheckInput): Conflict[] {
       if (!weeksOverlap(sd.week, candidate.week)) continue;
       conflicts.push({
         type: "self_duplicate",
-        message: `Duplicate slot: another class for this section is already on ${candidate.day} ${sd.start}-${sd.end}.`,
+        message: `Duplicate slot: another class for this section is already on ${candidate.day} ${fmtRange12(sd.start, sd.end)}.`,
       });
     }
   }
@@ -338,7 +339,7 @@ export function roomDependencies(data: AppData, roomId: string): Dependency[] {
     const sem = data.semesters.find((x) => x.id === slot.semester_id);
     deps.push({
       kind: "class_slot",
-      description: `${c?.code ?? "?"} (Sec ${s?.name ?? "?"}) · ${slot.day} ${slot.start}-${slot.end} · ${sem?.name ?? ""}`,
+      description: `${c?.code ?? "?"} (Sec ${s?.name ?? "?"}) · ${slot.day} ${fmtRange12(slot.start, slot.end)} · ${sem?.name ?? ""}`,
     });
   }
   return deps;
@@ -352,7 +353,7 @@ export function sectionDependencies(data: AppData, sectionId: string): Dependenc
     const sem = data.semesters.find((x) => x.id === slot.semester_id);
     deps.push({
       kind: "class_slot",
-      description: `${c?.code ?? "?"} · ${slot.day} ${slot.start}-${slot.end} · ${sem?.name ?? ""}`,
+      description: `${c?.code ?? "?"} · ${slot.day} ${fmtRange12(slot.start, slot.end)} · ${sem?.name ?? ""}`,
     });
   }
   for (const cst of data.course_section_teachers) {
@@ -375,7 +376,7 @@ export function courseDependencies(data: AppData, courseId: string): Dependency[
     const sem = data.semesters.find((x) => x.id === slot.semester_id);
     deps.push({
       kind: "class_slot",
-      description: `Sec ${s?.name ?? "?"} · ${slot.day} ${slot.start}-${slot.end} · ${sem?.name ?? ""}`,
+      description: `Sec ${s?.name ?? "?"} · ${slot.day} ${fmtRange12(slot.start, slot.end)} · ${sem?.name ?? ""}`,
     });
   }
   for (const cst of data.course_section_teachers) {
@@ -416,7 +417,7 @@ export function dayDependencies(data: AppData, dayName: string): Dependency[] {
     const sem = data.semesters.find((x) => x.id === slot.semester_id);
     deps.push({
       kind: "class_slot",
-      description: `${c?.code ?? "?"} (Sec ${s?.name ?? "?"}) · ${slot.start}-${slot.end} · ${sem?.name ?? ""}`,
+      description: `${c?.code ?? "?"} (Sec ${s?.name ?? "?"}) · ${fmtRange12(slot.start, slot.end)} · ${sem?.name ?? ""}`,
     });
   }
   return deps;

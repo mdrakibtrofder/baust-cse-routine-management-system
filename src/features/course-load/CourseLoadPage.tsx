@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, AlertCircle, Check, Users } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, fmtRange12 } from "@/lib/utils";
 import type { Course, Section } from "@/lib/types";
 import { COURSE_TYPE_INFO } from "@/lib/types";
 import { TeacherPicker } from "./TeacherPicker";
@@ -246,7 +246,7 @@ function SectionCell({ course, section, onAssign }: {
                 return (
                   <div key={slot.id} className="flex items-center gap-1.5 font-mono">
                     <span className="font-semibold">{slot.day}</span>
-                    <span>{slot.start}–{slot.end}</span>
+                    <span>{fmtRange12(slot.start, slot.end)}</span>
                     {room ? <Badge variant="outline" className="text-[9px] px-1 py-0 h-3.5">{room.name}</Badge> :
                       <span className="text-destructive">no room</span>}
                     {slot.week !== "EVERY" && <span className="text-[9px] text-muted-foreground">#{slot.week}</span>}

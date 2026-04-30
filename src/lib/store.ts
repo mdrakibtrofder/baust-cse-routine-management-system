@@ -17,7 +17,7 @@ import type {
   RoomUnavailability,
 } from "./types";
 
-const STORAGE_KEY = "rms-data-v2";
+const STORAGE_KEY = "rms-data-v3";
 
 function uid() {
   return crypto.randomUUID();

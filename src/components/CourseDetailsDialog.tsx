@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { BookOpen, Users, MapPin, Calendar, Clock, GraduationCap, Sparkles } from "lucide-react";
 import type { Course } from "@/lib/types";
 import { TeacherChip } from "@/components/TeacherBadge";
-import { cn } from "@/lib/utils";
+import { cn, fmtRange12 } from "@/lib/utils";
 
 const DEFAULT_DEPT = "CSE";
 
@@ -157,7 +157,7 @@ export function CourseDetailsDialog({
                         </span>
                         <span className="inline-flex items-center gap-1 font-mono">
                           <Clock className="h-3 w-3" />
-                          {s.start}–{s.end}
+                          {fmtRange12(s.start, s.end)}
                         </span>
                         {room ? (
                           <span className="inline-flex items-center gap-1 font-mono px-1.5 py-0.5 rounded bg-orange-100/80 text-orange-900 border border-orange-200">

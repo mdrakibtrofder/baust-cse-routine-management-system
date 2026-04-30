@@ -8,6 +8,7 @@ import {
 } from "docx";
 import type { AppData, ClassSlot } from "@/lib/types";
 import { timesOverlap } from "@/lib/conflicts";
+import { fmtRange12 } from "@/lib/utils";
 import type { RoutineScope } from "@/components/RoutineView";
 
 const DEFAULT_DEPT = "CSE";
@@ -111,7 +112,7 @@ export function buildRoutineMatrix(data: AppData, scope: RoutineScope) {
     return [c?.code ?? "", teachers, room?.name ?? "", sectionTag].filter(Boolean).join("\n");
   };
 
-  const header = ["Day", ...periods.map((p) => `${p.start}-${p.end}`)];
+  const header = ["Day", ...periods.map((p) => fmtRange12(p.start, p.end))];
   const rows = days.map((d) => {
     const row: string[] = [d.name];
     for (const p of periods) {
