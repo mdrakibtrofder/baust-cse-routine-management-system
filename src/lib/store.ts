@@ -13,9 +13,11 @@ import type {
   CourseSectionTeacher,
   CourseType,
   Semester,
+  TeacherUnavailability,
+  RoomUnavailability,
 } from "./types";
 
-const STORAGE_KEY = "rms-data-v2";
+const STORAGE_KEY = "rms-data-v3";
 
 function uid() {
   return crypto.randomUUID();
@@ -108,6 +110,8 @@ function buildSeedData(): AppData {
     course_section_teachers: Array.from(cst_map.values()),
     semesters,
     active_semester_id: activeId,
+    teacher_unavailability: [],
+    room_unavailability: [],
   };
 }
 
@@ -151,6 +155,13 @@ interface StoreState extends AppData {
   replaceRooms: (list: Room[]) => void;
   replaceSections: (list: Section[]) => void;
   replaceCourses: (list: Course[]) => void;
+  // unavailability
+  addTeacherUnavailability: (u: Omit<TeacherUnavailability, "id">) => void;
+  updateTeacherUnavailability: (id: string, u: Partial<TeacherUnavailability>) => void;
+  deleteTeacherUnavailability: (id: string) => void;
+  addRoomUnavailability: (u: Omit<RoomUnavailability, "id">) => void;
+  updateRoomUnavailability: (id: string, u: Partial<RoomUnavailability>) => void;
+  deleteRoomUnavailability: (id: string) => void;
 }
 
 export const useStore = create<StoreState>()(
@@ -291,6 +302,23 @@ export const useStore = create<StoreState>()(
       replaceRooms: (list) => set(() => ({ rooms: list })),
       replaceSections: (list) => set(() => ({ sections: list })),
       replaceCourses: (list) => set(() => ({ courses: list })),
+
+      addTeacherUnavailability: (u) =>
+        set((s) => ({ teacher_unavailability: [...s.teacher_unavailability, { ...u, id: uid() }] })),
+      updateTeacherUnavailability: (id, u) =>
+        set((s) => ({
+          teacher_unavailability: s.teacher_unavailability.map((x) => (x.id === id ? { ...x, ...u } : x)),
+        })),
+      deleteTeacherUnavailability: (id) =>
+        set((s) => ({ teacher_unavailability: s.teacher_unavailability.filter((x) => x.id !== id) })),
+      addRoomUnavailability: (u) =>
+        set((s) => ({ room_unavailability: [...s.room_unavailability, { ...u, id: uid() }] })),
+      updateRoomUnavailability: (id, u) =>
+        set((s) => ({
+          room_unavailability: s.room_unavailability.map((x) => (x.id === id ? { ...x, ...u } : x)),
+        })),
+      deleteRoomUnavailability: (id) =>
+        set((s) => ({ room_unavailability: s.room_unavailability.filter((x) => x.id !== id) })),
     }),
     { name: STORAGE_KEY },
   ),

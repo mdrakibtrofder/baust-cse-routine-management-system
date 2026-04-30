@@ -1,9 +1,15 @@
 import { useMemo } from "react";
 import { useStore } from "@/lib/store";
-import { cn } from "@/lib/utils";
-import { BookOpen, MapPin, Coffee, FlaskConical } from "lucide-react";
+import { cn, fmtTime12, fmtRange12 } from "@/lib/utils";
+import { BookOpen, MapPin, Coffee, FlaskConical, FileSpreadsheet, FileText, FileType, FileJson, Image as ImageIcon } from "lucide-react";
 import { COURSE_TYPE_INFO, type ClassSlot } from "@/lib/types";
 import { timesOverlap } from "@/lib/conflicts";
+import { Button } from "@/components/ui/button";
+import {
+  exportRoutineExcel, exportRoutinePdf, exportRoutineDocx,
+  exportRoutineJson, exportRoutineImage,
+} from "@/lib/routine-export";
+import { toast } from "sonner";
 
 const DEFAULT_DEPT = "CSE";
 
@@ -62,12 +68,36 @@ export function RoutineView({
 
   return (
     <div className="space-y-3">
-      {(title || subtitle) && (
-        <div>
-          {title && <h2 className="text-lg font-semibold">{title}</h2>}
-          {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
+      <div className="flex items-start justify-between gap-2 flex-wrap">
+        {(title || subtitle) && (
+          <div>
+            {title && <h2 className="text-lg font-semibold">{title}</h2>}
+            {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
+          </div>
+        )}
+        <div className="flex gap-1.5 ml-auto flex-wrap">
+          <Button size="sm" variant="outline" className="h-7 text-xs"
+            onClick={() => { try { exportRoutinePdf(data, scope); } catch (e: any) { toast.error(e.message); } }}>
+            <FileText className="h-3.5 w-3.5 mr-1" /> PDF
+          </Button>
+          <Button size="sm" variant="outline" className="h-7 text-xs"
+            onClick={() => { try { exportRoutineExcel(data, scope); } catch (e: any) { toast.error(e.message); } }}>
+            <FileSpreadsheet className="h-3.5 w-3.5 mr-1" /> Excel
+          </Button>
+          <Button size="sm" variant="outline" className="h-7 text-xs"
+            onClick={async () => { try { await exportRoutineDocx(data, scope); } catch (e: any) { toast.error(e.message); } }}>
+            <FileType className="h-3.5 w-3.5 mr-1" /> DOCX
+          </Button>
+          <Button size="sm" variant="outline" className="h-7 text-xs"
+            onClick={() => { try { exportRoutineJson(data, scope); } catch (e: any) { toast.error(e.message); } }}>
+            <FileJson className="h-3.5 w-3.5 mr-1" /> JSON
+          </Button>
+          <Button size="sm" variant="outline" className="h-7 text-xs"
+            onClick={() => { try { exportRoutineImage(data, scope); } catch (e: any) { toast.error(e.message); } }}>
+            <ImageIcon className="h-3.5 w-3.5 mr-1" /> Image
+          </Button>
         </div>
-      )}
+      </div>
 
       <div className="rounded-xl overflow-hidden border bg-card shadow-sm">
         <div className="overflow-auto">
@@ -85,8 +115,9 @@ export function RoutineView({
                       isBreak(p.id) && "bg-amber-400/90 text-amber-950",
                     )}
                   >
-                    <div>{formatTime(p.start)} -</div>
-                    <div>{formatTime(p.end)}</div>
+                    <div>{fmtTime12(p.start)}</div>
+                    <div className="opacity-70">to</div>
+                    <div>{fmtTime12(p.end)}</div>
                   </th>
                 ))}
               </tr>
@@ -108,7 +139,7 @@ export function RoutineView({
                           <Coffee className="h-4 w-4 mx-auto text-amber-700" />
                           <div className="text-[10px] font-bold text-amber-900 mt-1">BREAK</div>
                           <div className="text-[9px] text-amber-700">
-                            {formatTime(p.start)} - {formatTime(p.end)}
+                            {fmtRange12(p.start, p.end)}
                           </div>
                         </td>
                       );
@@ -210,14 +241,6 @@ function RoutineCell({ slot }: { slot: ClassSlot }) {
       </div>
     </div>
   );
-}
-
-function formatTime(t: string) {
-  // "08:00" -> "08.00 AM"
-  const [h, m] = t.split(":").map(Number);
-  const ampm = h >= 12 ? "PM" : "AM";
-  const hh = h % 12 === 0 ? 12 : h % 12;
-  return `${String(hh).padStart(2, "0")}.${String(m).padStart(2, "0")} ${ampm}`;
 }
 
 function dayLong(d: string) {

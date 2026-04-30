@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useStore } from "@/lib/store";
+import { fmtRange12 } from "@/lib/utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,6 +34,8 @@ import {
   checkConflicts,
   findAvailableRooms,
   teachersBusyAt,
+  teacherUnavailableAt,
+  roomUnavailableAt,
   timesOverlap,
   weeksOverlap,
   type Conflict,
@@ -42,6 +45,7 @@ import { cn } from "@/lib/utils";
 import { TeacherChip } from "@/components/TeacherBadge";
 import { TeacherDetailsDialog } from "@/components/TeacherDetailsDialog";
 import { RoutineDialog } from "@/components/RoutineDialog";
+import { CourseDetailsDialog } from "@/components/CourseDetailsDialog";
 import { useConfirm } from "@/components/ConfirmDialog";
 
 interface DraftClass {
@@ -106,6 +110,7 @@ export function ClassAssignDialog({
   const [confirmSave, setConfirmSave] = useState<{ msg: string } | null>(null);
   const [teacherDetailsId, setTeacherDetailsId] = useState<string | null>(null);
   const [showSectionRoutine, setShowSectionRoutine] = useState(false);
+  const [showCourseDetails, setShowCourseDetails] = useState(false);
   const confirmDialog = useConfirm();
 
   useEffect(() => {
@@ -262,20 +267,37 @@ export function ClassAssignDialog({
         <DialogContent className="max-w-5xl max-h-[92vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 flex-wrap">
-              <span>
+              <button
+                type="button"
+                onClick={() => setShowCourseDetails(true)}
+                title="Click to see all sections, teachers, rooms for this course"
+                className="text-left hover:text-primary transition underline-offset-4 hover:underline"
+              >
                 {course.code} — {course.name}
-              </span>
+              </button>
               <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
                 Level {course.level} · Term {course.term}
               </Badge>
             </DialogTitle>
             <div className="flex items-center gap-2 flex-wrap mt-2">
-              <Badge variant="outline">Section {section.name}</Badge>
+              <button
+                type="button"
+                onClick={() => setShowSectionRoutine(true)}
+                title="Click to view full section routine"
+                className="inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium hover:bg-primary/10 hover:border-primary/40 transition"
+              >
+                Section {section.name}
+              </button>
               <Badge>{info.label}</Badge>
-              <Badge variant="secondary" className="gap-1">
+              <button
+                type="button"
+                onClick={() => setShowSectionRoutine(true)}
+                title="Click to view full section routine"
+                className="inline-flex items-center gap-1 rounded-md bg-secondary px-2 py-0.5 text-xs font-medium hover:bg-primary/10 transition"
+              >
                 <Users className="h-3 w-3" />
                 {section.total_students} students
-              </Badge>
+              </button>
               <Button
                 variant="outline"
                 size="sm"
@@ -328,7 +350,7 @@ export function ClassAssignDialog({
                         )}
                       </div>
                       <div className="font-mono text-[11px]">
-                        {d.day} {d.start}–{d.end}
+                        {d.day} {fmtRange12(d.start, d.end)}
                       </div>
                       <div className="text-[10px] text-muted-foreground truncate">
                         {room ? room.name : <span className="text-warning">no room</span>}
@@ -372,10 +394,15 @@ export function ClassAssignDialog({
                       </button>
                     ))}
                   </div>
-                  <Badge variant="outline" className="gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setShowSectionRoutine(true)}
+                    title="Click to view full section routine"
+                    className="inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs hover:bg-primary/10 hover:border-primary/40 transition"
+                  >
                     <Users className="h-3 w-3" />
                     Section {section.name}: {section.total_students}
-                  </Badge>
+                  </button>
                 </div>
               </div>
 
@@ -404,7 +431,7 @@ export function ClassAssignDialog({
                     <SelectContent>
                       {applicablePeriods.map((p) => (
                         <SelectItem key={p.id} value={p.id}>
-                          {p.start}–{p.end} ({p.duration % 60 === 0 ? `${p.duration / 60}h` : `${p.duration}m`})
+                          {fmtRange12(p.start, p.end)} ({p.duration % 60 === 0 ? `${p.duration / 60}h` : `${p.duration}m`})
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -443,13 +470,24 @@ export function ClassAssignDialog({
                       .map((r) => {
                         const ok = availableRooms.some((ar) => ar.id === r.id);
                         const capOk = r.capacity >= section.total_students;
+                        // "Fully booked" => every applicable period on current.day is taken (by some other slot)
+                        const fullyBooked = applicablePeriods.length > 0 && applicablePeriods.every((p) => {
+                          return data.class_slots.some(
+                            (slot) =>
+                              slot.id !== current.id &&
+                              slot.room_id === r.id &&
+                              slot.day === current.day &&
+                              timesOverlap(slot.start, slot.end, p.start, p.end),
+                          );
+                        });
                         return (
                           <SelectItem key={r.id} value={r.id}>
                             <span className="flex items-center gap-2">
                               <span className="font-mono">{r.name}</span>
                               <span className="text-xs text-muted-foreground">Capacity {r.capacity}</span>
                               {!capOk && <Badge variant="destructive" className="text-[10px]">small</Badge>}
-                              {!ok && capOk && <Badge variant="outline" className="text-[10px]">busy</Badge>}
+                              {fullyBooked && <Badge variant="destructive" className="text-[10px]">fully booked</Badge>}
+                              {!ok && capOk && !fullyBooked && <Badge variant="outline" className="text-[10px]">conflict</Badge>}
                               {ok && capOk && <Check className="h-3 w-3 text-success" />}
                             </span>
                           </SelectItem>
@@ -626,6 +664,12 @@ export function ClassAssignDialog({
         title={`Section ${section.name} · Level ${section.level}, Term ${section.term}`}
         subtitle={`${course.code} — ${course.name}`}
       />
+
+      <CourseDetailsDialog
+        course={showCourseDetails ? course : null}
+        open={showCourseDetails}
+        onOpenChange={setShowCourseDetails}
+      />
     </>
   );
 }
@@ -669,12 +713,18 @@ function RoomDayGrid({
 
   const periods = data.periods.filter((p) => p.kind === info.roomKind).sort((a, b) => a.start.localeCompare(b.start));
 
-  const teacherBusyByPeriod = useMemo(() => {
-    const map = new Map<string, { teacherId: string; courseCode?: string; sectionName?: string }>();
+  const teacherStatusByPeriod = useMemo(() => {
+    const map = new Map<
+      string,
+      {
+        busy?: { teacherId: string; teacherShort?: string; teacherName?: string; courseCode?: string; sectionName?: string };
+        unavailable?: { teacherId: string; teacherShort?: string; teacherName?: string; reason?: string };
+      }
+    >();
     for (const p of periods) {
+      const entry: any = {};
       const busy = teachersBusyAt(
-        data,
-        teacherIds,
+        data, teacherIds,
         { day, start: p.start, end: p.end, week },
         currentSlotId,
         { course_id: course.id, section_id: section.id },
@@ -682,13 +732,28 @@ function RoomDayGrid({
       if (busy) {
         const c = data.courses.find((x) => x.id === busy.slot.course_id);
         const s = data.sections.find((x) => x.id === busy.slot.section_id);
-        map.set(p.id, { teacherId: busy.teacherId, courseCode: c?.code, sectionName: s?.name });
+        const t = data.teachers.find((x) => x.id === busy.teacherId);
+        entry.busy = {
+          teacherId: busy.teacherId,
+          teacherShort: t?.short_name,
+          teacherName: t?.name,
+          courseCode: c?.code,
+          sectionName: s?.name,
+        };
       }
+      for (const tid of teacherIds) {
+        const u = teacherUnavailableAt(data, tid, { day, start: p.start, end: p.end });
+        if (u) {
+          const t = data.teachers.find((x) => x.id === tid);
+          entry.unavailable = { teacherId: tid, teacherShort: t?.short_name, teacherName: t?.name, reason: u.reason };
+          break;
+        }
+      }
+      if (entry.busy || entry.unavailable) map.set(p.id, entry);
     }
     return map;
   }, [data, periods, teacherIds, day, week, currentSlotId, course.id, section.id]);
 
-  /** Check if any sibling draft already uses this day+period (within the same course-section) */
   function siblingDuplicate(p: { start: string; end: string }) {
     return siblingDrafts.some(
       (sd) => sd.day === day && timesOverlap(sd.start, sd.end, p.start, p.end) && weeksOverlap(sd.week, week),
@@ -706,12 +771,7 @@ function RoomDayGrid({
     });
   }
 
-  /** Pick handler that warns the user when the cell has known issues */
-  async function handlePick(
-    roomId: string,
-    p: { start: string; end: string },
-    issues: string[],
-  ) {
+  async function handlePick(roomId: string, p: { start: string; end: string }, issues: string[]) {
     if (issues.length === 0) {
       onPick(roomId, p.start, p.end);
       return;
@@ -736,6 +796,13 @@ function RoomDayGrid({
     if (ok) onPick(roomId, p.start, p.end);
   }
 
+  function toneFor(n: number) {
+    if (n <= 0) return "bg-success/10 hover:bg-success/25 border-success/30 text-success";
+    if (n === 1) return "bg-red-200/70 hover:bg-red-300/70 border-red-300 text-red-900 dark:bg-red-950/40 dark:text-red-100";
+    if (n === 2) return "bg-red-400/70 hover:bg-red-500/70 border-red-500 text-red-950 dark:text-red-50";
+    return "bg-red-700/80 hover:bg-red-800/80 border-red-900 text-white";
+  }
+
   return (
     <div className="overflow-auto max-h-[40vh]">
       <table className="w-full text-xs">
@@ -743,23 +810,28 @@ function RoomDayGrid({
           <tr>
             <th className="text-left px-2 py-1.5 font-medium border-b border-r min-w-[90px]">Room</th>
             {periods.map((p) => {
-              const teacherBusy = teacherBusyByPeriod.get(p.id);
+              const status = teacherStatusByPeriod.get(p.id);
               const dup = siblingDuplicate(p);
+              const issueCount = (status?.busy ? 1 : 0) + (status?.unavailable ? 1 : 0) + (dup ? 1 : 0);
               return (
                 <th
                   key={p.id}
                   className={cn(
-                    "text-center px-1.5 py-1.5 font-medium border-b border-r min-w-[100px]",
-                    (teacherBusy || dup) && "bg-destructive/10",
-                    teacherBusy && dup && "bg-red-700/20",
+                    "text-center px-1.5 py-1.5 font-medium border-b border-r min-w-[110px]",
+                    issueCount === 1 && "bg-red-200/40",
+                    issueCount >= 2 && "bg-red-500/30",
                   )}
                 >
-                  <div className="font-mono">
-                    {p.start}–{p.end}
-                  </div>
-                  {teacherBusy && (
-                    <div className="text-[9px] font-normal text-destructive font-mono">
-                      {data.teachers.find((t) => t.id === teacherBusy.teacherId)?.short_name} busy ({teacherBusy.courseCode})
+                  <div className="font-mono">{fmtRange12(p.start, p.end)}</div>
+                  {status?.busy && (
+                    <div className="text-[9px] font-normal text-destructive font-mono leading-tight">
+                      {status.busy.teacherShort} ({status.busy.teacherName}) assigned in {status.busy.courseCode}
+                    </div>
+                  )}
+                  {status?.unavailable && (
+                    <div className="text-[9px] font-normal text-warning font-mono leading-tight">
+                      {status.unavailable.teacherShort} unavailable
+                      {status.unavailable.reason ? ` (${status.unavailable.reason})` : ""}
                     </div>
                   )}
                   {dup && (
@@ -773,83 +845,74 @@ function RoomDayGrid({
         <tbody>
           {rooms.map((r) => (
             <tr key={r.id} className="border-b">
-              <td
-                className={cn(
-                  "px-2 py-1 border-r",
-                  currentRoomId === r.id && "bg-primary/5",
-                )}
-              >
+              <td className={cn("px-2 py-1 border-r", currentRoomId === r.id && "bg-primary/5")}>
                 <div className="font-mono font-semibold">{r.name}</div>
                 <div className="text-[10px] text-muted-foreground">Capacity {r.capacity}</div>
               </td>
               {periods.map((p) => {
-                const teacherBusy = teacherBusyByPeriod.get(p.id);
+                const status = teacherStatusByPeriod.get(p.id);
+                const teacherBusy = status?.busy;
+                const teacherUnavail = status?.unavailable;
                 const booking = findBooking(r.id, p);
                 const dup = siblingDuplicate(p);
+                const roomUnavail = roomUnavailableAt(data, r.id, { day, start: p.start, end: p.end });
                 const isCurrent =
-                  currentRoomId === r.id &&
-                  currentStart === p.start &&
-                  currentEnd === p.end;
+                  currentRoomId === r.id && currentStart === p.start && currentEnd === p.end;
 
                 const issues: string[] = [];
                 if (booking) {
                   const c = data.courses.find((c) => c.id === booking.course_id);
                   const s = data.sections.find((s) => s.id === booking.section_id);
-                  issues.push(
-                    `Room ${r.name} is already booked by ${c?.code} (Sec ${s?.name}) ${booking.start}–${booking.end}.`,
-                  );
+                  issues.push(`Room ${r.name} is already booked by ${c?.code} (Sec ${s?.name}) ${fmtRange12(booking.start, booking.end)}.`);
                 }
                 if (teacherBusy) {
-                  const t = data.teachers.find((x) => x.id === teacherBusy.teacherId);
-                  issues.push(
-                    `Teacher ${t?.short_name ?? ""} already teaches ${teacherBusy.courseCode} (Sec ${teacherBusy.sectionName}) at this time.`,
-                  );
+                  issues.push(`${teacherBusy.teacherShort} (${teacherBusy.teacherName}) already assigned in ${teacherBusy.courseCode} (Sec ${teacherBusy.sectionName}) at this time.`);
+                }
+                if (teacherUnavail) {
+                  issues.push(`${teacherUnavail.teacherShort} is unavailable at this time${teacherUnavail.reason ? ` (${teacherUnavail.reason})` : ""}.`);
+                }
+                if (roomUnavail) {
+                  issues.push(`Room ${r.name} is unavailable at this time${roomUnavail.reason ? ` (${roomUnavail.reason})` : ""}.`);
                 }
                 if (dup) {
-                  issues.push(
-                    `Another class for this section is already on ${day} ${p.start}–${p.end}.`,
-                  );
+                  issues.push(`Another class for this section is already on ${day} ${fmtRange12(p.start, p.end)}.`);
                 }
 
-                const conflictCount = (booking ? 1 : 0) + (teacherBusy ? 1 : 0) + (dup ? 1 : 0);
-                const busyTeacher = teacherBusy
-                  ? data.teachers.find((x) => x.id === teacherBusy.teacherId)
-                  : null;
+                const conflictCount =
+                  (booking ? 1 : 0) + (teacherBusy ? 1 : 0) + (teacherUnavail ? 1 : 0) +
+                  (roomUnavail ? 1 : 0) + (dup ? 1 : 0);
+                const tone = toneFor(conflictCount);
+                const bookedCourse = booking ? data.courses.find((c) => c.id === booking.course_id) : null;
+                const bookedSec = booking ? data.sections.find((s) => s.id === booking.section_id) : null;
 
                 let inner: React.ReactNode;
                 if (conflictCount === 0) {
                   inner = (
-                    <div className="w-full h-full rounded bg-success/10 hover:bg-success/25 border border-success/30 px-1.5 py-1.5 text-[10px] text-success font-medium transition">
+                    <div className={cn("w-full h-full min-h-[44px] flex items-center justify-center rounded border px-1.5 py-1.5 text-[10px] font-medium transition", tone)}>
                       Free
                     </div>
                   );
                 } else {
-                  // Use deeper red as the number of overlapping conflicts grows.
-                  const tone =
-                    conflictCount >= 2
-                      ? "bg-red-700/30 hover:bg-red-700/40 border-red-800 text-red-950 dark:text-red-100"
-                      : "bg-destructive/10 hover:bg-destructive/20 border-destructive/40 text-destructive";
-                  const bookedCourse = booking
-                    ? data.courses.find((c) => c.id === booking.course_id)
-                    : null;
-                  const bookedSec = booking
-                    ? data.sections.find((s) => s.id === booking.section_id)
-                    : null;
                   inner = (
-                    <div className={cn("rounded border px-1.5 py-1 text-[10px] cursor-pointer transition", tone)}>
+                    <div className={cn("w-full h-full min-h-[44px] rounded border px-1.5 py-1 text-[10px] cursor-pointer transition space-y-0.5", tone)}>
                       {booking && (
-                        <div className="font-semibold">
+                        <div className="font-semibold truncate">
                           {bookedCourse?.code} · Sec {bookedSec?.name}
                         </div>
                       )}
-                      {busyTeacher && (
-                        <div className="font-mono">
-                          {busyTeacher.short_name}{" "}
-                          <span className="opacity-70">busy</span>
-                        </div>
+                      {teacherBusy && (
+                        <div className="font-mono truncate">{teacherBusy.teacherShort} assigned</div>
                       )}
-                      {dup && !booking && !busyTeacher && <div>duplicate</div>}
-                      {dup && (booking || busyTeacher) && (
+                      {teacherUnavail && (
+                        <div className="font-mono truncate">{teacherUnavail.teacherShort} unavailable</div>
+                      )}
+                      {roomUnavail && (
+                        <div className="font-mono truncate">room unavailable</div>
+                      )}
+                      {dup && !booking && !teacherBusy && !teacherUnavail && !roomUnavail && (
+                        <div>duplicate</div>
+                      )}
+                      {dup && (booking || teacherBusy || teacherUnavail || roomUnavail) && (
                         <div className="opacity-80">+ duplicate</div>
                       )}
                     </div>
@@ -857,12 +920,12 @@ function RoomDayGrid({
                 }
 
                 return (
-                  <td key={p.id} className="border-r p-0.5">
+                  <td key={p.id} className="border-r p-0.5 h-full">
                     <button
                       type="button"
                       onClick={() => handlePick(r.id, p, issues)}
                       className={cn(
-                        "block w-full text-left rounded transition",
+                        "block w-full h-full text-left rounded transition",
                         isCurrent && "ring-2 ring-blue-500 ring-offset-1 ring-offset-background",
                       )}
                       title={issues.length > 0 ? issues.join(" · ") : "Free — click to select"}

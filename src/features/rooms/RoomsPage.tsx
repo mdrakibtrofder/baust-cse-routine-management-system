@@ -12,13 +12,14 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Pencil, Trash2, Plus, Search, CalendarDays } from "lucide-react";
+import { Pencil, Trash2, Plus, Search, CalendarDays, Clock } from "lucide-react";
 import { toast } from "sonner";
 import type { Room } from "@/lib/types";
 import { useConfirm } from "@/components/ConfirmDialog";
 import { roomDependencies } from "@/lib/conflicts";
 import { BlockedDeleteDialog } from "@/components/BlockedDeleteDialog";
 import { RoutineDialog } from "@/components/RoutineDialog";
+import { UnavailabilityDialog } from "@/components/UnavailabilityDialog";
 
 const empty: Omit<Room, "id"> = { name: "", room_type: "Theory", capacity: 50 };
 
@@ -32,6 +33,7 @@ export function RoomsPage() {
   const [form, setForm] = useState<Omit<Room, "id">>(empty);
   const [blocked, setBlocked] = useState<{ room: Room; deps: ReturnType<typeof roomDependencies> } | null>(null);
   const [routineFor, setRoutineFor] = useState<Room | null>(null);
+  const [unavailFor, setUnavailFor] = useState<Room | null>(null);
 
   const filtered = useMemo(
     () => rooms.filter(r => r.name.toLowerCase().includes(q.toLowerCase()) || r.room_type.toLowerCase().includes(q.toLowerCase())),
@@ -128,6 +130,10 @@ export function RoomsPage() {
                         onClick={() => setRoutineFor(r)}>
                         <CalendarDays className="h-3.5 w-3.5 text-primary" />
                       </Button>
+                      <Button size="icon" variant="ghost" title="Manage unavailability"
+                        onClick={() => setUnavailFor(r)}>
+                        <Clock className="h-3.5 w-3.5 text-warning" />
+                      </Button>
                       <Button size="icon" variant="ghost" onClick={() => { setEditing(r); setForm(r); setOpen(true); }}>
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
@@ -191,6 +197,14 @@ export function RoomsPage() {
         scope={routineFor ? { kind: "room", room_id: routineFor.id } : null}
         title={routineFor ? `Room ${routineFor.name}` : ""}
         subtitle={routineFor ? `${routineFor.room_type} · capacity ${routineFor.capacity}` : ""}
+      />
+
+      <UnavailabilityDialog
+        open={!!unavailFor}
+        onOpenChange={(v) => !v && setUnavailFor(null)}
+        mode="room"
+        entityId={unavailFor?.id ?? null}
+        entityLabel={unavailFor ? `Room ${unavailFor.name}` : ""}
       />
     </div>
   );
