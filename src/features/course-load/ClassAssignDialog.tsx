@@ -663,6 +663,12 @@ export function ClassAssignDialog({
         title={`Section ${section.name} · Level ${section.level}, Term ${section.term}`}
         subtitle={`${course.code} — ${course.name}`}
       />
+
+      <CourseDetailsDialog
+        course={showCourseDetails ? course : null}
+        open={showCourseDetails}
+        onOpenChange={setShowCourseDetails}
+      />
     </>
   );
 }
