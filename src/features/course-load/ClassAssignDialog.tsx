@@ -895,12 +895,12 @@ function RoomDayGrid({
                 }
 
                 return (
-                  <td key={p.id} className="border-r p-0.5">
+                  <td key={p.id} className="border-r p-0.5 h-full">
                     <button
                       type="button"
                       onClick={() => handlePick(r.id, p, issues)}
                       className={cn(
-                        "block w-full text-left rounded transition",
+                        "block w-full h-full text-left rounded transition",
                         isCurrent && "ring-2 ring-blue-500 ring-offset-1 ring-offset-background",
                       )}
                       title={issues.length > 0 ? issues.join(" · ") : "Free — click to select"}
