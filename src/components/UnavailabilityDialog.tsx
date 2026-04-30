@@ -106,7 +106,7 @@ export function UnavailabilityDialog({
                     {mode === "teacher"
                       ? (u as any).day
                       : ((u as any).days as string[]).join(", ")}{" "}
-                    · {u.start}–{u.end}
+                    · {fmtRange12(u.start, u.end)}
                   </div>
                   {u.reason && (
                     <div className="text-muted-foreground italic">{u.reason}</div>

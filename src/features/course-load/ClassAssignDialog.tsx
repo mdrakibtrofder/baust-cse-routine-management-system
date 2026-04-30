@@ -349,7 +349,7 @@ export function ClassAssignDialog({
                         )}
                       </div>
                       <div className="font-mono text-[11px]">
-                        {d.day} {d.start}–{d.end}
+                        {d.day} {fmtRange12(d.start, d.end)}
                       </div>
                       <div className="text-[10px] text-muted-foreground truncate">
                         {room ? room.name : <span className="text-warning">no room</span>}
@@ -430,7 +430,7 @@ export function ClassAssignDialog({
                     <SelectContent>
                       {applicablePeriods.map((p) => (
                         <SelectItem key={p.id} value={p.id}>
-                          {p.start}–{p.end} ({p.duration % 60 === 0 ? `${p.duration / 60}h` : `${p.duration}m`})
+                          {fmtRange12(p.start, p.end)} ({p.duration % 60 === 0 ? `${p.duration / 60}h` : `${p.duration}m`})
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -821,7 +821,7 @@ function RoomDayGrid({
                     issueCount >= 2 && "bg-red-500/30",
                   )}
                 >
-                  <div className="font-mono">{p.start}–{p.end}</div>
+                  <div className="font-mono">{fmtRange12(p.start, p.end)}</div>
                   {status?.busy && (
                     <div className="text-[9px] font-normal text-destructive font-mono leading-tight">
                       {status.busy.teacherShort} ({status.busy.teacherName}) assigned in {status.busy.courseCode}
@@ -862,7 +862,7 @@ function RoomDayGrid({
                 if (booking) {
                   const c = data.courses.find((c) => c.id === booking.course_id);
                   const s = data.sections.find((s) => s.id === booking.section_id);
-                  issues.push(`Room ${r.name} is already booked by ${c?.code} (Sec ${s?.name}) ${booking.start}–${booking.end}.`);
+                  issues.push(`Room ${r.name} is already booked by ${c?.code} (Sec ${s?.name}) ${fmtRange12(booking.start, booking.end)}.`);
                 }
                 if (teacherBusy) {
                   issues.push(`${teacherBusy.teacherShort} (${teacherBusy.teacherName}) already assigned in ${teacherBusy.courseCode} (Sec ${teacherBusy.sectionName}) at this time.`);
@@ -874,7 +874,7 @@ function RoomDayGrid({
                   issues.push(`Room ${r.name} is unavailable at this time${roomUnavail.reason ? ` (${roomUnavail.reason})` : ""}.`);
                 }
                 if (dup) {
-                  issues.push(`Another class for this section is already on ${day} ${p.start}–${p.end}.`);
+                  issues.push(`Another class for this section is already on ${day} ${fmtRange12(p.start, p.end)}.`);
                 }
 
                 const conflictCount =
