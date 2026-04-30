@@ -44,6 +44,7 @@ import { cn } from "@/lib/utils";
 import { TeacherChip } from "@/components/TeacherBadge";
 import { TeacherDetailsDialog } from "@/components/TeacherDetailsDialog";
 import { RoutineDialog } from "@/components/RoutineDialog";
+import { CourseDetailsDialog } from "@/components/CourseDetailsDialog";
 import { useConfirm } from "@/components/ConfirmDialog";
 
 interface DraftClass {
@@ -108,6 +109,7 @@ export function ClassAssignDialog({
   const [confirmSave, setConfirmSave] = useState<{ msg: string } | null>(null);
   const [teacherDetailsId, setTeacherDetailsId] = useState<string | null>(null);
   const [showSectionRoutine, setShowSectionRoutine] = useState(false);
+  const [showCourseDetails, setShowCourseDetails] = useState(false);
   const confirmDialog = useConfirm();
 
   useEffect(() => {
@@ -264,9 +266,14 @@ export function ClassAssignDialog({
         <DialogContent className="max-w-5xl max-h-[92vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 flex-wrap">
-              <span>
+              <button
+                type="button"
+                onClick={() => setShowCourseDetails(true)}
+                title="Click to see all sections, teachers, rooms for this course"
+                className="text-left hover:text-primary transition underline-offset-4 hover:underline"
+              >
                 {course.code} — {course.name}
-              </span>
+              </button>
               <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
                 Level {course.level} · Term {course.term}
               </Badge>
@@ -462,13 +469,24 @@ export function ClassAssignDialog({
                       .map((r) => {
                         const ok = availableRooms.some((ar) => ar.id === r.id);
                         const capOk = r.capacity >= section.total_students;
+                        // "Fully booked" => every applicable period on current.day is taken (by some other slot)
+                        const fullyBooked = applicablePeriods.length > 0 && applicablePeriods.every((p) => {
+                          return data.class_slots.some(
+                            (slot) =>
+                              slot.id !== current.id &&
+                              slot.room_id === r.id &&
+                              slot.day === current.day &&
+                              timesOverlap(slot.start, slot.end, p.start, p.end),
+                          );
+                        });
                         return (
                           <SelectItem key={r.id} value={r.id}>
                             <span className="flex items-center gap-2">
                               <span className="font-mono">{r.name}</span>
                               <span className="text-xs text-muted-foreground">Capacity {r.capacity}</span>
                               {!capOk && <Badge variant="destructive" className="text-[10px]">small</Badge>}
-                              {!ok && capOk && <Badge variant="outline" className="text-[10px]">busy</Badge>}
+                              {fullyBooked && <Badge variant="destructive" className="text-[10px]">fully booked</Badge>}
+                              {!ok && capOk && !fullyBooked && <Badge variant="outline" className="text-[10px]">conflict</Badge>}
                               {ok && capOk && <Check className="h-3 w-3 text-success" />}
                             </span>
                           </SelectItem>
@@ -644,6 +662,12 @@ export function ClassAssignDialog({
         scope={{ kind: "section", section_id: section.id }}
         title={`Section ${section.name} · Level ${section.level}, Term ${section.term}`}
         subtitle={`${course.code} — ${course.name}`}
+      />
+
+      <CourseDetailsDialog
+        course={showCourseDetails ? course : null}
+        open={showCourseDetails}
+        onOpenChange={setShowCourseDetails}
       />
     </>
   );
@@ -863,13 +887,13 @@ function RoomDayGrid({
                 let inner: React.ReactNode;
                 if (conflictCount === 0) {
                   inner = (
-                    <div className={cn("w-full h-full rounded border px-1.5 py-1.5 text-[10px] font-medium transition", tone)}>
+                    <div className={cn("w-full h-full min-h-[44px] flex items-center justify-center rounded border px-1.5 py-1.5 text-[10px] font-medium transition", tone)}>
                       Free
                     </div>
                   );
                 } else {
                   inner = (
-                    <div className={cn("rounded border px-1.5 py-1 text-[10px] cursor-pointer transition space-y-0.5", tone)}>
+                    <div className={cn("w-full h-full min-h-[44px] rounded border px-1.5 py-1 text-[10px] cursor-pointer transition space-y-0.5", tone)}>
                       {booking && (
                         <div className="font-semibold truncate">
                           {bookedCourse?.code} · Sec {bookedSec?.name}
@@ -895,12 +919,12 @@ function RoomDayGrid({
                 }
 
                 return (
-                  <td key={p.id} className="border-r p-0.5">
+                  <td key={p.id} className="border-r p-0.5 h-full">
                     <button
                       type="button"
                       onClick={() => handlePick(r.id, p, issues)}
                       className={cn(
-                        "block w-full text-left rounded transition",
+                        "block w-full h-full text-left rounded transition",
                         isCurrent && "ring-2 ring-blue-500 ring-offset-1 ring-offset-background",
                       )}
                       title={issues.length > 0 ? issues.join(" · ") : "Free — click to select"}
