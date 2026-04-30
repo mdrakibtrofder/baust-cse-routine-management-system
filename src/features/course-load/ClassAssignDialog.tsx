@@ -44,6 +44,7 @@ import { cn } from "@/lib/utils";
 import { TeacherChip } from "@/components/TeacherBadge";
 import { TeacherDetailsDialog } from "@/components/TeacherDetailsDialog";
 import { RoutineDialog } from "@/components/RoutineDialog";
+import { CourseDetailsDialog } from "@/components/CourseDetailsDialog";
 import { useConfirm } from "@/components/ConfirmDialog";
 
 interface DraftClass {
@@ -108,6 +109,7 @@ export function ClassAssignDialog({
   const [confirmSave, setConfirmSave] = useState<{ msg: string } | null>(null);
   const [teacherDetailsId, setTeacherDetailsId] = useState<string | null>(null);
   const [showSectionRoutine, setShowSectionRoutine] = useState(false);
+  const [showCourseDetails, setShowCourseDetails] = useState(false);
   const confirmDialog = useConfirm();
 
   useEffect(() => {
@@ -264,9 +266,14 @@ export function ClassAssignDialog({
         <DialogContent className="max-w-5xl max-h-[92vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 flex-wrap">
-              <span>
+              <button
+                type="button"
+                onClick={() => setShowCourseDetails(true)}
+                title="Click to see all sections, teachers, rooms for this course"
+                className="text-left hover:text-primary transition underline-offset-4 hover:underline"
+              >
                 {course.code} — {course.name}
-              </span>
+              </button>
               <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
                 Level {course.level} · Term {course.term}
               </Badge>
