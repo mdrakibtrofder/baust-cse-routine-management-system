@@ -863,13 +863,13 @@ function RoomDayGrid({
                 let inner: React.ReactNode;
                 if (conflictCount === 0) {
                   inner = (
-                    <div className={cn("w-full h-full rounded border px-1.5 py-1.5 text-[10px] font-medium transition", tone)}>
+                    <div className={cn("w-full h-full min-h-[44px] flex items-center justify-center rounded border px-1.5 py-1.5 text-[10px] font-medium transition", tone)}>
                       Free
                     </div>
                   );
                 } else {
                   inner = (
-                    <div className={cn("rounded border px-1.5 py-1 text-[10px] cursor-pointer transition space-y-0.5", tone)}>
+                    <div className={cn("w-full h-full min-h-[44px] rounded border px-1.5 py-1 text-[10px] cursor-pointer transition space-y-0.5", tone)}>
                       {booking && (
                         <div className="font-semibold truncate">
                           {bookedCourse?.code} · Sec {bookedSec?.name}
