@@ -462,13 +462,24 @@ export function ClassAssignDialog({
                       .map((r) => {
                         const ok = availableRooms.some((ar) => ar.id === r.id);
                         const capOk = r.capacity >= section.total_students;
+                        // "Fully booked" => every applicable period on current.day is taken (by some other slot)
+                        const fullyBooked = applicablePeriods.length > 0 && applicablePeriods.every((p) => {
+                          return data.class_slots.some(
+                            (slot) =>
+                              slot.id !== current.id &&
+                              slot.room_id === r.id &&
+                              slot.day === current.day &&
+                              timesOverlap(slot.start, slot.end, p.start, p.end),
+                          );
+                        });
                         return (
                           <SelectItem key={r.id} value={r.id}>
                             <span className="flex items-center gap-2">
                               <span className="font-mono">{r.name}</span>
                               <span className="text-xs text-muted-foreground">Capacity {r.capacity}</span>
                               {!capOk && <Badge variant="destructive" className="text-[10px]">small</Badge>}
-                              {!ok && capOk && <Badge variant="outline" className="text-[10px]">busy</Badge>}
+                              {fullyBooked && <Badge variant="destructive" className="text-[10px]">fully booked</Badge>}
+                              {!ok && capOk && !fullyBooked && <Badge variant="outline" className="text-[10px]">conflict</Badge>}
                               {ok && capOk && <Check className="h-3 w-3 text-success" />}
                             </span>
                           </SelectItem>
