@@ -14,6 +14,7 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SectionsRouteImport } from './routes/sections'
 import { Route as RoutineRouteImport } from './routes/routine'
 import { Route as RoomsRouteImport } from './routes/rooms'
+import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as CoursesRouteImport } from './routes/courses'
 import { Route as AvailabilityRouteImport } from './routes/availability'
 import { Route as IndexRouteImport } from './routes/index'
@@ -43,6 +44,11 @@ const RoomsRoute = RoomsRouteImport.update({
   path: '/rooms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReportsRoute = ReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CoursesRoute = CoursesRouteImport.update({
   id: '/courses',
   path: '/courses',
@@ -63,6 +69,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/availability': typeof AvailabilityRoute
   '/courses': typeof CoursesRoute
+  '/reports': typeof ReportsRoute
   '/rooms': typeof RoomsRoute
   '/routine': typeof RoutineRoute
   '/sections': typeof SectionsRoute
@@ -73,6 +80,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/availability': typeof AvailabilityRoute
   '/courses': typeof CoursesRoute
+  '/reports': typeof ReportsRoute
   '/rooms': typeof RoomsRoute
   '/routine': typeof RoutineRoute
   '/sections': typeof SectionsRoute
@@ -84,6 +92,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/availability': typeof AvailabilityRoute
   '/courses': typeof CoursesRoute
+  '/reports': typeof ReportsRoute
   '/rooms': typeof RoomsRoute
   '/routine': typeof RoutineRoute
   '/sections': typeof SectionsRoute
@@ -96,6 +105,7 @@ export interface FileRouteTypes {
     | '/'
     | '/availability'
     | '/courses'
+    | '/reports'
     | '/rooms'
     | '/routine'
     | '/sections'
@@ -106,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/availability'
     | '/courses'
+    | '/reports'
     | '/rooms'
     | '/routine'
     | '/sections'
@@ -116,6 +127,7 @@ export interface FileRouteTypes {
     | '/'
     | '/availability'
     | '/courses'
+    | '/reports'
     | '/rooms'
     | '/routine'
     | '/sections'
@@ -127,6 +139,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AvailabilityRoute: typeof AvailabilityRoute
   CoursesRoute: typeof CoursesRoute
+  ReportsRoute: typeof ReportsRoute
   RoomsRoute: typeof RoomsRoute
   RoutineRoute: typeof RoutineRoute
   SectionsRoute: typeof SectionsRoute
@@ -171,6 +184,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RoomsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reports': {
+      id: '/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof ReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/courses': {
       id: '/courses'
       path: '/courses'
@@ -199,6 +219,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AvailabilityRoute: AvailabilityRoute,
   CoursesRoute: CoursesRoute,
+  ReportsRoute: ReportsRoute,
   RoomsRoute: RoomsRoute,
   RoutineRoute: RoutineRoute,
   SectionsRoute: SectionsRoute,
