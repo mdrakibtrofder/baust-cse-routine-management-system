@@ -105,7 +105,7 @@ function LevelTermBlock({ level, term, courses, sections, onAssign, onSectionRou
         <div>
           <h2 className="font-bold text-base">Level {level}, Term {term}</h2>
           <p className="text-xs opacity-90">
-            {courses.length} courses · {sections.length} section{sections.length !== 1 ? "s" : ""} · {totalCredit.toFixed(2)} credits
+            {courses.length} courses · {sections.length} section{sections.length !== 1 ? "s" : ""} · {Number(totalCredit).toFixed(2)} credits
           </p>
         </div>
         <div className="flex gap-1">

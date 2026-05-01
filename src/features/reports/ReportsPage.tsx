@@ -41,10 +41,10 @@ export function ReportsPage() {
           id: t.id,
           name: t.short_name,
           fullName: t.name,
-          used: Number(used.toFixed(2)),
+          used: Number(Number(used).toFixed(2)),
           assigned: t.assigned_credit,
           meetings,
-          remaining: Number((t.assigned_credit - used).toFixed(2)),
+          remaining: Number((Number(t.assigned_credit) - Number(used)).toFixed(2)),
           over: t.assigned_credit > 0 && used > t.assigned_credit + 0.001,
         };
       })
@@ -155,7 +155,7 @@ export function ReportsPage() {
           <HighlightCard
             label="Most loaded teacher"
             value={mostLoadedTeacher?.name ?? "—"}
-            sub={mostLoadedTeacher ? `${mostLoadedTeacher.fullName} · ${mostLoadedTeacher.used.toFixed(2)} cr` : ""}
+            sub={mostLoadedTeacher ? `${mostLoadedTeacher.fullName} · ${Number(mostLoadedTeacher.used).toFixed(2)} cr` : ""}
             color="from-fuchsia-500 to-purple-600"
           />
           <HighlightCard
@@ -226,11 +226,11 @@ export function ReportsPage() {
                           </div>
                         </td>
                         <td className="px-3 py-2 text-muted-foreground">{teacher.designation}</td>
-                        <td className="px-3 py-2 text-right">{t.assigned.toFixed(2)}</td>
+                        <td className="px-3 py-2 text-right">{Number(t.assigned).toFixed(2)}</td>
                         <td className={cn("px-3 py-2 text-right font-semibold", t.over && "text-destructive")}>
-                          {t.used.toFixed(2)}
+                          {Number(t.used).toFixed(2)}
                         </td>
-                        <td className="px-3 py-2 text-right">{t.remaining.toFixed(2)}</td>
+                        <td className="px-3 py-2 text-right">{Number(t.remaining).toFixed(2)}</td>
                         <td className="px-3 py-2 text-right">{t.meetings}</td>
                         <td className="px-3 py-2">
                           <Progress value={Math.min(100, pct)} className={cn("h-2", t.over && "[&>div]:bg-destructive")} />

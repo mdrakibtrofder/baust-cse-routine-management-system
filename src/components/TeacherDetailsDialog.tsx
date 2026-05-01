@@ -52,7 +52,7 @@ export function TeacherDetailsDialog({
           <InfoCard
             icon={Award}
             label="Total Credit"
-            value={`${teacher.assigned_credit.toFixed(2)}`}
+            value={`${Number(teacher.assigned_credit).toFixed(2)}`}
           />
           <InfoCard
             icon={BookOpen}
@@ -64,9 +64,9 @@ export function TeacherDetailsDialog({
                     used > teacher.assigned_credit + 0.001 && "text-destructive font-semibold",
                   )}
                 >
-                  {used.toFixed(2)}
+                  {Number(used).toFixed(2)}
                 </span>
-                <span className="text-muted-foreground"> / {remaining.toFixed(2)}</span>
+                <span className="text-muted-foreground"> / {Number(remaining).toFixed(2)}</span>
               </span>
             }
           />

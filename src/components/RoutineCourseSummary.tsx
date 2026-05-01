@@ -50,11 +50,11 @@ export function RoutineCourseSummary({ scope }: { scope: RoutineScope }) {
                     {r.theory > 0 ? r.theory : <span className="text-muted-foreground">-</span>}
                   </td>
                   <td className="text-center px-3 py-2 text-foreground/80">
-                    {r.sessional > 0 ? r.sessional.toFixed(2) : <span className="text-muted-foreground">-</span>}
+                    {r.sessional > 0 ? Number(r.sessional).toFixed(2) : <span className="text-muted-foreground">-</span>}
                   </td>
                   <td className="text-center px-3 py-2">
                     <span className="inline-flex items-center justify-center min-w-[28px] h-6 px-2 rounded-full bg-amber-100 text-amber-900 font-semibold border border-amber-200">
-                      {r.credit.toFixed(2)}
+                      {Number(r.credit).toFixed(2)}
                     </span>
                   </td>
                 </tr>
@@ -72,13 +72,13 @@ export function RoutineCourseSummary({ scope }: { scope: RoutineScope }) {
               <td className="text-center px-3 py-2">
                 <span className="inline-flex items-center gap-1 text-foreground">
                   <FlaskConical className="h-3 w-3 text-purple-600" />
-                  {totals.sessional.toFixed(2)}
+                  {Number(totals.sessional).toFixed(2)}
                 </span>
               </td>
               <td className="text-center px-3 py-2">
                 <span className="inline-flex items-center gap-1.5 px-2.5 h-7 rounded-full bg-amber-400 text-amber-950 border border-amber-500">
                   <CreditCard className="h-3 w-3" />
-                  {totals.credit.toFixed(2)}
+                  {Number(totals.credit).toFixed(2)}
                 </span>
               </td>
             </tr>

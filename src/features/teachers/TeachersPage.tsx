@@ -189,10 +189,10 @@ export function TeachersPage() {
                       <Badge variant="outline">{t.department || "-"}</Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground text-xs">{t.status || "-"}</TableCell>
-                    <TableCell className="text-right">{t.assigned_credit.toFixed(2)}</TableCell>
+                    <TableCell className="text-right">{Number(t.assigned_credit).toFixed(2)}</TableCell>
                     <TableCell className="text-right">
                       <span className={over ? "text-destructive font-semibold" : used >= t.assigned_credit && t.assigned_credit > 0 ? "text-warning font-semibold" : ""}>
-                        {used.toFixed(2)}
+                        {Number(used).toFixed(2)}
                       </span>
                     </TableCell>
                     <TableCell className="text-right">
