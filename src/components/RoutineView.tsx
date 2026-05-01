@@ -10,6 +10,7 @@ import {
   exportRoutineJson, exportRoutineImage,
 } from "@/lib/routine-export";
 import { toast } from "sonner";
+import { RoutineCourseSummary } from "@/components/RoutineCourseSummary";
 
 const DEFAULT_DEPT = "CSE";
 
