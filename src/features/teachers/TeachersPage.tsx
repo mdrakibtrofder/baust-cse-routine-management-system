@@ -19,6 +19,8 @@ import { useConfirm } from "@/components/ConfirmDialog";
 import { TeacherMoveDialog } from "@/components/TeacherMoveDialog";
 import { RoutineDialog } from "@/components/RoutineDialog";
 import { UnavailabilityDialog } from "@/components/UnavailabilityDialog";
+import { rankInfoFor } from "@/lib/teacher-rank";
+import { cn } from "@/lib/utils";
 
 const empty: Omit<Teacher, "id"> = {
   short_name: "", name: "", designation: "", department: "CSE",
@@ -164,16 +166,30 @@ export function TeachersPage() {
                 const used = teacherAssignedCreditUsed(data, t.id);
                 const over = t.assigned_credit > 0 && used > t.assigned_credit + 0.001;
                 const depCount = teacherDependencies(data, t.id).length;
+                const rank = rankInfoFor(t.designation);
                 return (
                   <TableRow key={t.id}>
                     <TableCell className="font-mono font-medium">{t.short_name}</TableCell>
                     <TableCell>{t.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{t.designation}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={cn(
+                            "h-6 w-7 rounded-md flex items-center justify-center text-[10px] font-bold border",
+                            rank.className,
+                          )}
+                          title={rank.label}
+                        >
+                          {rank.short}
+                        </span>
+                        <span>{t.designation || "-"}</span>
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <Badge variant="outline">{t.department || "-"}</Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground text-xs">{t.status || "-"}</TableCell>
-                    <TableCell className="text-right">{t.assigned_credit}</TableCell>
+                    <TableCell className="text-right">{t.assigned_credit.toFixed(2)}</TableCell>
                     <TableCell className="text-right">
                       <span className={over ? "text-destructive font-semibold" : used >= t.assigned_credit && t.assigned_credit > 0 ? "text-warning font-semibold" : ""}>
                         {used.toFixed(2)}

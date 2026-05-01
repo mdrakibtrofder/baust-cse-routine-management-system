@@ -25,30 +25,47 @@ export function slugify(s: string) {
     .replace(/^-+|-+$/g, "");
 }
 
+/** Convert a string to Sentence-Case-Dashed for filenames.
+ *  e.g. "md. mahadi hasan" -> "Md-Mahadi-Hasan", "level 1 term ii" -> "Level-1-Term-II".
+ *  Preserves all-uppercase tokens (e.g. roman numerals II/III). */
+export function sentenceCaseDashed(s: string) {
+  return s
+    .replace(/[^A-Za-z0-9]+/g, " ")
+    .trim()
+    .split(/\s+/)
+    .map((w) => {
+      if (!w) return w;
+      // Preserve all-uppercase tokens up to 4 chars (roman numerals, acronyms)
+      if (/^[A-Z0-9]+$/.test(w) && w.length <= 4) return w;
+      return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+    })
+    .join("-");
+}
+
 /** Compute friendly scope info: human title, slug filename suffix, and metadata fields. */
 export function getScopeInfo(data: AppData, scope: RoutineScope) {
   if (scope.kind === "teacher") {
     const t = data.teachers.find((x) => x.id === scope.teacher_id);
-    if (!t) return { title: "Teacher", slug: "teacher", meta: [] as { label: string; value: string }[] };
+    if (!t) return { title: "Teacher", slug: "Teacher-Routine", meta: [] as { label: string; value: string }[] };
     return {
       title: `Routine of ${t.name}`,
-      slug: `routine-of-${slugify(t.name)}`,
+      slug: `${sentenceCaseDashed(t.name)}-Routine`,
       meta: [
         { label: "Teacher Name", value: t.name },
         { label: "Short Name", value: t.short_name },
         { label: "Designation", value: t.designation },
         { label: "Department", value: t.department },
         { label: "Status", value: t.status },
-        { label: "Total Credit", value: String(t.assigned_credit) },
+        { label: "Total Credit", value: t.assigned_credit.toFixed(2) },
       ],
     };
   }
   if (scope.kind === "room") {
     const r = data.rooms.find((x) => x.id === scope.room_id);
-    if (!r) return { title: "Room", slug: "room", meta: [] };
+    if (!r) return { title: "Room", slug: "Room-Routine", meta: [] };
     return {
       title: `Routine of Room ${r.name}`,
-      slug: `routine-of-room-${slugify(r.name)}`,
+      slug: `Room-${sentenceCaseDashed(r.name)}-Routine`,
       meta: [
         { label: "Room Name", value: r.name },
         { label: "Room Type", value: r.room_type },
@@ -58,11 +75,11 @@ export function getScopeInfo(data: AppData, scope: RoutineScope) {
   }
   if (scope.kind === "section") {
     const s = data.sections.find((x) => x.id === scope.section_id);
-    if (!s) return { title: "Section", slug: "section", meta: [] };
+    if (!s) return { title: "Section", slug: "Section-Routine", meta: [] };
     const termRoman = s.term;
     return {
       title: `Routine of Level ${s.level} Term ${termRoman} Section ${s.name}`,
-      slug: `routine-of-level-${s.level}-term-${termRoman}-section-${slugify(s.name)}`,
+      slug: `Level-${s.level}-Term-${termRoman}-Section-${sentenceCaseDashed(s.name)}-Routine`,
       meta: [
         { label: "Department", value: DEFAULT_DEPT },
         { label: "Level", value: String(s.level) },
@@ -72,7 +89,7 @@ export function getScopeInfo(data: AppData, scope: RoutineScope) {
       ],
     };
   }
-  return { title: "Full Routine", slug: "full-routine", meta: [] };
+  return { title: "Full Routine", slug: "Full-Routine", meta: [] };
 }
 
 /** Build a 2D matrix [day][period] => string for the routine. */

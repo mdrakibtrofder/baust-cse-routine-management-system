@@ -52,7 +52,7 @@ export function TeacherDetailsDialog({
           <InfoCard
             icon={Award}
             label="Total Credit"
-            value={`${teacher.assigned_credit}`}
+            value={`${teacher.assigned_credit.toFixed(2)}`}
           />
           <InfoCard
             icon={BookOpen}
