@@ -99,8 +99,8 @@ export const useStore = create<StoreState>((set, get) => ({
   isLoading: false,
   error: null,
   auth: {
-    user: JSON.parse(localStorage.getItem('user') || 'null'),
-    token: localStorage.getItem('auth_token'),
+    user: typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('user') || 'null') : null,
+    token: typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null,
   },
 
   init: async () => {
@@ -154,8 +154,10 @@ export const useStore = create<StoreState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const res = await api.post<{ access_token: string, user: any }>('/auth/login', { username, password });
-      localStorage.setItem('auth_token', res.access_token);
-      localStorage.setItem('user', JSON.stringify(res.user));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('auth_token', res.access_token);
+        localStorage.setItem('user', JSON.stringify(res.user));
+      }
       set({ auth: { token: res.access_token, user: res.user }, isLoading: false });
       await get().init();
     } catch (err: any) {
@@ -165,8 +167,10 @@ export const useStore = create<StoreState>((set, get) => ({
   },
 
   logout: () => {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('user');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('user');
+    }
     set({ auth: { token: null, user: null }, teachers: [], rooms: [], sections: [], courses: [], class_slots: [], course_section_teachers: [] });
   },
 
