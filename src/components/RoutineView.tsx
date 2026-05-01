@@ -179,6 +179,8 @@ export function RoutineView({
           </table>
         </div>
       </div>
+
+      <RoutineCourseSummary scope={scope} />
     </div>
   );
 }
