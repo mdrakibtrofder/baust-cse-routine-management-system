@@ -12,13 +12,11 @@ import {
   UserSearch,
   BarChart3,
   Loader2,
-  LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ConfirmProvider } from "@/components/ConfirmDialog";
 import { SemesterSelector } from "@/components/SemesterSelector";
 import { useStore } from "@/lib/store";
-import { Button } from "./ui/button";
 
 const nav = [
   { to: "/", label: "Course Load", icon: LayoutGrid },
@@ -35,8 +33,6 @@ const nav = [
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const loc = useLocation();
   const init = useStore((s) => s.init);
-  const logout = useStore((s) => s.logout);
-  const user = useStore((s) => s.auth.user);
   const isLoading = useStore((s) => s.isLoading);
   const activeSemester = useStore((s) =>
     s.semesters.find((x) => x.id === s.active_semester_id),
@@ -95,18 +91,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           })}
         </nav>
         <div className="px-3 py-4 border-t space-y-3">
-          <div className="flex items-center gap-3 px-2">
-            <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-[10px] font-bold">
-              {user?.username?.[0].toUpperCase() ?? "U"}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-xs font-semibold truncate">{user?.username ?? "User"}</div>
-              <div className="text-[10px] text-muted-foreground truncate">Admin</div>
-            </div>
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={logout}>
-              <LogOut className="h-4 w-4" />
-            </Button>
-          </div>
           <div className="px-2 py-1 text-[11px] text-muted-foreground flex items-center gap-2">
             {isLoading && <Loader2 className="h-3 w-3 animate-spin" />}
             Connected to PostgreSQL
