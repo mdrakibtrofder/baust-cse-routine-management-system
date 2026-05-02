@@ -39,6 +39,7 @@ interface StoreState extends AppData {
   addTeacher: (t: Omit<Teacher, "id">) => Promise<void>;
   updateTeacher: (id: string, t: Partial<Teacher>) => Promise<void>;
   deleteTeacher: (id: string) => Promise<void>;
+  replaceTeachers: (teachers: Teacher[]) => Promise<void>;
   moveTeacherAssignments: (fromId: string, toId: string) => Promise<void>;
   
   // rooms
@@ -203,6 +204,12 @@ export const useStore = create<StoreState>((set, get) => ({
     try {
       await api.delete(`/teachers/${id}`);
       set((s) => ({ teachers: s.teachers.filter((x) => x.id !== id) }));
+    } catch (err: any) { set({ error: err.message }); }
+  },
+  replaceTeachers: async (teachers: Teacher[]) => {
+    try {
+      await api.post('/teachers', teachers);
+      await get().init();
     } catch (err: any) { set({ error: err.message }); }
   },
   moveTeacherAssignments: async (fromId, toId) => {
