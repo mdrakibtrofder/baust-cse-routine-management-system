@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { useStore } from "@/lib/store";
-import { fmtRange12 } from "@/lib/utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,7 +40,7 @@ import {
   type Conflict,
 } from "@/lib/conflicts";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { cn, compareDayAndTime, compareTimeValues, sortDays, fmtRange12, fmtDayTitle } from "@/lib/utils";
 import { TeacherChip } from "@/components/TeacherBadge";
 import { TeacherDetailsDialog } from "@/components/TeacherDetailsDialog";
 import { RoutineDialog } from "@/components/RoutineDialog";
@@ -95,14 +94,18 @@ export function ClassAssignDialog({
 
   const existing = useMemo(
     () =>
-      data.class_slots.filter(
-        (s) =>
-          s.semester_id === data.active_semester_id &&
-          s.course_id === course.id &&
-          s.section_id === section.id,
-      ),
+      data.class_slots
+        .filter(
+          (s) =>
+            s.semester_id === data.active_semester_id &&
+            s.course_id === course.id &&
+            s.section_id === section.id,
+        )
+        .sort(compareDayAndTime),
     [data.class_slots, data.active_semester_id, course.id, section.id],
   );
+
+  const orderedDays = useMemo(() => sortDays(data.days), [data.days]);
 
   const [drafts, setDrafts] = useState<DraftClass[]>([]);
   const [step, setStep] = useState(0);
@@ -132,7 +135,10 @@ export function ClassAssignDialog({
   const current: DraftClass = drafts[safeStep] ?? EMPTY_CLASS(info);
 
   const applicablePeriods = useMemo(
-    () => data.periods.filter((p) => p.kind === info.roomKind),
+    () =>
+      data.periods
+        .filter((p) => p.kind === info.roomKind)
+        .sort((a, b) => compareTimeValues(a.start, b.start)),
     [data.periods, info.roomKind],
   );
 
@@ -350,7 +356,7 @@ export function ClassAssignDialog({
                         )}
                       </div>
                       <div className="font-mono text-[11px]">
-                        {d.day} {fmtRange12(d.start, d.end)}
+                        {fmtDayTitle(d.day)} {fmtRange12(d.start, d.end)}
                       </div>
                       <div className="text-[10px] text-muted-foreground truncate">
                         {room ? room.name : <span className="text-warning">no room</span>}
@@ -408,22 +414,22 @@ export function ClassAssignDialog({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label>Day</Label>
+                  <Label>{info.roomKind === "sessional" ? "Sessional Day" : "Theory Day"}</Label>
                   <Select value={current.day} onValueChange={(v) => setCurrent({ day: v })}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {data.days.map((d) => (
+                      {orderedDays.map((d) => (
                         <SelectItem key={d.id} value={d.name}>
-                          {d.name}
+                          {fmtDayTitle(d.name)}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <Label>Time slot</Label>
+                  <Label>{info.roomKind === "sessional" ? "Sessional Timeslot" : "Theory Timeslot"}</Label>
                   <Select value={matchedPeriodId} onValueChange={setPeriod}>
                     <SelectTrigger>
                       <SelectValue placeholder="Pick a period" />
@@ -457,7 +463,7 @@ export function ClassAssignDialog({
 
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <Label>Room</Label>
+                  <Label>{info.roomKind === "sessional" ? "Sessional Room" : "Theory Room"}</Label>
                   <span className="text-xs text-muted-foreground">{availableRooms.length} available</span>
                 </div>
                 <Select value={current.room_id ?? ""} onValueChange={(v) => setCurrent({ room_id: v })}>
@@ -512,7 +518,7 @@ export function ClassAssignDialog({
                 {showRoomTable && (
                   <div className="p-2 space-y-2">
                     <div className="flex flex-wrap gap-1">
-                      {data.days.map((d) => (
+                      {orderedDays.map((d) => (
                         <button
                           key={d.id}
                           type="button"
@@ -524,7 +530,7 @@ export function ClassAssignDialog({
                               : "bg-card hover:bg-muted border-border text-muted-foreground",
                           )}
                         >
-                          {d.name}
+                          {fmtDayTitle(d.name)}
                         </button>
                       ))}
                     </div>
@@ -711,7 +717,9 @@ function RoomDayGrid({
     .filter((r) => r.capacity >= section.total_students)
     .sort((a, b) => a.name.localeCompare(b.name));
 
-  const periods = data.periods.filter((p) => p.kind === info.roomKind).sort((a, b) => a.start.localeCompare(b.start));
+  const periods = data.periods
+    .filter((p) => p.kind === info.roomKind)
+    .sort((a, b) => compareTimeValues(a.start, b.start));
 
   const teacherStatusByPeriod = useMemo(() => {
     const map = new Map<

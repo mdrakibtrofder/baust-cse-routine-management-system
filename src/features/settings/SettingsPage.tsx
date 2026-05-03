@@ -9,7 +9,7 @@ import { Trash2, Plus, Pencil, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { useConfirm } from "@/components/ConfirmDialog";
-import { fmtRange12 } from "@/lib/utils";
+import { compareDayNames, compareTimeValues, fmtRange12, sortDays } from "@/lib/utils";
 import { periodDependencies, dayDependencies } from "@/lib/conflicts";
 import { BlockedDeleteDialog } from "@/components/BlockedDeleteDialog";
 import type { Period } from "@/lib/types";
@@ -29,6 +29,8 @@ export function SettingsPage() {
   const [editing, setEditing] = useState<{ id: string; start: string; end: string } | null>(null);
   const [blockedPeriod, setBlockedPeriod] = useState<{ period: Period; deps: ReturnType<typeof periodDependencies> } | null>(null);
   const [blockedDay, setBlockedDay] = useState<{ name: string; deps: ReturnType<typeof dayDependencies> } | null>(null);
+  const orderedDays = sortDays(days);
+  const orderedPeriods = [...periods].sort((a, b) => compareTimeValues(a.start, b.start));
 
   /** Uniqueness checks */
   const periodDup = (start: string, end: string, ignoreId?: string) =>
@@ -82,7 +84,7 @@ export function SettingsPage() {
           <div className="px-4 py-3 border-b font-semibold" style={{ background: "var(--gradient-soft)" }}>Class Days</div>
           <div className="p-4 space-y-3">
             <div className="flex flex-wrap gap-2">
-              {days.map(d => (
+              {orderedDays.map(d => (
                 <Badge key={d.id} variant="secondary" className="px-3 py-1.5 text-sm gap-2">
                   {d.name}
                   <button onClick={() => tryDeleteDay(d)} className="hover:text-destructive">
@@ -107,7 +109,7 @@ export function SettingsPage() {
           <div className="px-4 py-3 border-b font-semibold" style={{ background: "var(--gradient-soft)" }}>Periods</div>
           <div className="p-4 space-y-3">
             <div className="space-y-1.5 max-h-72 overflow-auto">
-              {periods.map(p => {
+              {orderedPeriods.map(p => {
                 const isEdit = editing?.id === p.id;
                 const deps = periodDependencies(data, p.id);
                 return (

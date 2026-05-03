@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { cn, fmtTime12 } from "@/lib/utils";
+import { cn, compareDayNames, compareTimeValues, fmtTime12, sortDays } from "@/lib/utils";
 import { teacherAssignedCreditUsed, timesOverlap } from "@/lib/conflicts";
 import { rankInfoFor } from "@/lib/teacher-rank";
 import {
@@ -52,9 +52,10 @@ export function ReportsPage() {
   }, [data, slots, csts]);
 
   /** Room load: slots / total period-day cells */
-  const periods = useMemo(() => [...data.periods].sort((a, b) => a.start.localeCompare(b.start)), [data.periods]);
+  const periods = useMemo(() => [...data.periods].sort((a, b) => compareTimeValues(a.start, b.start)), [data.periods]);
+  const days = useMemo(() => sortDays(data.days), [data.days]);
   const nonBreakPeriods = useMemo(() => periods.filter((p) => !/break/i.test(p.name)), [periods]);
-  const totalCells = nonBreakPeriods.length * data.days.length;
+  const totalCells = nonBreakPeriods.length * days.length;
 
   const roomLoad = useMemo(() => {
     return data.rooms
@@ -76,21 +77,21 @@ export function ReportsPage() {
   /** Day-time heat: how many classes happen at each (day, period) */
   const dayTimeLoad = useMemo(() => {
     const list: { label: string; day: string; time: string; count: number }[] = [];
-    for (const d of data.days) {
+    for (const d of days) {
       for (const p of nonBreakPeriods) {
         const count = slots.filter((s) => s.day === d.name && timesOverlap(s.start, s.end, p.start, p.end)).length;
         list.push({ label: `${d.name} ${fmtTime12(p.start)}`, day: d.name, time: fmtTime12(p.start), count });
       }
     }
     return list;
-  }, [data.days, nonBreakPeriods, slots]);
+  }, [days, nonBreakPeriods, slots]);
 
   const dayTotals = useMemo(() => {
-    return data.days.map((d) => ({
+    return days.map((d) => ({
       day: d.name,
       classes: slots.filter((s) => s.day === d.name).length,
     }));
-  }, [data.days, slots]);
+  }, [days, slots]);
 
   /** Section coverage: each section, each course → assigned & scheduled? */
   const sectionCoverage = useMemo(() => {
@@ -338,13 +339,13 @@ export function ReportsPage() {
 
             <ChartCard title="Day × Time class density">
               <ResponsiveContainer width="100%" height={Math.max(300, nonBreakPeriods.length * 30)}>
-                <LineChart data={dayTimeLoad.filter((d) => d.day === data.days[0]?.name)}>
+                <LineChart data={dayTimeLoad.filter((d) => d.day === days[0]?.name)}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="time" />
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  {data.days.map((d, i) => (
+                  {days.map((d, i) => (
                     <Line
                       key={d.id}
                       type="monotone"

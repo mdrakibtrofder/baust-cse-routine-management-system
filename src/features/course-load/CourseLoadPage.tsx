@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, AlertCircle, Check, Users } from "lucide-react";
-import { cn, fmtRange12 } from "@/lib/utils";
+import { cn, compareDayAndTime, fmtRange12 } from "@/lib/utils";
 import type { Course, Section } from "@/lib/types";
 import { COURSE_TYPE_INFO } from "@/lib/types";
 import { TeacherPicker } from "./TeacherPicker";
@@ -200,7 +200,7 @@ function SectionCell({ course, section, onAssign }: {
   const teacherIds = cst?.teacher_ids ?? [];
   const slots = data.class_slots
     .filter(s => s.semester_id === data.active_semester_id && s.course_id === course.id && s.section_id === section.id)
-    .sort((a, b) => a.day.localeCompare(b.day) || a.start.localeCompare(b.start));
+    .sort(compareDayAndTime);
 
   // gather conflicts on existing slots
   const allConflicts = slots.flatMap(slot =>

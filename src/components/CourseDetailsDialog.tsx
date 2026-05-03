@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { BookOpen, Users, MapPin, Calendar, Clock, GraduationCap, Sparkles } from "lucide-react";
 import type { Course } from "@/lib/types";
 import { TeacherChip } from "@/components/TeacherBadge";
-import { cn, fmtRange12 } from "@/lib/utils";
+import { cn, compareDayAndTime, fmtRange12, fmtDayTitle } from "@/lib/utils";
 
 const DEFAULT_DEPT = "CSE";
 
@@ -89,7 +89,7 @@ export function CourseDetailsDialog({
                   s.course_id === course.id &&
                   s.section_id === sec.id,
               )
-              .sort((a, b) => a.day.localeCompare(b.day) || a.start.localeCompare(b.start));
+              .sort(compareDayAndTime);
             const gradient = SECTION_GRADIENTS[idx % SECTION_GRADIENTS.length];
 
             return (
@@ -153,7 +153,7 @@ export function CourseDetailsDialog({
                       >
                         <span className="inline-flex items-center gap-1 font-bold text-primary">
                           <Calendar className="h-3 w-3" />
-                          {s.day}
+                          {fmtDayTitle(s.day)}
                         </span>
                         <span className="inline-flex items-center gap-1 font-mono">
                           <Clock className="h-3 w-3" />

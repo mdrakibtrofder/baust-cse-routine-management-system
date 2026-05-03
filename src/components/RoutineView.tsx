@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useStore } from "@/lib/store";
-import { cn, fmtTime12, fmtRange12 } from "@/lib/utils";
+import { cn, compareTimeValues, fmtTime12, fmtRange12, sortDays, fmtDayTitle } from "@/lib/utils";
 import { BookOpen, MapPin, Coffee, FlaskConical, FileSpreadsheet, FileText, FileType, FileJson, Image as ImageIcon } from "lucide-react";
 import { COURSE_TYPE_INFO, type ClassSlot } from "@/lib/types";
 import { timesOverlap } from "@/lib/conflicts";
@@ -37,10 +37,10 @@ export function RoutineView({
   const data = useStore();
 
   const periods = useMemo(
-    () => [...data.periods].sort((a, b) => a.start.localeCompare(b.start)),
+    () => [...data.periods].sort((a, b) => compareTimeValues(a.start, b.start)),
     [data.periods],
   );
-  const days = data.days;
+  const days = useMemo(() => sortDays(data.days), [data.days]);
 
   const slots = useMemo(() => {
     return data.class_slots.filter((s) => {
@@ -130,7 +130,7 @@ export function RoutineView({
                     className="px-3 py-3 font-bold text-primary-foreground align-top sticky left-0 z-10"
                     style={{ background: "var(--primary)", minWidth: 90 }}
                   >
-                    <div className="text-sm uppercase">{d.name}</div>
+                    <div className="text-sm uppercase">{fmtDayTitle(d.name)}</div>
                     <div className="text-[10px] font-normal opacity-80">{dayLong(d.name)}</div>
                   </td>
                   {periods.map((p) => {
@@ -206,13 +206,18 @@ function RoutineCell({ slot }: { slot: ClassSlot }) {
 
   return (
     <div className="rounded-md border bg-background hover:shadow-sm transition px-1.5 py-1.5 text-[11px] space-y-0.5">
-      <div className="flex items-center gap-1 font-bold">
-        {isSessional ? (
-          <FlaskConical className="h-3 w-3 text-purple-600" />
-        ) : (
-          <BookOpen className="h-3 w-3 text-blue-600" />
-        )}
-        <span className="font-mono">{course.code}</span>
+      <div className="flex items-center justify-between gap-1">
+        <div className="flex items-center gap-1 font-bold">
+          {isSessional ? (
+            <FlaskConical className="h-3 w-3 text-purple-600" />
+          ) : (
+            <BookOpen className="h-3 w-3 text-blue-600" />
+          )}
+          <span className="font-mono">{course.code}</span>
+        </div>
+        <div className="text-[9px] font-mono text-muted-foreground whitespace-nowrap">
+          {fmtRange12(slot.start, slot.end)}
+        </div>
       </div>
       {teachers.length > 0 && (
         <div className="font-semibold text-[10px] text-foreground/80 font-mono">

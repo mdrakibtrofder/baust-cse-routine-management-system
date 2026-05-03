@@ -8,7 +8,7 @@ import {
 } from "docx";
 import type { AppData, ClassSlot } from "@/lib/types";
 import { timesOverlap } from "@/lib/conflicts";
-import { fmtRange12 } from "@/lib/utils";
+import { compareTimeValues, fmtRange12, sortDays, fmtDayTitle } from "@/lib/utils";
 import type { RoutineScope } from "@/components/RoutineView";
 
 const DEFAULT_DEPT = "CSE";
@@ -94,8 +94,8 @@ export function getScopeInfo(data: AppData, scope: RoutineScope) {
 
 /** Build a 2D matrix [day][period] => string for the routine. */
 export function buildRoutineMatrix(data: AppData, scope: RoutineScope) {
-  const periods = [...data.periods].sort((a, b) => a.start.localeCompare(b.start));
-  const days = data.days;
+  const periods = [...data.periods].sort((a, b) => compareTimeValues(a.start, b.start));
+  const days = sortDays(data.days);
 
   const slots = data.class_slots.filter((s) => {
     if (s.semester_id !== data.active_semester_id) return false;
@@ -131,7 +131,7 @@ export function buildRoutineMatrix(data: AppData, scope: RoutineScope) {
 
   const header = ["Day", ...periods.map((p) => fmtRange12(p.start, p.end))];
   const rows = days.map((d) => {
-    const row: string[] = [d.name];
+    const row: string[] = [fmtDayTitle(d.name)];
     for (const p of periods) {
       if (isBreak(p.name)) {
         row.push("BREAK");

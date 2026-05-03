@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { cn, fmtRange12, fmtTime12 } from "@/lib/utils";
+import { cn, compareTimeValues, fmtRange12, fmtTime12, sortDays } from "@/lib/utils";
 import { timesOverlap, teacherUnavailableAt } from "@/lib/conflicts";
 import { rankInfoFor } from "@/lib/teacher-rank";
 import {
@@ -30,10 +30,10 @@ export function AvailabilityFinderPage() {
   const [selected, setSelected] = useState<CellInfo | null>(null);
 
   const periods = useMemo(
-    () => [...data.periods].sort((a, b) => a.start.localeCompare(b.start)),
+    () => [...data.periods].sort((a, b) => compareTimeValues(a.start, b.start)),
     [data.periods],
   );
-  const days = data.days;
+  const days = useMemo(() => sortDays(data.days), [data.days]);
 
   const slotsBySemester = useMemo(
     () => data.class_slots.filter((s) => s.semester_id === data.active_semester_id),
@@ -91,7 +91,7 @@ export function AvailabilityFinderPage() {
       } else {
         const next = teacherSlots
           .filter((s) => s.day === day && s.start >= p.end)
-          .sort((a, b) => a.start.localeCompare(b.start))[0] ?? null;
+          .sort((a, b) => compareTimeValues(a.start, b.start))[0] ?? null;
         freeOnes.push({ teacher: t, nextSameDay: next });
       }
     }

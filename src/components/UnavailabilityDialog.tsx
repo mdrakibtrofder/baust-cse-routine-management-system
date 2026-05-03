@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useStore } from "@/lib/store";
-import { fmtRange12 } from "@/lib/utils";
+import { cn, compareDayNames, compareTimeValues, sortDays, fmtDayTitle, fmtRange12 } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -14,7 +14,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, Clock } from "lucide-react";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 
 type Mode = "teacher" | "room";
 
@@ -36,6 +35,12 @@ export function UnavailabilityDialog({
     mode === "teacher"
       ? data.teacher_unavailability.filter((u) => u.teacher_id === entityId)
       : data.room_unavailability.filter((u) => u.room_id === entityId);
+  const orderedDays = sortDays(data.days);
+  const sortedList = [...list].sort((a, b) => {
+    const dayA = mode === "teacher" ? (a as any).day : ((a as any).days?.[0] ?? "");
+    const dayB = mode === "teacher" ? (b as any).day : ((b as any).days?.[0] ?? "");
+    return compareDayNames(dayA, dayB) || compareTimeValues(a.start, b.start);
+  });
 
   const [day, setDay] = useState("SUN");
   const [days, setDays] = useState<string[]>(["SUN"]);
@@ -95,18 +100,21 @@ export function UnavailabilityDialog({
 
         <div className="space-y-3">
           <div className="rounded-md border max-h-[30vh] overflow-y-auto divide-y">
-            {list.length === 0 && (
+            {sortedList.length === 0 && (
               <div className="px-3 py-4 text-center text-xs text-muted-foreground">
                 No unavailability rules yet.
               </div>
             )}
-            {list.map((u) => (
+            {sortedList.map((u) => (
               <div key={u.id} className="flex items-center justify-between px-3 py-2 text-xs">
                 <div className="space-y-0.5">
                   <div className="font-mono font-semibold">
                     {mode === "teacher"
-                      ? (u as any).day
-                      : ((u as any).days as string[]).join(", ")}{" "}
+                      ? fmtDayTitle((u as any).day)
+                      : [...((u as any).days as string[])]
+                          .sort(compareDayNames)
+                          .map(fmtDayTitle)
+                          .join(", ")}{" "}
                     · {fmtRange12(u.start, u.end)}
                   </div>
                   {u.reason && (
@@ -130,9 +138,9 @@ export function UnavailabilityDialog({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {data.days.map((d) => (
+                    {orderedDays.map((d) => (
                       <SelectItem key={d.id} value={d.name}>
-                        {d.name}
+                        {fmtDayTitle(d.name)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -142,7 +150,7 @@ export function UnavailabilityDialog({
               <div>
                 <Label className="text-xs">Days</Label>
                 <div className="flex flex-wrap gap-1.5 mt-1">
-                  {data.days.map((d) => {
+                  {orderedDays.map((d) => {
                     const active = days.includes(d.name);
                     return (
                       <button
@@ -156,7 +164,7 @@ export function UnavailabilityDialog({
                             : "bg-card hover:bg-muted border-border text-muted-foreground",
                         )}
                       >
-                        {d.name}
+                        {fmtDayTitle(d.name)}
                       </button>
                     );
                   })}
