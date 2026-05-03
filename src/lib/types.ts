@@ -13,7 +13,7 @@ export interface Teacher {
   designation: string;
   department: string;
   status: string;
-  assigned_credit: number;
+  assigned_credit_hours: number;
 }
 
 export interface Course {

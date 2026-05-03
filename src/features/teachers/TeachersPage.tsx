@@ -24,7 +24,7 @@ import { cn } from "@/lib/utils";
 
 const empty: Omit<Teacher, "id"> = {
   short_name: "", name: "", designation: "", department: "CSE",
-  status: "", assigned_credit: 0,
+  status: "", assigned_credit_hours: 0,
 };
 
 export function TeachersPage() {
@@ -123,7 +123,14 @@ export function TeachersPage() {
               designation: String(r["Designation"] ?? r.designation ?? "").trim(),
               department: String(r["Department"] ?? r.department ?? "").trim(),
               status: String(r["Status"] ?? r.status ?? "").trim(),
-              assigned_credit: Number(r["Credits"] ?? r["assigned_credit"] ?? 0) || 0,
+              assigned_credit_hours:
+                Number(
+                  r["Credit Hours"] ??
+                    r["Credits"] ??
+                    r["assigned_credit_hours"] ??
+                    r["assigned_credit"] ??
+                    0,
+                ) || 0,
             });
           }
           replaceTeachers(list);
@@ -131,7 +138,7 @@ export function TeachersPage() {
         exportRows={() => teachers.map(t => ({
           "Short Name": t.short_name, "Full Name": t.name,
           Designation: t.designation, Department: t.department,
-          Status: t.status, Credits: t.assigned_credit,
+          Status: t.status, "Credit Hours": t.assigned_credit_hours,
         }))}
         exportName="teachers.xlsx"
         showReset
@@ -164,7 +171,7 @@ export function TeachersPage() {
             <TableBody>
               {filtered.map(t => {
                 const used = teacherAssignedCreditUsed(data, t.id);
-                const over = t.assigned_credit > 0 && used > t.assigned_credit + 0.001;
+                const over = t.assigned_credit_hours > 0 && used > t.assigned_credit_hours + 0.001;
                 const depCount = teacherDependencies(data, t.id).length;
                 const rank = rankInfoFor(t.designation);
                 return (
@@ -189,9 +196,9 @@ export function TeachersPage() {
                       <Badge variant="outline">{t.department || "-"}</Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground text-xs">{t.status || "-"}</TableCell>
-                    <TableCell className="text-right">{Number(t.assigned_credit).toFixed(2)}</TableCell>
+                    <TableCell className="text-right">{Number(t.assigned_credit_hours).toFixed(2)}</TableCell>
                     <TableCell className="text-right">
-                      <span className={over ? "text-destructive font-semibold" : used >= t.assigned_credit && t.assigned_credit > 0 ? "text-warning font-semibold" : ""}>
+                      <span className={over ? "text-destructive font-semibold" : used >= t.assigned_credit_hours && t.assigned_credit_hours > 0 ? "text-warning font-semibold" : ""}>
                         {Number(used).toFixed(2)}
                       </span>
                     </TableCell>
@@ -256,8 +263,8 @@ export function TeachersPage() {
             </div>
             <div className="col-span-2">
               <Label>Total credit</Label>
-              <Input type="number" step="0.25" value={form.assigned_credit}
-                onChange={(e) => setForm({ ...form, assigned_credit: Number(e.target.value) || 0 })} />
+              <Input type="number" step="0.25" value={form.assigned_credit_hours}
+                onChange={(e) => setForm({ ...form, assigned_credit_hours: Number(e.target.value) || 0 })} />
             </div>
           </div>
           <DialogFooter>

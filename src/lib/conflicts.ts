@@ -233,12 +233,12 @@ export function teacherWouldExceed(
     (x) => x.course_id === course.id && x.section_id === section.id,
   );
   const alreadyOnIt = existing?.teacher_ids.includes(teacherId);
-  if (alreadyOnIt) return { exceeds: false, current, assigned: t.assigned_credit, addition: 0 };
+  if (alreadyOnIt) return { exceeds: false, current, assigned: t.assigned_credit_hours, addition: 0 };
   const share = course.sessional > 0 && coteachers > 0 ? course.credit / (coteachers + 1) : course.credit;
   return {
-    exceeds: t.assigned_credit > 0 && current + share > t.assigned_credit + 0.001,
+    exceeds: t.assigned_credit_hours > 0 && current + share > t.assigned_credit_hours + 0.001,
     current,
-    assigned: t.assigned_credit,
+    assigned: t.assigned_credit_hours,
     addition: share,
   };
 }

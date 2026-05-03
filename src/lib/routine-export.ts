@@ -56,7 +56,7 @@ export function getScopeInfo(data: AppData, scope: RoutineScope) {
         { label: "Designation", value: t.designation },
         { label: "Department", value: t.department },
         { label: "Status", value: t.status },
-        { label: "Total Credit", value: Number(t.assigned_credit).toFixed(2) },
+        { label: "Total Credit", value: Number(t.assigned_credit_hours).toFixed(2) },
       ],
     };
   }

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useStore } from "@/lib/store";
 import { PageHeader } from "@/components/PageHeader";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -42,10 +42,10 @@ export function ReportsPage() {
           name: t.short_name,
           fullName: t.name,
           used: Number(Number(used).toFixed(2)),
-          assigned: t.assigned_credit,
+          assigned: t.assigned_credit_hours,
           meetings,
-          remaining: Number((Number(t.assigned_credit) - Number(used)).toFixed(2)),
-          over: t.assigned_credit > 0 && used > t.assigned_credit + 0.001,
+          remaining: Number((Number(t.assigned_credit_hours) - Number(used)).toFixed(2)),
+          over: t.assigned_credit_hours > 0 && used > t.assigned_credit_hours + 0.001,
         };
       })
       .sort((a, b) => b.used - a.used);
