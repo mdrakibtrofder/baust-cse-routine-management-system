@@ -28,6 +28,7 @@ const nav = [
   { to: "/sections", label: "Sections", icon: Boxes },
   { to: "/rooms", label: "Rooms", icon: DoorOpen },
   { to: "/settings", label: "Periods & Days", icon: Settings },
+  { to: "/semester-settings", label: "Semester Settings", icon: CalendarDays },
 ] as const;
 
 export function AppLayout({ children }: { children: React.ReactNode }) {

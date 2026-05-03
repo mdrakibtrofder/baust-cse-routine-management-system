@@ -10,10 +10,11 @@ export function SemesterSelector({ compact = false }: { compact?: boolean }) {
   // group by year for cleaner dropdown
   const byYear = new Map<number, typeof semesters>();
   for (const s of semesters) {
-    if (!byYear.has(s.year)) byYear.set(s.year, []);
-    byYear.get(s.year)!.push(s);
+    const yearVal = s.year_ref?.value || 0;
+    if (!byYear.has(yearVal)) byYear.set(yearVal, []);
+    byYear.get(yearVal)!.push(s);
   }
-  const years = Array.from(byYear.keys()).sort((a, b) => a - b);
+  const years = Array.from(byYear.keys()).sort((a, b) => b - a); // descending order for years
 
   return (
     <div className={compact ? "flex items-center gap-1.5" : "space-y-1"}>

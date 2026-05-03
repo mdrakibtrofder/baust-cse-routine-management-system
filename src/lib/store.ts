@@ -11,6 +11,8 @@ import type {
   ClassSlot,
   CourseSectionTeacher,
   Semester,
+  Year,
+  SemesterType,
   TeacherUnavailability,
   RoomUnavailability,
 } from "./types";
@@ -28,12 +30,21 @@ interface StoreState extends AppData {
   // initialization
   init: () => Promise<void>;
   
-  // auth
-  login: (username: string, password: string) => Promise<void>;
-  logout: () => void;
+  // years
+  addYear: (value: number) => Promise<void>;
+  updateYear: (id: string, value: number) => Promise<void>;
+  deleteYear: (id: string) => Promise<void>;
+
+  // semester types
+  addSemesterType: (name: string) => Promise<void>;
+  updateSemesterType: (id: string, name: string) => Promise<void>;
+  deleteSemesterType: (id: string) => Promise<void>;
 
   // semesters
   setActiveSemester: (id: string) => void;
+  addSemester: (s: Omit<Semester, "id">) => Promise<void>;
+  updateSemester: (id: string, s: Partial<Semester>) => Promise<void>;
+  deleteSemester: (id: string) => Promise<void>;
   
   // teachers
   addTeacher: (t: Omit<Teacher, "id">) => Promise<void>;
@@ -95,6 +106,8 @@ export const useStore = create<StoreState>((set, get) => ({
   course_section_teachers: [],
   semesters: [],
   active_semester_id: "",
+  years: [],
+  semester_types: [],
   teacher_unavailability: [],
   room_unavailability: [],
   isLoading: false,
@@ -107,7 +120,7 @@ export const useStore = create<StoreState>((set, get) => ({
   init: async () => {
     set({ isLoading: true, error: null });
     try {
-      const [teachers, rooms, sections, courses, periods, days, semesters, unavailTeachers, unavailRooms] = await Promise.all([
+      const [teachers, rooms, sections, courses, periods, days, semesters, years, types, unavailTeachers, unavailRooms] = await Promise.all([
         api.get<any>('/teachers').then(res => res.data),
         api.get<Room[]>('/rooms'),
         api.get<Section[]>('/sections'),
@@ -115,11 +128,14 @@ export const useStore = create<StoreState>((set, get) => ({
         api.get<Period[]>('/periods'),
         api.get<Day[]>('/days'),
         api.get<Semester[]>('/semesters'),
+        api.get<Year[]>('/years'),
+        api.get<SemesterType[]>('/semester-types'),
         api.get<TeacherUnavailability[]>('/teacher-unavailability').catch(() => []),
         api.get<RoomUnavailability[]>('/room-unavailability').catch(() => []),
       ]);
 
-      const active_semester = semesters.length > 0 ? semesters[0].id : "";
+      const active_semester_entity = semesters.find(s => s.is_active) || semesters[0];
+      const active_semester = active_semester_entity ? active_semester_entity.id : "";
       
       let class_slots: ClassSlot[] = [];
       let course_section_teachers: CourseSectionTeacher[] = [];
@@ -139,6 +155,8 @@ export const useStore = create<StoreState>((set, get) => ({
         periods,
         days,
         semesters,
+        years,
+        semester_types: types,
         class_slots,
         course_section_teachers,
         teacher_unavailability: unavailTeachers,
@@ -151,7 +169,66 @@ export const useStore = create<StoreState>((set, get) => ({
     }
   },
 
-  login: async (username, password) => {
+  addYear: async (value) => {
+    try {
+      const res = await api.post<Year>('/years', { value });
+      set((s) => ({ years: [...s.years, res].sort((a, b) => a.value - b.value) }));
+    } catch (err: any) { set({ error: err.message }); }
+  },
+  updateYear: async (id, value) => {
+    try {
+      const res = await api.patch<Year>(`/years/${id}`, { value });
+      set((s) => ({ years: s.years.map((x) => (x.id === id ? res : x)).sort((a, b) => a.value - b.value) }));
+    } catch (err: any) { set({ error: err.message }); }
+  },
+  deleteYear: async (id) => {
+    try {
+      await api.delete(`/years/${id}`);
+      set((s) => ({ years: s.years.filter((x) => x.id !== id) }));
+    } catch (err: any) { set({ error: err.message }); }
+  },
+
+  addSemesterType: async (name) => {
+    try {
+      const res = await api.post<SemesterType>('/semester-types', { name });
+      set((s) => ({ semester_types: [...s.semester_types, res].sort((a, b) => a.name.localeCompare(b.name)) }));
+    } catch (err: any) { set({ error: err.message }); }
+  },
+  updateSemesterType: async (id, name) => {
+    try {
+      const res = await api.patch<SemesterType>(`/semester-types/${id}`, { name });
+      set((s) => ({ semester_types: s.semester_types.map((x) => (x.id === id ? res : x)).sort((a, b) => a.name.localeCompare(b.name)) }));
+    } catch (err: any) { set({ error: err.message }); }
+  },
+  deleteSemesterType: async (id) => {
+    try {
+      await api.delete(`/semester-types/${id}`);
+      set((s) => ({ semester_types: s.semester_types.filter((x) => x.id !== id) }));
+    } catch (err: any) { set({ error: err.message }); }
+  },
+
+  addSemester: async (s) => {
+    try {
+      const res = await api.post<Semester>('/semesters', s);
+      set((state) => ({ semesters: [...state.semesters, res] }));
+      if (res.is_active) await get().setActiveSemester(res.id);
+    } catch (err: any) { set({ error: err.message }); }
+  },
+  updateSemester: async (id, s) => {
+    try {
+      const res = await api.patch<Semester>(`/semesters/${id}`, s);
+      set((state) => ({ semesters: state.semesters.map((x) => (x.id === id ? res : x)) }));
+      if (res.is_active) await get().setActiveSemester(res.id);
+    } catch (err: any) { set({ error: err.message }); }
+  },
+  deleteSemester: async (id) => {
+    try {
+      await api.delete(`/semesters/${id}`);
+      set((state) => ({ semesters: state.semesters.filter((x) => x.id !== id) }));
+    } catch (err: any) { set({ error: err.message }); }
+  },
+
+  login: async (username: string, password: string) => {
     set({ isLoading: true, error: null });
     try {
       const res = await api.post<{ access_token: string, user: any }>('/auth/login', { username, password });
@@ -182,7 +259,12 @@ export const useStore = create<StoreState>((set, get) => ({
         api.get<ClassSlot[]>(`/class-slots?semester_id=${id}`),
         api.get<CourseSectionTeacher[]>(`/assignments?semester_id=${id}`),
       ]);
-      set({ class_slots, course_section_teachers, isLoading: false });
+      set((s) => ({
+        class_slots,
+        course_section_teachers,
+        semesters: s.semesters.map(sem => ({ ...sem, is_active: sem.id === id })),
+        isLoading: false
+      }));
     } catch (err: any) {
       set({ error: err.message, isLoading: false });
     }

@@ -79,11 +79,24 @@ export interface CourseSectionTeacher {
   teacher_ids: string[]; // 1 for theory, 2 for sessional
 }
 
+export interface Year {
+  id: string;
+  value: number;
+}
+
+export interface SemesterType {
+  id: string;
+  name: string;
+}
+
 export interface Semester {
   id: string;
   name: string; // e.g. "Winter 2026"
-  year: number;
-  season: "Winter" | "Summer";
+  year_id: string;
+  type_id: string;
+  is_active: boolean;
+  year_ref?: Year;
+  type_ref?: SemesterType;
 }
 
 /** A recurring weekly window when a teacher is unavailable */
@@ -118,6 +131,8 @@ export interface AppData {
   course_section_teachers: CourseSectionTeacher[];
   semesters: Semester[];
   active_semester_id: string;
+  years: Year[];
+  semester_types: SemesterType[];
   teacher_unavailability: TeacherUnavailability[];
   room_unavailability: RoomUnavailability[];
 }
