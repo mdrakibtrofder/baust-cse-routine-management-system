@@ -254,7 +254,7 @@ function SectionCell({ course, section, onAssign }: {
                 );
               })}
               <div className="flex items-center gap-1 pt-0.5">
-                {allOk && <span className="flex items-center gap-1 text-success"><Check className="h-3 w-3" /> ok</span>}
+                {allOk && <span className="flex items-center gap-1 text-success"><Check className="h-3 w-3" /> Completed</span>}
                 {allConflicts.length > 0 && (
                   <span className="flex items-center gap-1 text-destructive">
                     <AlertCircle className="h-3 w-3" /> {allConflicts.length} conflict{allConflicts.length>1?"s":""}
