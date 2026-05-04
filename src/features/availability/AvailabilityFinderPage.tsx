@@ -29,10 +29,18 @@ export function AvailabilityFinderPage() {
   const data = useStore();
   const [selected, setSelected] = useState<CellInfo | null>(null);
 
-  const periods = useMemo(
-    () => [...data.periods].sort((a, b) => compareTimeValues(a.start, b.start)),
-    [data.periods],
-  );
+  const periods = useMemo(() => {
+    const theory = data.periods
+      .filter((p) => p.kind === "theory")
+      .sort((a, b) => compareTimeValues(a.start, b.start));
+    
+    const sessionalExtra = data.periods
+      .filter((p) => p.kind === "sessional")
+      .filter((sp) => !theory.some((tp) => timesOverlap(sp.start, sp.end, tp.start, tp.end)))
+      .sort((a, b) => compareTimeValues(a.start, b.start));
+      
+    return [...theory, ...sessionalExtra].sort((a, b) => compareTimeValues(a.start, b.start));
+  }, [data.periods]);
   const days = useMemo(() => sortDays(data.days), [data.days]);
 
   const slotsBySemester = useMemo(
@@ -161,22 +169,33 @@ export function AvailabilityFinderPage() {
                       const freeN = info.free.length;
                       const ratio = total === 0 ? 0 : busyN / total;
                       const bg =
-                        ratio >= 0.8 ? "bg-red-100/80 hover:bg-red-200/80" :
-                        ratio >= 0.5 ? "bg-orange-50 hover:bg-orange-100" :
-                        ratio >= 0.25 ? "bg-yellow-50 hover:bg-yellow-100" :
-                        "bg-emerald-50 hover:bg-emerald-100";
+                        ratio >= 0.8 ? "bg-rose-50 hover:bg-rose-100 border-rose-200" :
+                        ratio >= 0.5 ? "bg-orange-50 hover:bg-orange-100 border-orange-200" :
+                        ratio >= 0.25 ? "bg-amber-50 hover:bg-amber-100 border-amber-200" :
+                        "bg-emerald-50 hover:bg-emerald-100 border-emerald-200";
                       return (
                         <td
                           key={p.id}
-                          className={cn("p-0 cursor-pointer transition-colors", bg)}
+                          className={cn("p-1.5 cursor-pointer transition-all border border-transparent", bg)}
                           onClick={() => setSelected(info)}
                         >
-                          <div className="flex flex-col items-center justify-center h-full min-h-[64px] py-2 gap-1">
-                            <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-700">
-                              <UserCheck className="h-3 w-3" /> {freeN} free
+                          <div className="flex flex-col items-center justify-center h-full min-h-[72px] rounded-lg border border-transparent hover:border-current/10 transition-all shadow-sm bg-white/40">
+                            <div className="flex flex-col items-center gap-0.5">
+                              <div className="text-[14px] font-black text-emerald-700 leading-none">
+                                {freeN}
+                              </div>
+                              <div className="text-[9px] font-bold uppercase tracking-wider text-emerald-600/80">
+                                Free
+                              </div>
                             </div>
-                            <div className="flex items-center gap-1 text-[11px] font-medium text-rose-700">
-                              <UserX className="h-3 w-3" /> {busyN} busy
+                            <div className="w-8 h-[1px] bg-slate-200 my-1.5" />
+                            <div className="flex flex-col items-center gap-0.5">
+                              <div className="text-[12px] font-bold text-rose-700 leading-none opacity-80">
+                                {busyN}
+                              </div>
+                              <div className="text-[8px] font-bold uppercase tracking-wider text-rose-600/60">
+                                Busy
+                              </div>
                             </div>
                           </div>
                         </td>

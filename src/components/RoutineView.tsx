@@ -293,6 +293,14 @@ export function RoutineView({
                 </tbody>
               </table>
             </div>
+
+            <div className="pt-6 border-t">
+              <div className="text-lg font-bold text-slate-800 mb-4 uppercase tracking-tight flex items-center gap-2">
+                <FileText className="h-5 w-5 text-primary" />
+                Course Load Summary
+              </div>
+              <RoutineCourseSummary scope={scope} />
+            </div>
           </div>
         </DialogContent>
       </Dialog>

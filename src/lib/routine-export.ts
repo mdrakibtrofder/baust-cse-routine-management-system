@@ -10,6 +10,7 @@ import type { AppData, ClassSlot } from "@/lib/types";
 import { timesOverlap } from "@/lib/conflicts";
 import { compareTimeValues, fmtRange12, sortDays, fmtDayTitle } from "@/lib/utils";
 import type { RoutineScope } from "@/components/RoutineView";
+import { buildRoutineCourseSummary } from "./routine-summary";
 
 const DEFAULT_DEPT = "CSE";
 
@@ -182,6 +183,30 @@ export function exportRoutineExcel(data: AppData, scope: RoutineScope) {
     aoa.push(r.map(c => c === "SKIP" ? "" : c));
   }
 
+  // Add course summary
+  aoa.push([]);
+  aoa.push(["Course Load Summary"]);
+  aoa.push(["Course Code", "Course Title", "Theory", "Sessional", "Credit", "Classes/Week"]);
+  const summary = buildRoutineCourseSummary(data, scope);
+  for (const row of summary.rows) {
+    aoa.push([
+      row.course.code,
+      row.course.name,
+      row.theory,
+      row.sessional,
+      row.credit,
+      row.meetings
+    ]);
+  }
+  aoa.push([
+    "TOTAL",
+    "",
+    summary.totals.theory,
+    summary.totals.sessional,
+    summary.totals.credit,
+    summary.totals.meetings
+  ]);
+
   const ws = XLSX.utils.aoa_to_sheet(aoa);
   ws["!cols"] = header.map(() => ({ wch: 24 }));
   const wb = XLSX.utils.book_new();
@@ -237,6 +262,39 @@ export function exportRoutinePdf(data: AppData, scope: RoutineScope) {
     columnStyles: { 0: { fontStyle: "bold", fillColor: [219, 234, 254], cellWidth: 60 } },
     theme: "grid",
   });
+
+  // Add Course Summary table
+  const summary = buildRoutineCourseSummary(data, scope);
+  doc.addPage();
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "bold");
+  doc.text("Course Load Summary", 40, 40);
+
+  autoTable(doc, {
+    startY: 60,
+    head: [["Course Code", "Course Title", "Theory", "Sessional", "Credit", "Classes/Week"]],
+    body: [
+      ...summary.rows.map(r => [
+        r.course.code,
+        r.course.name,
+        r.theory.toFixed(2),
+        r.sessional.toFixed(2),
+        r.credit.toFixed(2),
+        r.meetings
+      ]),
+      [
+        { content: "TOTAL", colSpan: 2, styles: { fontStyle: "bold", halign: "right" } },
+        summary.totals.theory.toFixed(2),
+        summary.totals.sessional.toFixed(2),
+        summary.totals.credit.toFixed(2),
+        summary.totals.meetings
+      ]
+    ],
+    styles: { fontSize: 8, cellPadding: 4 },
+    headStyles: { fillColor: [30, 58, 138], textColor: 255, fontStyle: "bold" },
+    theme: "grid",
+  });
+
   doc.save(`${info.slug}.pdf`);
 }
 
@@ -287,6 +345,44 @@ export async function exportRoutineDocx(data: AppData, scope: RoutineScope) {
       }),
   );
 
+  const summary = buildRoutineCourseSummary(data, scope);
+  const summaryHeaderRow = new TableRow({
+    children: ["Course Code", "Course Title", "Theory", "Sessional", "Credit", "Classes/Week"].map((h, i) => 
+      new TableCell({
+        width: { size: [1200, 3800, 1000, 1000, 1000, 1000][i], type: WidthType.DXA },
+        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: h, bold: true })] })]
+      })
+    )
+  });
+
+  const summaryBodyRows = summary.rows.map(r => 
+    new TableRow({
+      children: [
+        r.course.code,
+        r.course.name,
+        r.theory.toFixed(2),
+        r.sessional.toFixed(2),
+        r.credit.toFixed(2),
+        r.meetings.toString()
+      ].map((v, i) => 
+        new TableCell({
+          width: { size: [1200, 3800, 1000, 1000, 1000, 1000][i], type: WidthType.DXA },
+          children: [new Paragraph({ alignment: i > 1 ? AlignmentType.CENTER : AlignmentType.LEFT, children: [new TextRun(v)] })]
+        })
+      )
+    })
+  );
+
+  const summaryTotalRow = new TableRow({
+    children: [
+      new TableCell({ columnSpan: 2, children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: "TOTAL", bold: true })] })] }),
+      new TableCell({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun(summary.totals.theory.toFixed(2))] })] }),
+      new TableCell({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun(summary.totals.sessional.toFixed(2))] })] }),
+      new TableCell({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun(summary.totals.credit.toFixed(2))] })] }),
+      new TableCell({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun(summary.totals.meetings.toString())] })] }),
+    ]
+  });
+
   const doc = new Document({
     sections: [
       {
@@ -299,6 +395,13 @@ export async function exportRoutineDocx(data: AppData, scope: RoutineScope) {
             width: { size: 9000, type: WidthType.DXA },
             columnWidths: header.map(() => Math.floor(9000 / header.length)),
             rows: [headerRow, ...bodyRows],
+          }),
+          new Paragraph({ children: [new TextRun(" ")] }),
+          new Paragraph({ heading: HeadingLevel.HEADING_2, children: [new TextRun("Course Load Summary")] }),
+          new Table({
+            width: { size: 9000, type: WidthType.DXA },
+            columnWidths: [1200, 3800, 1000, 1000, 1000, 1000],
+            rows: [summaryHeaderRow, ...summaryBodyRows, summaryTotalRow],
           }),
         ],
       },
