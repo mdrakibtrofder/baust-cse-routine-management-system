@@ -94,7 +94,9 @@ export function getScopeInfo(data: AppData, scope: RoutineScope) {
 
 /** Build a 2D matrix [day][period] => string for the routine. */
 export function buildRoutineMatrix(data: AppData, scope: RoutineScope) {
-  const periods = [...data.periods].sort((a, b) => compareTimeValues(a.start, b.start));
+  const theoryPeriods = [...data.periods]
+    .filter((p) => p.kind === "theory")
+    .sort((a, b) => compareTimeValues(a.start, b.start));
   const days = sortDays(data.days);
 
   const slots = data.class_slots.filter((s) => {
@@ -129,30 +131,40 @@ export function buildRoutineMatrix(data: AppData, scope: RoutineScope) {
     return [c?.code ?? "", teachers, room?.name ?? "", sectionTag].filter(Boolean).join("\n");
   };
 
-  const header = ["Day", ...periods.map((p) => fmtRange12(p.start, p.end))];
+  const header = ["Day", ...theoryPeriods.map((p) => fmtRange12(p.start, p.end))];
   const rows = days.map((d) => {
     const row: string[] = [fmtDayTitle(d.name)];
-    for (const p of periods) {
+    let skipCount = 0;
+    for (const p of theoryPeriods) {
+      if (skipCount > 0) {
+        row.push("SKIP"); // Indicator for merging
+        skipCount--;
+        continue;
+      }
       if (isBreak(p.name)) {
         row.push("BREAK");
         continue;
       }
       const cellSlots = slots.filter(
-        (s) => s.day === d.name && timesOverlap(s.start, s.end, p.start, p.end) && s.start === p.start,
+        (s) => s.day === d.name && timesOverlap(s.start, s.end, p.start, p.end)
       );
-      if (cellSlots.length === 0) {
-        const spanning = slots.find(
-          (s) => s.day === d.name && timesOverlap(s.start, s.end, p.start, p.end) && s.start < p.start,
-        );
-        row.push(spanning ? "↑" : "");
+      
+      const starting = cellSlots.filter(s => s.start === p.start);
+      if (starting.length === 0) {
+        const spanning = cellSlots.find(s => s.start < p.start);
+        row.push(spanning ? "SKIP" : "");
       } else {
-        row.push(cellSlots.map(cellText).join("\n---\n"));
+        const colSpan = Math.max(1, ...starting.map(s => {
+          return theoryPeriods.filter(tp => timesOverlap(s.start, s.end, tp.start, tp.end)).length;
+        }));
+        skipCount = colSpan - 1;
+        row.push(starting.map(cellText).join("\n---\n"));
       }
     }
     return row;
   });
 
-  return { header, rows, periods, days, slots };
+  return { header, rows, periods: theoryPeriods, days, slots };
 }
 
 /* =============== EXCEL =============== */
@@ -166,7 +178,9 @@ export function exportRoutineExcel(data: AppData, scope: RoutineScope) {
   for (const m of info.meta) aoa.push([m.label, m.value]);
   aoa.push([]);
   aoa.push(header);
-  for (const r of rows) aoa.push(r);
+  for (const r of rows) {
+    aoa.push(r.map(c => c === "SKIP" ? "" : c));
+  }
 
   const ws = XLSX.utils.aoa_to_sheet(aoa);
   ws["!cols"] = header.map(() => ({ wch: 24 }));
@@ -198,13 +212,30 @@ export function exportRoutinePdf(data: AppData, scope: RoutineScope) {
   }
   const startY = y + 6;
 
+  // Handle cell merging for PDF
+  const body = rows.map(r => r.map(c => ({ content: c, colSpan: 1 })));
+  for (let r = 0; r < body.length; r++) {
+    for (let c = 1; c < body[r].length; c++) {
+      if (body[r][c].content === "SKIP") {
+        let prev = c - 1;
+        while (prev >= 1 && body[r][prev].content === "SKIP") prev--;
+        body[r][prev].colSpan++;
+      }
+    }
+  }
+  const finalBody = body.map(r => r.filter(c => c.content !== "SKIP").map(c => {
+    if (c.content === "BREAK") return { content: "BREAK", styles: { fillColor: [254, 243, 199], fontStyle: "bold", halign: "center" } };
+    return c;
+  }));
+
   autoTable(doc, {
     head: [header],
-    body: rows,
+    body: finalBody as any,
     startY,
-    styles: { fontSize: 7, cellPadding: 3, valign: "top" },
-    headStyles: { fillColor: [37, 99, 235], textColor: 255 },
-    columnStyles: { 0: { fontStyle: "bold", fillColor: [219, 234, 254] } },
+    styles: { fontSize: 7, cellPadding: 3, valign: "top", halign: "left", overflow: "linebreak" },
+    headStyles: { fillColor: [30, 58, 138], textColor: 255, fontStyle: "bold", halign: "center" },
+    columnStyles: { 0: { fontStyle: "bold", fillColor: [219, 234, 254], cellWidth: 60 } },
+    theme: "grid",
   });
   doc.save(`${info.slug}.pdf`);
 }
@@ -386,24 +417,36 @@ export function exportRoutineImage(data: AppData, scope: RoutineScope) {
   ctx.textAlign = "left";
   for (let r = 0; r < rowsCount; r++) {
     for (let c = 0; c < cols; c++) {
+      const content = rows[r][c];
+      if (content === "SKIP") continue;
+
+      let colSpan = 1;
+      let nextC = c + 1;
+      while (nextC < cols && rows[r][nextC] === "SKIP") {
+        colSpan++;
+        nextC++;
+      }
+
       const x = tableX + c * cellW;
       const yy = tableY + r * cellH;
+      const currentCellW = cellW * colSpan;
+
       // Cell background
       const isDay = c === 0;
-      ctx.fillStyle = isDay ? "#dbeafe" : (rows[r][c] === "BREAK" ? "#fef3c7" : "#ffffff");
-      ctx.fillRect(x, yy, cellW, cellH);
+      ctx.fillStyle = isDay ? "#dbeafe" : (content === "BREAK" ? "#fef3c7" : "#ffffff");
+      ctx.fillRect(x, yy, currentCellW, cellH);
       // Border
       ctx.strokeStyle = "#cbd5e1";
       ctx.lineWidth = 1;
-      ctx.strokeRect(x + 0.5, yy + 0.5, cellW - 1, cellH - 1);
+      ctx.strokeRect(x + 0.5, yy + 0.5, currentCellW - 1, cellH - 1);
       // Text
       ctx.fillStyle = "#0f172a";
       ctx.font = isDay ? "bold 13px Arial, sans-serif" : "11px Arial, sans-serif";
-      const lines = String(rows[r][c]).split("\n");
+      const lines = String(content).split("\n");
       let ty = yy + 8;
       for (const line of lines) {
         if (ty > yy + cellH - 12) break;
-        ctx.fillText(line, x + 6, ty, cellW - 12);
+        ctx.fillText(line, x + 6, ty, currentCellW - 12);
         ty += 14;
       }
     }

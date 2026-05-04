@@ -57,6 +57,7 @@ interface StoreState extends AppData {
   addRoom: (r: Omit<Room, "id">) => Promise<void>;
   updateRoom: (id: string, r: Partial<Room>) => Promise<void>;
   deleteRoom: (id: string) => Promise<void>;
+  replaceRooms: (rooms: Room[]) => Promise<void>;
   
   // sections
   addSection: (s: Omit<Section, "id">) => Promise<void>;
@@ -278,7 +279,8 @@ export const useStore = create<StoreState>((set, get) => ({
   },
   updateTeacher: async (id, t) => {
     try {
-      const res = await api.patch<Teacher>(`/teachers/${id}`, t);
+      const { id: _id, ...payload } = t as any;
+      const res = await api.patch<Teacher>(`/teachers/${id}`, payload);
       set((s) => ({ teachers: s.teachers.map((x) => (x.id === id ? res : x)) }));
     } catch (err: any) { set({ error: err.message }); }
   },
@@ -309,7 +311,8 @@ export const useStore = create<StoreState>((set, get) => ({
   },
   updateRoom: async (id, r) => {
     try {
-      const res = await api.patch<Room>(`/rooms/${id}`, r);
+      const { id: _id, ...payload } = r as any;
+      const res = await api.patch<Room>(`/rooms/${id}`, payload);
       set((s) => ({ rooms: s.rooms.map((x) => (x.id === id ? res : x)) }));
     } catch (err: any) { set({ error: err.message }); }
   },
@@ -317,6 +320,12 @@ export const useStore = create<StoreState>((set, get) => ({
     try {
       await api.delete(`/rooms/${id}`);
       set((s) => ({ rooms: s.rooms.filter((x) => x.id !== id) }));
+    } catch (err: any) { set({ error: err.message }); }
+  },
+  replaceRooms: async (rooms: Room[]) => {
+    try {
+      await api.post('/rooms', rooms);
+      await get().init();
     } catch (err: any) { set({ error: err.message }); }
   },
 
@@ -328,7 +337,8 @@ export const useStore = create<StoreState>((set, get) => ({
   },
   updateSection: async (id, sec) => {
     try {
-      const res = await api.patch<Section>(`/sections/${id}`, sec);
+      const { id: _id, ...payload } = sec as any;
+      const res = await api.patch<Section>(`/sections/${id}`, payload);
       set((s) => ({ sections: s.sections.map((x) => (x.id === id ? res : x)) }));
     } catch (err: any) { set({ error: err.message }); }
   },
@@ -347,7 +357,8 @@ export const useStore = create<StoreState>((set, get) => ({
   },
   updateCourse: async (id, c) => {
     try {
-      const res = await api.patch<Course>(`/courses/${id}`, c);
+      const { id: _id, ...payload } = c as any;
+      const res = await api.patch<Course>(`/courses/${id}`, payload);
       set((s) => ({ courses: s.courses.map((x) => (x.id === id ? res : x)) }));
     } catch (err: any) { set({ error: err.message }); }
   },
@@ -366,7 +377,8 @@ export const useStore = create<StoreState>((set, get) => ({
   },
   updatePeriod: async (id, patch) => {
     try {
-      const res = await api.patch<Period>(`/periods/${id}`, patch);
+      const { id: _id, ...payload } = patch as any;
+      const res = await api.patch<Period>(`/periods/${id}`, payload);
       // Re-fetch all slots as times might have changed
       const slots = await api.get<ClassSlot[]>(`/class-slots?semester_id=${get().active_semester_id}`);
       set((s) => ({
@@ -415,8 +427,9 @@ export const useStore = create<StoreState>((set, get) => ({
 
   upsertClassSlot: async (slot) => {
     try {
+      const { id, ...rest } = slot;
       const payload = {
-        ...slot,
+        ...rest,
         semester_id: slot.semester_id || get().active_semester_id
       };
       const res = slot.id 

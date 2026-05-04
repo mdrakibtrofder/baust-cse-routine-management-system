@@ -43,11 +43,16 @@ export function RoomsPage() {
   const dup = (name: string, ignoreId?: string) =>
     rooms.some(r => r.id !== ignoreId && r.name.trim().toLowerCase() === name.trim().toLowerCase());
 
-  const submit = () => {
+  const submit = async () => {
     if (!form.name.trim()) return toast.error("Room name required");
     if (dup(form.name, editing?.id)) return toast.error(`Room name "${form.name}" already exists`);
-    if (editing) { updateRoom(editing.id, form); toast.success("Room updated"); }
-    else { addRoom(form); toast.success("Room added"); }
+    if (editing) {
+      await updateRoom(editing.id, form);
+      toast.success("Room updated");
+    } else {
+      await addRoom(form);
+      toast.success("Room added");
+    }
     setOpen(false);
   };
 
@@ -134,7 +139,11 @@ export function RoomsPage() {
                         onClick={() => setUnavailFor(r)}>
                         <Clock className="h-3.5 w-3.5 text-warning" />
                       </Button>
-                      <Button size="icon" variant="ghost" onClick={() => { setEditing(r); setForm(r); setOpen(true); }}>
+                      <Button size="icon" variant="ghost" onClick={() => {
+                        setEditing(r);
+                        setForm({ name: r.name, room_type: r.room_type, capacity: r.capacity });
+                        setOpen(true);
+                      }}>
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
                       <Button size="icon" variant="ghost" onClick={() => tryDelete(r)}>

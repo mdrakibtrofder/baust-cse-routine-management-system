@@ -57,9 +57,9 @@ interface DraftClass {
 }
 
 const EMPTY_CLASS = (info: ReturnType<typeof courseInfo>): DraftClass => ({
-  day: "SUN",
-  start: "08:00",
-  end: info.classDuration === 60 ? "09:00" : "11:00",
+  day: "",
+  start: "",
+  end: "",
   room_id: null,
   week: info.weekPattern,
 });
@@ -417,7 +417,7 @@ export function ClassAssignDialog({
                   <Label>{info.roomKind === "sessional" ? "Sessional Day" : "Theory Day"}</Label>
                   <Select value={current.day} onValueChange={(v) => setCurrent({ day: v })}>
                     <SelectTrigger>
-                      <SelectValue />
+                      <SelectValue placeholder="Select Day" />
                     </SelectTrigger>
                     <SelectContent>
                       {orderedDays.map((d) => (
@@ -515,7 +515,7 @@ export function ClassAssignDialog({
                   </span>
                   {showRoomTable ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
                 </button>
-                {showRoomTable && (
+                {showRoomTable && current.day && (
                   <div className="p-2 space-y-2">
                     <div className="flex flex-wrap gap-1">
                       {orderedDays.map((d) => (
@@ -549,6 +549,11 @@ export function ClassAssignDialog({
                       week={current.week}
                       onPick={(roomId, start, end) => setCurrent({ room_id: roomId, start, end })}
                     />
+                  </div>
+                )}
+                {showRoomTable && !current.day && (
+                  <div className="p-8 text-center text-sm text-muted-foreground">
+                    Select a day to view availability grid
                   </div>
                 )}
               </div>
