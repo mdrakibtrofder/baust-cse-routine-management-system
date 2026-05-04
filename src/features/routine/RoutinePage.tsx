@@ -41,7 +41,7 @@ export function RoutinePage() {
     }
     if (mode === "room") {
       const r = data.rooms.find((x) => x.id === roomId);
-      return r ? `Room ${r.name} (cap ${r.capacity}, ${r.room_type})` : "";
+      return r ? `Room ${r.name} (capacity ${r.capacity}, ${r.room_type})` : "";
     }
     const s = data.sections.find((x) => x.id === sectionId);
     return s ? `Level ${s.level}, Term ${s.term} · Section ${s.name} · ${s.total_students} students` : "";
@@ -94,7 +94,7 @@ export function RoutinePage() {
                     <SelectItem key={r.id} value={r.id}>
                       <span className="font-mono mr-2">{r.name}</span>
                       <span className="text-xs text-muted-foreground">
-                        {r.room_type} · cap {r.capacity}
+                        {r.room_type} · capacity {r.capacity}
                       </span>
                     </SelectItem>
                   ))}
