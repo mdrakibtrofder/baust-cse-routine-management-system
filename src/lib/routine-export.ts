@@ -192,18 +192,18 @@ export function exportRoutineExcel(data: AppData, scope: RoutineScope) {
     aoa.push([
       row.course.code,
       row.course.name,
-      row.theory,
-      row.sessional,
-      row.credit,
+      Number(row.theory),
+      Number(row.sessional),
+      Number(row.credit),
       row.meetings
     ]);
   }
   aoa.push([
     "TOTAL",
     "",
-    summary.totals.theory,
-    summary.totals.sessional,
-    summary.totals.credit,
+    Number(summary.totals.theory),
+    Number(summary.totals.sessional),
+    Number(summary.totals.credit),
     summary.totals.meetings
   ]);
 
@@ -277,16 +277,16 @@ export function exportRoutinePdf(data: AppData, scope: RoutineScope) {
       ...summary.rows.map(r => [
         r.course.code,
         r.course.name,
-        r.theory.toFixed(2),
-        r.sessional.toFixed(2),
-        r.credit.toFixed(2),
+        Number(r.theory).toFixed(2),
+        Number(r.sessional).toFixed(2),
+        Number(r.credit).toFixed(2),
         r.meetings
       ]),
       [
         { content: "TOTAL", colSpan: 2, styles: { fontStyle: "bold", halign: "right" } },
-        summary.totals.theory.toFixed(2),
-        summary.totals.sessional.toFixed(2),
-        summary.totals.credit.toFixed(2),
+        Number(summary.totals.theory).toFixed(2),
+        Number(summary.totals.sessional).toFixed(2),
+        Number(summary.totals.credit).toFixed(2),
         summary.totals.meetings
       ]
     ],
@@ -360,9 +360,9 @@ export async function exportRoutineDocx(data: AppData, scope: RoutineScope) {
       children: [
         r.course.code,
         r.course.name,
-        r.theory.toFixed(2),
-        r.sessional.toFixed(2),
-        r.credit.toFixed(2),
+        Number(r.theory).toFixed(2),
+        Number(r.sessional).toFixed(2),
+        Number(r.credit).toFixed(2),
         r.meetings.toString()
       ].map((v, i) => 
         new TableCell({
@@ -376,9 +376,9 @@ export async function exportRoutineDocx(data: AppData, scope: RoutineScope) {
   const summaryTotalRow = new TableRow({
     children: [
       new TableCell({ columnSpan: 2, children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: "TOTAL", bold: true })] })] }),
-      new TableCell({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun(summary.totals.theory.toFixed(2))] })] }),
-      new TableCell({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun(summary.totals.sessional.toFixed(2))] })] }),
-      new TableCell({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun(summary.totals.credit.toFixed(2))] })] }),
+      new TableCell({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun(Number(summary.totals.theory).toFixed(2))] })] }),
+      new TableCell({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun(Number(summary.totals.sessional).toFixed(2))] })] }),
+      new TableCell({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun(Number(summary.totals.credit).toFixed(2))] })] }),
       new TableCell({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun(summary.totals.meetings.toString())] })] }),
     ]
   });

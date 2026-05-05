@@ -47,7 +47,7 @@ export function RoutineCourseSummary({ scope }: { scope: RoutineScope }) {
                     </div>
                   </td>
                   <td className="text-center px-3 py-2 text-foreground/80">
-                    {r.theory > 0 ? r.theory : <span className="text-muted-foreground">-</span>}
+                    {r.theory > 0 ? Number(r.theory).toFixed(2) : <span className="text-muted-foreground">-</span>}
                   </td>
                   <td className="text-center px-3 py-2 text-foreground/80">
                     {r.sessional > 0 ? Number(r.sessional).toFixed(2) : <span className="text-muted-foreground">-</span>}
@@ -66,7 +66,7 @@ export function RoutineCourseSummary({ scope }: { scope: RoutineScope }) {
               <td className="text-center px-3 py-2">
                 <span className="inline-flex items-center gap-1 text-foreground">
                   <Clock className="h-3 w-3 text-muted-foreground" />
-                  {totals.theory}
+                  {Number(totals.theory).toFixed(2)}
                 </span>
               </td>
               <td className="text-center px-3 py-2">
