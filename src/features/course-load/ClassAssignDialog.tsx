@@ -50,7 +50,7 @@ import { RoutineDialog } from "@/components/RoutineDialog";
 import { CourseDetailsDialog } from "@/components/CourseDetailsDialog";
 import { useConfirm } from "@/components/ConfirmDialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { UserPlus, X, Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -426,47 +426,49 @@ export function ClassAssignDialog({
                     <PopoverContent className="p-0 w-80 shadow-2xl border-slate-200" align="end">
                       <Command className="rounded-xl">
                         <CommandInput placeholder="Search teachers..." className="h-10 text-xs" />
-                        <CommandEmpty className="py-4 text-xs text-slate-400">No teacher found.</CommandEmpty>
-                        <CommandGroup className="max-h-72 overflow-y-auto p-2">
-                          {data.teachers
-                            .sort((a, b) => a.short_name.localeCompare(b.short_name))
-                            .map((t) => {
-                              const isSelected = teacherIds.includes(t.id);
-                              const exceed = teacherWouldExceed(data, t.id, course, section, info.teachersRequired - 1);
-                              return (
-                                <CommandItem
-                                  key={t.id}
-                                  onSelect={() => {
-                                    if (isSelected) {
-                                      const next = teacherIds.filter(id => id !== t.id);
-                                      data.setCourseSectionTeachers(course.id, section.id, next);
-                                    } else if (canAddTeacher) {
-                                      const next = [...teacherIds, t.id];
-                                      data.setCourseSectionTeachers(course.id, section.id, next);
-                                    }
-                                  }}
-                                  className="flex items-center justify-between rounded-lg px-3 py-2 cursor-pointer"
-                                >
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2">
-                                      <RankPill designation={t.designation} />
-                                      <span className="font-mono font-bold text-xs">{t.short_name}</span>
-                                      <span className="text-muted-foreground text-[11px] truncate">{t.name}</span>
+                        <CommandList className="max-h-72">
+                          <CommandEmpty className="py-4 text-xs text-slate-400">No teacher found.</CommandEmpty>
+                          <CommandGroup className="p-2">
+                            {data.teachers
+                              .sort((a, b) => a.short_name.localeCompare(b.short_name))
+                              .map((t) => {
+                                const isSelected = teacherIds.includes(t.id);
+                                const exceed = teacherWouldExceed(data, t.id, course, section, info.teachersRequired - 1);
+                                return (
+                                  <CommandItem
+                                    key={t.id}
+                                    onSelect={() => {
+                                      if (isSelected) {
+                                        const next = teacherIds.filter(id => id !== t.id);
+                                        data.setCourseSectionTeachers(course.id, section.id, next);
+                                      } else if (canAddTeacher) {
+                                        const next = [...teacherIds, t.id];
+                                        data.setCourseSectionTeachers(course.id, section.id, next);
+                                      }
+                                    }}
+                                    className="flex items-center justify-between rounded-lg px-3 py-2 cursor-pointer"
+                                  >
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-2">
+                                        <RankPill designation={t.designation} />
+                                        <span className="font-mono font-bold text-xs">{t.short_name}</span>
+                                        <span className="text-muted-foreground text-[11px] truncate">{t.name}</span>
+                                      </div>
+                                      <div className="text-[10px] text-muted-foreground flex items-center gap-2 mt-0.5 ml-[26px]">
+                                        <span className="truncate">{t.designation}</span>
+                                        {t.status && <Badge variant="outline" className="text-[9px] py-0 h-3.5 px-1">{t.status}</Badge>}
+                                        <span className={cn("font-medium", exceed.exceeds && "text-destructive font-bold")} title="Assigned / Total">
+                                          {Number(exceed.current).toFixed(2)}/{Number(exceed.assigned).toFixed(2)} cr
+                                        </span>
+                                        {exceed.exceeds && <AlertCircle className="h-3 w-3 text-destructive" />}
+                                      </div>
                                     </div>
-                                    <div className="text-[10px] text-muted-foreground flex items-center gap-2 mt-0.5 ml-[26px]">
-                                      <span className="truncate">{t.designation}</span>
-                                      {t.status && <Badge variant="outline" className="text-[9px] py-0 h-3.5 px-1">{t.status}</Badge>}
-                                      <span className={cn("font-medium", exceed.exceeds && "text-destructive font-bold")} title="Assigned / Total">
-                                        {Number(exceed.current).toFixed(2)}/{Number(exceed.assigned).toFixed(2)} cr
-                                      </span>
-                                      {exceed.exceeds && <AlertCircle className="h-3 w-3 text-destructive" />}
-                                    </div>
-                                  </div>
-                                  {isSelected && <Check className="h-4 w-4 text-primary stroke-[3px] ml-2 shrink-0" />}
-                                </CommandItem>
-                              );
-                            })}
-                        </CommandGroup>
+                                    {isSelected && <Check className="h-4 w-4 text-primary stroke-[3px] ml-2 shrink-0" />}
+                                  </CommandItem>
+                                );
+                              })}
+                          </CommandGroup>
+                        </CommandList>
                       </Command>
                     </PopoverContent>
                   </Popover>
