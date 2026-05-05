@@ -47,6 +47,10 @@ import { TeacherDetailsDialog } from "@/components/TeacherDetailsDialog";
 import { RoutineDialog } from "@/components/RoutineDialog";
 import { CourseDetailsDialog } from "@/components/CourseDetailsDialog";
 import { useConfirm } from "@/components/ConfirmDialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { UserPlus, X, Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface DraftClass {
   id?: string;
@@ -116,6 +120,9 @@ export function ClassAssignDialog({
   const [showSectionRoutine, setShowSectionRoutine] = useState(false);
   const [showCourseDetails, setShowCourseDetails] = useState(false);
   const confirmDialog = useConfirm();
+
+  const maxTeachers = info.roomKind === "sessional" ? 2 : 1;
+  const canAddTeacher = teacherIds.length < maxTeachers;
 
   useEffect(() => {
     if (!open) return;
@@ -389,37 +396,110 @@ export function ClassAssignDialog({
                 </div>
               )}
 
-              {/* Teachers + section info — read-only label */}
-              <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Label className="text-xs uppercase tracking-wide text-muted-foreground m-0">
-                      {teachers.length > 1 ? "Teachers" : "Teacher"}
+              {/* Teachers + section info */}
+              <div className="rounded-lg border bg-muted/30 p-3 space-y-3">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex flex-col gap-1">
+                    <Label className="text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                      Teachers ({teachers.length}/{maxTeachers})
                     </Label>
-                    {teachers.length === 0 && (
-                      <span className="text-xs text-destructive">Not assigned — set in Course Load grid</span>
+                    {!canAddTeacher && (
+                      <div className="text-[9px] text-success font-bold flex items-center gap-1 uppercase">
+                        <Check className="h-3 w-3" /> Assigned
+                      </div>
                     )}
-                    {teachers.map((t) => (
-                      <button
-                        key={t.id}
-                        type="button"
-                        onClick={() => setTeacherDetailsId(t.id)}
-                        className="hover:bg-primary/10 hover:border-primary/40 transition rounded px-1.5 py-0.5 bg-card border cursor-pointer"
-                        title="Click to view teacher details"
-                      >
-                        <TeacherChip teacher={t} />
-                      </button>
-                    ))}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowSectionRoutine(true)}
-                    title="Click to view full section routine"
-                    className="inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs hover:bg-primary/10 hover:border-primary/40 transition"
-                  >
-                    <Users className="h-3 w-3" />
-                    Section {section.name}: {section.total_students}
-                  </button>
+
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="h-8 text-[10px] gap-2 font-bold bg-white hover:bg-primary hover:text-white transition-all border-slate-200"
+                        disabled={!canAddTeacher}
+                      >
+                        <UserPlus className="h-3.5 w-3.5" /> Add Teacher
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="p-0 w-[260px] shadow-2xl border-slate-200" align="end">
+                      <Command className="rounded-xl">
+                        <CommandInput placeholder="Search teachers..." className="h-10 text-xs" />
+                        <CommandEmpty className="py-4 text-xs text-slate-400">No teacher found.</CommandEmpty>
+                        <CommandGroup className="max-h-[240px] overflow-y-auto p-2">
+                          {data.teachers
+                            .sort((a, b) => a.short_name.localeCompare(b.short_name))
+                            .map((t) => {
+                              const isSelected = teacherIds.includes(t.id);
+                              return (
+                                <CommandItem
+                                  key={t.id}
+                                  onSelect={() => {
+                                    if (isSelected) {
+                                      const next = teacherIds.filter(id => id !== t.id);
+                                      data.setCourseSectionTeachers(course.id, section.id, next);
+                                    } else if (canAddTeacher) {
+                                      const next = [...teacherIds, t.id];
+                                      data.setCourseSectionTeachers(course.id, section.id, next);
+                                    }
+                                  }}
+                                  className="flex items-center justify-between rounded-lg px-3 py-2 cursor-pointer"
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded bg-primary/10 text-primary flex items-center justify-center font-black text-[10px]">
+                                      {t.short_name}
+                                    </div>
+                                    <div className="flex flex-col">
+                                      <span className="font-bold text-xs">{t.name}</span>
+                                      <span className="text-[9px] text-slate-400 uppercase font-medium">{t.designation}</span>
+                                    </div>
+                                  </div>
+                                  {isSelected && <Check className="h-4 w-4 text-primary stroke-[3px]" />}
+                                </CommandItem>
+                              );
+                            })}
+                        </CommandGroup>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div className="flex flex-wrap gap-2.5">
+                  {teachers.length === 0 ? (
+                    <div className="text-[11px] text-slate-400 font-bold italic py-2 w-full text-center border-2 border-dashed border-slate-200 rounded-lg">
+                      No teachers assigned yet.
+                    </div>
+                  ) : (
+                    <TooltipProvider>
+                      {teachers.map((t) => (
+                        <div key={t.id} className="flex items-center gap-1 group animate-in fade-in zoom-in duration-200">
+                          <button
+                            type="button"
+                            onClick={() => setTeacherDetailsId(t.id)}
+                            className="hover:scale-105 transition-transform"
+                          >
+                            <TeacherChip teacher={t} />
+                          </button>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const next = teacherIds.filter(id => id !== t.id);
+                                  data.setCourseSectionTeachers(course.id, section.id, next);
+                                }}
+                                className="p-1 rounded-full hover:bg-rose-100 text-slate-400 hover:text-rose-600 transition-all"
+                              >
+                                <X className="h-3.5 w-3.5 stroke-[3px]" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent className="bg-slate-800 text-white text-[10px] font-bold">
+                              <p>Remove Teacher</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                      ))}
+                    </TooltipProvider>
+                  )}
                 </div>
               </div>
 
