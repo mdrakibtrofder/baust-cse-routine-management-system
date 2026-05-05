@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Stepper } from "@/components/Stepper";
 import { Badge } from "@/components/ui/badge";
 import {
+  AlertCircle,
   AlertTriangle,
   Check,
   ChevronLeft,
@@ -38,11 +39,12 @@ import {
   roomUnavailableAt,
   timesOverlap,
   weeksOverlap,
+  teacherWouldExceed,
   type Conflict,
 } from "@/lib/conflicts";
 import { toast } from "sonner";
 import { cn, compareDayAndTime, compareTimeValues, sortDays, fmtRange12, fmtDayTitle } from "@/lib/utils";
-import { TeacherChip } from "@/components/TeacherBadge";
+import { RankPill, TeacherChip } from "@/components/TeacherBadge";
 import { TeacherDetailsDialog } from "@/components/TeacherDetailsDialog";
 import { RoutineDialog } from "@/components/RoutineDialog";
 import { CourseDetailsDialog } from "@/components/CourseDetailsDialog";
@@ -421,15 +423,16 @@ export function ClassAssignDialog({
                         <UserPlus className="h-3.5 w-3.5" /> Add Teacher
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="p-0 w-[260px] shadow-2xl border-slate-200" align="end">
+                    <PopoverContent className="p-0 w-80 shadow-2xl border-slate-200" align="end">
                       <Command className="rounded-xl">
                         <CommandInput placeholder="Search teachers..." className="h-10 text-xs" />
                         <CommandEmpty className="py-4 text-xs text-slate-400">No teacher found.</CommandEmpty>
-                        <CommandGroup className="max-h-[240px] overflow-y-auto p-2">
+                        <CommandGroup className="max-h-72 overflow-y-auto p-2">
                           {data.teachers
                             .sort((a, b) => a.short_name.localeCompare(b.short_name))
                             .map((t) => {
                               const isSelected = teacherIds.includes(t.id);
+                              const exceed = teacherWouldExceed(data, t.id, course, section, info.teachersRequired - 1);
                               return (
                                 <CommandItem
                                   key={t.id}
@@ -444,16 +447,22 @@ export function ClassAssignDialog({
                                   }}
                                   className="flex items-center justify-between rounded-lg px-3 py-2 cursor-pointer"
                                 >
-                                  <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded bg-primary/10 text-primary flex items-center justify-center font-black text-[10px]">
-                                      {t.short_name}
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <RankPill designation={t.designation} />
+                                      <span className="font-mono font-bold text-xs">{t.short_name}</span>
+                                      <span className="text-muted-foreground text-[11px] truncate">{t.name}</span>
                                     </div>
-                                    <div className="flex flex-col">
-                                      <span className="font-bold text-xs">{t.name}</span>
-                                      <span className="text-[9px] text-slate-400 uppercase font-medium">{t.designation}</span>
+                                    <div className="text-[10px] text-muted-foreground flex items-center gap-2 mt-0.5 ml-[26px]">
+                                      <span className="truncate">{t.designation}</span>
+                                      {t.status && <Badge variant="outline" className="text-[9px] py-0 h-3.5 px-1">{t.status}</Badge>}
+                                      <span className={cn("font-medium", exceed.exceeds && "text-destructive font-bold")} title="Assigned / Total">
+                                        {Number(exceed.current).toFixed(2)}/{Number(exceed.assigned).toFixed(2)} cr
+                                      </span>
+                                      {exceed.exceeds && <AlertCircle className="h-3 w-3 text-destructive" />}
                                     </div>
                                   </div>
-                                  {isSelected && <Check className="h-4 w-4 text-primary stroke-[3px]" />}
+                                  {isSelected && <Check className="h-4 w-4 text-primary stroke-[3px] ml-2 shrink-0" />}
                                 </CommandItem>
                               );
                             })}
