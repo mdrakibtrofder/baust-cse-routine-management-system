@@ -359,7 +359,7 @@ export function ClassAssignDialog({
                         {fmtDayTitle(d.day)} {fmtRange12(d.start, d.end)}
                       </div>
                       <div className="text-[10px] text-muted-foreground truncate">
-                        {room ? room.name : <span className="text-warning">no room</span>}
+                        {room ? room.name : <span className="text-warning">Room, Day and Time Slot are not selected</span>}
                         {st.conflicts.length > 0 && (
                           <span className="text-destructive"> · {st.conflicts.length} issue</span>
                         )}
@@ -515,7 +515,7 @@ export function ClassAssignDialog({
                   </span>
                   {showRoomTable ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
                 </button>
-                {showRoomTable && current.day && (
+                {showRoomTable && (
                   <div className="p-2 space-y-2">
                     <div className="flex flex-wrap gap-1">
                       {orderedDays.map((d) => (
@@ -525,7 +525,7 @@ export function ClassAssignDialog({
                           onClick={() => setCurrent({ day: d.name })}
                           className={cn(
                             "px-2.5 py-1 text-[11px] font-semibold rounded-md border transition",
-                            current.day === d.name
+                            (current.day || "SUN") === d.name
                               ? "bg-primary text-primary-foreground border-primary"
                               : "bg-card hover:bg-muted border-border text-muted-foreground",
                           )}
@@ -538,7 +538,7 @@ export function ClassAssignDialog({
                       course={course}
                       section={section}
                       teacherIds={teacherIds}
-                      day={current.day}
+                      day={current.day || "SUN"}
                       currentSlotId={current.id}
                       currentRoomId={current.room_id}
                       currentStart={current.start}
@@ -547,13 +547,8 @@ export function ClassAssignDialog({
                         day: d.day, start: d.start, end: d.end, week: d.week,
                       }))}
                       week={current.week}
-                      onPick={(roomId, start, end) => setCurrent({ room_id: roomId, start, end })}
+                      onPick={(roomId, start, end) => setCurrent({ room_id: roomId, start, end, day: current.day || "SUN" })}
                     />
-                  </div>
-                )}
-                {showRoomTable && !current.day && (
-                  <div className="p-8 text-center text-sm text-muted-foreground">
-                    Select a day to view availability grid
                   </div>
                 )}
               </div>
@@ -592,14 +587,15 @@ export function ClassAssignDialog({
 
           <DialogFooter className="flex-row justify-between sm:justify-between">
             <div className="flex gap-2">
-              {existing.length > 0 && (
-                <Button variant="ghost" size="sm" onClick={clearAll}>
-                  <Trash2 className="h-3.5 w-3.5 mr-1 text-destructive" /> Clear all
+              {drafts.length > 1 && (
+                <Button variant="ghost" size="sm" onClick={clearAll} className="h-9 px-3">
+                  <Trash2 className="h-3.5 w-3.5 mr-1.5 text-destructive" /> Clear all
                 </Button>
               )}
               {(current.id || current.room_id) && (
-                <Button variant="ghost" size="sm" onClick={() => deleteOne(safeStep)}>
-                  <Trash2 className="h-3.5 w-3.5 mr-1 text-destructive" /> Delete this class
+                <Button variant="ghost" size="sm" onClick={() => deleteOne(safeStep)} className="h-9 px-3">
+                  <Trash2 className="h-3.5 w-3.5 mr-1.5 text-destructive" /> 
+                  {info.classCount === 1 ? "Clear this class" : "Delete this class"}
                 </Button>
               )}
             </div>
@@ -611,16 +607,18 @@ export function ClassAssignDialog({
                     size="sm"
                     disabled={safeStep === 0}
                     onClick={() => setStep((s) => s - 1)}
+                    className="h-9 px-4"
                   >
-                    <ChevronLeft className="h-4 w-4" /> Back
+                    <ChevronLeft className="h-4 w-4 mr-1" /> Back
                   </Button>
                   {safeStep < info.classCount - 1 && (
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setStep((s) => s + 1)}
+                      className="h-9 px-4"
                     >
-                      Next <ChevronRight className="h-4 w-4" />
+                      Next <ChevronRight className="h-4 w-4 ml-1" />
                     </Button>
                   )}
                 </>
@@ -628,6 +626,7 @@ export function ClassAssignDialog({
               <Button
                 size="sm"
                 onClick={save}
+                className="h-9 px-6 font-bold"
                 style={{ background: "var(--gradient-primary)", color: "var(--primary-foreground)" }}
               >
                 Save Schedule
