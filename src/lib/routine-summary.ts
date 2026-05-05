@@ -39,9 +39,9 @@ export function buildRoutineCourseSummary(
     if (!c) continue;
     rows.push({
       course: c,
-      theory: c.theory ?? 0,
-      sessional: c.sessional ?? 0,
-      credit: c.credit ?? 0,
+      theory: Number(c.theory || 0),
+      sessional: Number(c.sessional || 0),
+      credit: Number(c.credit || 0),
       meetings,
     });
   }
@@ -49,10 +49,10 @@ export function buildRoutineCourseSummary(
 
   const totals = rows.reduce(
     (acc, r) => ({
-      theory: acc.theory + r.theory,
-      sessional: acc.sessional + r.sessional,
-      credit: acc.credit + r.credit,
-      meetings: acc.meetings + r.meetings,
+      theory: Number(acc.theory || 0) + Number(r.theory || 0),
+      sessional: Number(acc.sessional || 0) + Number(r.sessional || 0),
+      credit: Number(acc.credit || 0) + Number(r.credit || 0),
+      meetings: Number(acc.meetings || 0) + Number(r.meetings || 0),
     }),
     { theory: 0, sessional: 0, credit: 0, meetings: 0 },
   );

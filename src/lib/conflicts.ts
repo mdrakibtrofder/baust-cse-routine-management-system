@@ -213,8 +213,10 @@ export function teacherAssignedCreditUsed(data: AppData, teacherId: string): num
     if (!cst.teacher_ids.includes(teacherId)) continue;
     const c = data.courses.find((x) => x.id === cst.course_id);
     if (!c) continue;
-    const share = c.sessional > 0 && cst.teacher_ids.length > 1 ? c.credit / cst.teacher_ids.length : c.credit;
-    total += share;
+    
+    const info = COURSE_TYPE_INFO[c.course_type];
+    const weight = info.roomKind === "sessional" ? 3 : 1;
+    total += weight;
   }
   return total;
 }
@@ -227,19 +229,23 @@ export function teacherWouldExceed(
   coteachers: number,
 ): { exceeds: boolean; current: number; assigned: number; addition: number } {
   const t = data.teachers.find((x) => x.id === teacherId);
+  const assigned = t ? Number(t.assigned_credit_hours || 0) : 0;
   if (!t) return { exceeds: false, current: 0, assigned: 0, addition: 0 };
   const current = teacherAssignedCreditUsed(data, teacherId);
   const existing = semCST(data).find(
     (x) => x.course_id === course.id && x.section_id === section.id,
   );
   const alreadyOnIt = existing?.teacher_ids.includes(teacherId);
-  if (alreadyOnIt) return { exceeds: false, current, assigned: t.assigned_credit_hours, addition: 0 };
-  const share = course.sessional > 0 && coteachers > 0 ? course.credit / (coteachers + 1) : course.credit;
+  
+  const info = COURSE_TYPE_INFO[course.course_type];
+  const weight = info.roomKind === "sessional" ? 3 : 1;
+  
+  if (alreadyOnIt) return { exceeds: false, current, assigned, addition: 0 };
   return {
-    exceeds: t.assigned_credit_hours > 0 && current + share > t.assigned_credit_hours + 0.001,
+    exceeds: assigned > 0 && current + weight > assigned + 0.001,
     current,
-    assigned: t.assigned_credit_hours,
-    addition: share,
+    assigned,
+    addition: weight,
   };
 }
 

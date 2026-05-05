@@ -21,7 +21,8 @@ export function TeacherDetailsDialog({
 
   const rank = rankInfoFor(teacher.designation);
   const used = teacherAssignedCreditUsed(data, teacher.id);
-  const remaining = teacher.assigned_credit_hours - used;
+  const assigned = Number(teacher.assigned_credit_hours || 0);
+  const remaining = assigned - used;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -52,7 +53,7 @@ export function TeacherDetailsDialog({
           <InfoCard
             icon={Award}
             label="Total Credit"
-            value={`${Number(teacher.assigned_credit_hours).toFixed(2)}`}
+            value={`${Number(assigned).toFixed(2)}`}
           />
           <InfoCard
             icon={BookOpen}
@@ -61,7 +62,7 @@ export function TeacherDetailsDialog({
               <span>
                 <span
                   className={cn(
-                    used > teacher.assigned_credit_hours + 0.001 && "text-destructive font-semibold",
+                    used > assigned + 0.001 && "text-destructive font-semibold",
                   )}
                 >
                   {Number(used).toFixed(2)}
