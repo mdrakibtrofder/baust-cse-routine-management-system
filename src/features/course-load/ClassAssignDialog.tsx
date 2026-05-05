@@ -27,6 +27,7 @@ import {
   ChevronDown,
   ChevronUp,
   CalendarDays,
+  MapPin,
 } from "lucide-react";
 import { COURSE_TYPE_INFO, type Course, type Section, type WeekPattern } from "@/lib/types";
 import {
@@ -358,10 +359,20 @@ export function ClassAssignDialog({
                       <div className="font-mono text-[11px]">
                         {fmtDayTitle(d.day)} {fmtRange12(d.start, d.end)}
                       </div>
-                      <div className="text-[10px] text-muted-foreground truncate">
-                        {room ? room.name : <span className="text-warning">Room, Day and Time Slot are not selected</span>}
+                      <div className="text-[10px] text-muted-foreground whitespace-normal leading-relaxed mt-1">
+                        {room ? (
+                          <span className="text-emerald-600 flex items-center gap-1 font-bold">
+                            <MapPin className="h-3 w-3" /> {room.name}
+                          </span>
+                        ) : (
+                          <span className="text-amber-600 font-medium italic">
+                            Room, Day and Time Slot are not selected
+                          </span>
+                        )}
                         {st.conflicts.length > 0 && (
-                          <span className="text-destructive"> · {st.conflicts.length} issue</span>
+                          <Badge variant="destructive" className="px-1.5 py-0 h-4 text-[8px] font-black mt-1.5 block w-fit">
+                            {st.conflicts.length} ISSUES
+                          </Badge>
                         )}
                       </div>
                     </button>

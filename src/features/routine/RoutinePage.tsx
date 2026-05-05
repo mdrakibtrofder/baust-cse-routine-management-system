@@ -11,9 +11,20 @@ type Mode = "teacher" | "room" | "section";
 export function RoutinePage() {
   const data = useStore();
   const [mode, setMode] = useState<Mode>("section");
-  const [teacherId, setTeacherId] = useState<string>(data.teachers[0]?.id ?? "");
-  const [roomId, setRoomId] = useState<string>(data.rooms[0]?.id ?? "");
-  const [sectionId, setSectionId] = useState<string>(data.sections[0]?.id ?? "");
+  const [teacherId, setTeacherId] = useState<string>("");
+  const [roomId, setRoomId] = useState<string>("");
+  const [sectionId, setSectionId] = useState<string>("");
+
+  useMemo(() => {
+    if (!teacherId && data.teachers.length > 0) setTeacherId(data.teachers[0].id);
+    if (!roomId && data.rooms.length > 0) setRoomId(data.rooms[0].id);
+    if (!sectionId && data.sections.length > 0) {
+      const sorted = [...data.sections].sort(
+        (a, b) => a.level - b.level || a.term.localeCompare(b.term) || a.name.localeCompare(b.name)
+      );
+      setSectionId(sorted[0].id);
+    }
+  }, [data]);
 
   const sectionsByLT = useMemo(() => {
     const m = new Map<string, typeof data.sections>();
