@@ -77,6 +77,7 @@ export interface CourseSectionTeacher {
   course_id: string;
   section_id: string;
   teacher_ids: string[]; // 1 for theory, 2 for sessional
+  primary_room_id?: string | null;
 }
 
 export interface Year {

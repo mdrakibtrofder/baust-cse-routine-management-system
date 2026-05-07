@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Clock } from "lucide-react";
+import { Plus, Trash2, Clock, Pencil } from "lucide-react";
 import { toast } from "sonner";
 
 type Mode = "teacher" | "room";
@@ -42,6 +42,7 @@ export function UnavailabilityDialog({
     return compareDayNames(dayA, dayB) || compareTimeValues(a.start, b.start);
   });
 
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [day, setDay] = useState("SUN");
   const [days, setDays] = useState<string[]>(["SUN"]);
   const [start, setStart] = useState("09:00");
@@ -49,6 +50,7 @@ export function UnavailabilityDialog({
   const [reason, setReason] = useState("");
 
   const reset = () => {
+    setEditingId(null);
     setDay("SUN");
     setDays(["SUN"]);
     setStart("09:00");
@@ -56,29 +58,67 @@ export function UnavailabilityDialog({
     setReason("");
   };
 
-  const add = () => {
+  const isDuplicate = () => {
+    return list.some(u => {
+      if (editingId && u.id === editingId) return false;
+      if (mode === "teacher") {
+        return (u as any).day === day && u.start === start && u.end === end;
+      } else {
+        return JSON.stringify((u as any).days) === JSON.stringify(days) && u.start === start && u.end === end;
+      }
+    });
+  };
+
+  const add = async () => {
     if (!entityId) return;
     if (start >= end) {
       toast.error("Start time must be before end time");
       return;
     }
+    if (isDuplicate()) {
+      toast.error("Unavailability for this time already exists");
+      return;
+    }
+    
     if (mode === "teacher") {
-      data.addTeacherUnavailability({ teacher_id: entityId, day, start, end, reason: reason.trim() || undefined });
+      if (editingId) {
+        await data.updateTeacherUnavailability(editingId, { day, start, end, reason: reason.trim() || undefined });
+      } else {
+        await data.addTeacherUnavailability({ teacher_id: entityId, day, start, end, reason: reason.trim() || undefined });
+      }
     } else {
       if (days.length === 0) {
         toast.error("Pick at least one day");
         return;
       }
-      data.addRoomUnavailability({ room_id: entityId, days, start, end, reason: reason.trim() || undefined });
+      if (editingId) {
+        await data.updateRoomUnavailability(editingId, { days, start, end, reason: reason.trim() || undefined });
+      } else {
+        await data.addRoomUnavailability({ room_id: entityId, days, start, end, reason: reason.trim() || undefined });
+      }
     }
-    toast.success("Unavailability added");
+    toast.success(editingId ? "Unavailability updated" : "Unavailability added");
     reset();
+    data.init();
   };
 
-  const remove = (id: string) => {
-    if (mode === "teacher") data.deleteTeacherUnavailability(id);
-    else data.deleteRoomUnavailability(id);
+  const startEdit = (u: any) => {
+    setEditingId(u.id);
+    setStart(u.start);
+    setEnd(u.end);
+    setReason(u.reason || "");
+    if (mode === "teacher") {
+      setDay(u.day);
+    } else {
+      setDays(u.days);
+    }
+  };
+
+  const remove = async (id: string) => {
+    if (mode === "teacher") await data.deleteTeacherUnavailability(id);
+    else await data.deleteRoomUnavailability(id);
     toast.success("Removed");
+    data.init();
   };
 
   const toggleDay = (d: string) => {
@@ -86,7 +126,7 @@ export function UnavailabilityDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(v) => { if(!v) reset(); onOpenChange(v); }}>
       <DialogContent className="max-w-xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -106,7 +146,7 @@ export function UnavailabilityDialog({
               </div>
             )}
             {sortedList.map((u) => (
-              <div key={u.id} className="flex items-center justify-between px-3 py-2 text-xs">
+              <div key={u.id} className={cn("flex items-center justify-between px-3 py-2 text-xs", editingId === u.id && "bg-primary/5")}>
                 <div className="space-y-0.5">
                   <div className="font-mono font-semibold">
                     {mode === "teacher"
@@ -121,15 +161,22 @@ export function UnavailabilityDialog({
                     <div className="text-muted-foreground italic">{u.reason}</div>
                   )}
                 </div>
-                <Button size="icon" variant="ghost" onClick={() => remove(u.id)}>
-                  <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                </Button>
+                <div className="flex gap-1">
+                  <Button size="icon" variant="ghost" onClick={() => startEdit(u)}>
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button size="icon" variant="ghost" onClick={() => remove(u.id)}>
+                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
 
           <div className="rounded-md border bg-muted/30 p-3 space-y-3">
-            <div className="text-[11px] font-semibold uppercase text-muted-foreground">Add new</div>
+            <div className="text-[11px] font-semibold uppercase text-muted-foreground">
+              {editingId ? "Edit unavailability" : "Add new"}
+            </div>
             {mode === "teacher" ? (
               <div>
                 <Label className="text-xs">Day</Label>
@@ -189,10 +236,17 @@ export function UnavailabilityDialog({
                 onChange={(e) => setReason(e.target.value)}
               />
             </div>
-            <Button onClick={add} size="sm" className="w-full"
-              style={{ background: "var(--gradient-primary)", color: "var(--primary-foreground)" }}>
-              <Plus className="h-3.5 w-3.5 mr-1" /> Add window
-            </Button>
+            <div className="flex gap-2">
+              {editingId && (
+                <Button variant="outline" size="sm" className="flex-1" onClick={reset}>
+                  Cancel
+                </Button>
+              )}
+              <Button onClick={add} size="sm" className="flex-1"
+                style={{ background: "var(--gradient-primary)", color: "var(--primary-foreground)" }}>
+                {editingId ? "Save changes" : <><Plus className="h-3.5 w-3.5 mr-1" /> Add window</>}
+              </Button>
+            </div>
           </div>
         </div>
 

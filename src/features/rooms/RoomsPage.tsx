@@ -54,6 +54,7 @@ export function RoomsPage() {
       toast.success("Room added");
     }
     setOpen(false);
+    data.init(); // Refresh data to reflect changes
   };
 
   const tryDelete = async (r: Room) => {

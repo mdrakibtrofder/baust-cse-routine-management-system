@@ -8,6 +8,7 @@ import { cn, compareDayAndTime, fmtRange12 } from "@/lib/utils";
 import type { Course, Section } from "@/lib/types";
 import { COURSE_TYPE_INFO } from "@/lib/types";
 import { TeacherPicker } from "./TeacherPicker";
+import { RoomPicker } from "./RoomPicker";
 import { ClassAssignDialog } from "./ClassAssignDialog";
 import { checkConflicts } from "@/lib/conflicts";
 import { RoutineDialog } from "@/components/RoutineDialog";
@@ -222,6 +223,7 @@ function SectionCell({ course, section, onAssign }: {
           {Array.from({ length: info.teachersRequired }).map((_, i) => (
             <TeacherPicker key={i} course={course} section={section} slotIndex={i} />
           ))}
+          <RoomPicker course={course} section={section} />
         </div>
         <button
           onClick={() => onAssign(course, section)}

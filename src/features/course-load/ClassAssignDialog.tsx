@@ -134,7 +134,7 @@ export function ClassAssignDialog({
       initial.push(
         e
           ? { id: e.id, day: e.day, start: e.start, end: e.end, room_id: e.room_id, week: e.week }
-          : EMPTY_CLASS(info),
+          : { ...EMPTY_CLASS(info), room_id: cst?.primary_room_id ?? null },
       );
     }
     setDrafts(initial);
