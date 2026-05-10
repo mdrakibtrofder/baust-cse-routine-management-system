@@ -273,7 +273,11 @@ export const useStore = create<StoreState>((set, get) => ({
 
   addTeacher: async (t) => {
     try {
-      const res = await api.post<Teacher>('/teachers', t);
+      const payload = {
+        ...t,
+        assigned_credit_hours: Number(t.assigned_credit_hours || 0)
+      };
+      const res = await api.post<Teacher>('/teachers', payload);
       set((s) => ({ teachers: [...s.teachers, res] }));
       return res;
     } catch (err: any) { 
@@ -283,7 +287,21 @@ export const useStore = create<StoreState>((set, get) => ({
   },
   updateTeacher: async (id, t) => {
     try {
-      const { id: _id, ...payload } = t as any;
+      // Clean payload: only send fields that are allowed in CreateTeacherDto
+      const payload = {
+        short_name: t.short_name,
+        name: t.name,
+        designation: t.designation,
+        department: t.department,
+        status: t.status,
+        assigned_credit_hours: t.assigned_credit_hours !== undefined ? Number(t.assigned_credit_hours) : undefined,
+      };
+
+      // Remove undefined fields so they aren't sent in PATCH
+      Object.keys(payload).forEach(key => 
+        (payload as any)[key] === undefined && delete (payload as any)[key]
+      );
+
       const res = await api.patch<Teacher>(`/teachers/${id}`, payload);
       set((s) => ({ teachers: s.teachers.map((x) => (x.id === id ? res : x)) }));
       return res;
