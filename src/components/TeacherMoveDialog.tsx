@@ -11,9 +11,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowRight, ShieldAlert } from "lucide-react";
+import { ArrowRight, ShieldAlert, Loader2 } from "lucide-react";
 import type { Dependency } from "@/lib/conflicts";
 import type { Teacher } from "@/lib/types";
+import { toast } from "sonner";
 
 /** Shown when the user tries to delete a teacher who has assignments.
  * Lets them migrate every assignment to another teacher. The old teacher
@@ -34,15 +35,24 @@ export function TeacherMoveDialog({
   const teachers = useStore((s) => s.teachers);
   const move = useStore((s) => s.moveTeacherAssignments);
   const [toId, setToId] = useState<string>("");
+  const [isMoving, setIsMoving] = useState(false);
 
   if (!fromTeacher) return null;
   const candidates = teachers.filter((t) => t.id !== fromTeacher.id);
 
-  const submit = () => {
+  const submit = async () => {
     if (!toId) return;
-    move(fromTeacher.id, toId);
-    onOpenChange(false);
-    onMoved?.();
+    setIsMoving(true);
+    try {
+      await move(fromTeacher.id, toId);
+      toast.success(`Successfully moved ${dependencies.length} assignment(s) to another teacher.`);
+      onOpenChange(false);
+      onMoved?.();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || err.message || "Failed to move assignments");
+    } finally {
+      setIsMoving(false);
+    }
   };
 
   return (
@@ -74,7 +84,7 @@ export function TeacherMoveDialog({
           <ArrowRight className="h-4 w-4 text-muted-foreground" />
           <div className="flex-1">
             <Label className="text-xs">Move to teacher</Label>
-            <Select value={toId} onValueChange={setToId}>
+            <Select value={toId} onValueChange={setToId} disabled={isMoving}>
               <SelectTrigger>
                 <SelectValue placeholder="Select replacement teacher…" />
               </SelectTrigger>
@@ -91,8 +101,11 @@ export function TeacherMoveDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={submit} disabled={!toId}>Move classes</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isMoving}>Cancel</Button>
+          <Button onClick={submit} disabled={!toId || isMoving}>
+            {isMoving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            Move classes
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

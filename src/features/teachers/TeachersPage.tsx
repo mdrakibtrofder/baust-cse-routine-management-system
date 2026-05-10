@@ -62,7 +62,7 @@ export function TeachersPage() {
   const shortDuplicate = (sn: string, ignoreId?: string) =>
     teachers.some(t => t.id !== ignoreId && t.short_name.trim().toLowerCase() === sn.trim().toLowerCase());
 
-  const submit = () => {
+  const submit = async () => {
     if (!form.short_name.trim() || !form.name.trim()) {
       toast.error("Short name and full name required");
       return;
@@ -71,15 +71,19 @@ export function TeachersPage() {
       toast.error(`Short name "${form.short_name}" is already used by another teacher`);
       return;
     }
-    if (editing) {
-      updateTeacher(editing.id, form);
-      toast.success("Teacher updated");
-    } else {
-      addTeacher(form);
-      toast.success("Teacher added");
+    try {
+      if (editing) {
+        await updateTeacher(editing.id, form);
+        toast.success("Teacher updated");
+      } else {
+        await addTeacher(form);
+        toast.success("Teacher added");
+      }
+      setOpen(false);
+      data.init(); // Refresh data to reflect changes
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || err.message || "Operation failed");
     }
-    setOpen(false);
-    data.init(); // Refresh data to reflect changes
   };
 
   const tryDelete = async (t: Teacher) => {
@@ -88,7 +92,7 @@ export function TeachersPage() {
       // Offer migration instead of blocking outright
       const ok = await confirmDialog({
         title: `${t.short_name} has ${deps.length} active assignment${deps.length === 1 ? "" : "s"}`,
-        description: `You can't simply delete this teacher because their classes/assignments depend on them. Move all of ${t.short_name}'s classes to another teacher? The original record will be kept.`,
+        description: `This teacher is currently assigned to courses. Deleting them will cause conflicts. We recommend moving their classes to another teacher first.`,
         confirmLabel: "Move classes…",
       });
       if (ok) setMoveTarget(t);
@@ -96,11 +100,20 @@ export function TeachersPage() {
     }
     const ok = await confirmDialog({
       title: `Delete teacher ${t.short_name}?`,
-      description: `${t.name} (${t.designation || "Faculty"}) has no assignments and will be permanently removed.`,
+      description: `${t.name} (${t.designation || "Faculty"}) will be permanently removed.`,
       destructive: true,
       confirmLabel: "Delete",
     });
-    if (ok) { deleteTeacher(t.id); toast.success("Deleted"); }
+    if (ok) {
+      try {
+        await deleteTeacher(t.id);
+        toast.success("Teacher deleted successfully");
+        data.init();
+      } catch (err: any) {
+        const msg = err.response?.data?.message || err.message || "Deletion failed";
+        toast.error(msg);
+      }
+    }
   };
 
   return (

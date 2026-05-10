@@ -47,8 +47,8 @@ interface StoreState extends AppData {
   deleteSemester: (id: string) => Promise<void>;
   
   // teachers
-  addTeacher: (t: Omit<Teacher, "id">) => Promise<void>;
-  updateTeacher: (id: string, t: Partial<Teacher>) => Promise<void>;
+  addTeacher: (t: Omit<Teacher, "id">) => Promise<Teacher>;
+  updateTeacher: (id: string, t: Partial<Teacher>) => Promise<Teacher>;
   deleteTeacher: (id: string) => Promise<void>;
   replaceTeachers: (teachers: Teacher[]) => Promise<void>;
   moveTeacherAssignments: (fromId: string, toId: string) => Promise<void>;
@@ -275,20 +275,31 @@ export const useStore = create<StoreState>((set, get) => ({
     try {
       const res = await api.post<Teacher>('/teachers', t);
       set((s) => ({ teachers: [...s.teachers, res] }));
-    } catch (err: any) { set({ error: err.message }); }
+      return res;
+    } catch (err: any) { 
+      set({ error: err.message });
+      throw err;
+    }
   },
   updateTeacher: async (id, t) => {
     try {
       const { id: _id, ...payload } = t as any;
       const res = await api.patch<Teacher>(`/teachers/${id}`, payload);
       set((s) => ({ teachers: s.teachers.map((x) => (x.id === id ? res : x)) }));
-    } catch (err: any) { set({ error: err.message }); }
+      return res;
+    } catch (err: any) { 
+      set({ error: err.message });
+      throw err;
+    }
   },
   deleteTeacher: async (id) => {
     try {
       await api.delete(`/teachers/${id}`);
       set((s) => ({ teachers: s.teachers.filter((x) => x.id !== id) }));
-    } catch (err: any) { set({ error: err.message }); }
+    } catch (err: any) { 
+      set({ error: err.message });
+      throw err;
+    }
   },
   replaceTeachers: async (teachers: Teacher[]) => {
     try {
@@ -300,7 +311,10 @@ export const useStore = create<StoreState>((set, get) => ({
     try {
       await api.post(`/teachers/${fromId}/move-assignments`, { toTeacherId: toId });
       await get().init();
-    } catch (err: any) { set({ error: err.message }); }
+    } catch (err: any) { 
+      set({ error: err.message });
+      throw err;
+    }
   },
 
   addRoom: async (r) => {
