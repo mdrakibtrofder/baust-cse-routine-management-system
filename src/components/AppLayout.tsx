@@ -91,12 +91,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
-        <div className="px-3 py-4 border-t space-y-3">
-          <div className="px-2 py-1 text-[11px] text-muted-foreground flex items-center gap-2">
-            {isLoading && <Loader2 className="h-3 w-3 animate-spin" />}
-            Connected to PostgreSQL
-          </div>
-        </div>
       </aside>
 
       <div className="flex-1 min-w-0 flex flex-col">

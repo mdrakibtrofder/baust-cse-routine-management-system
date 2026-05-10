@@ -65,8 +65,8 @@ interface StoreState extends AppData {
   deleteSection: (id: string) => Promise<void>;
   
   // courses
-  addCourse: (c: Omit<Course, "id">) => Promise<void>;
-  updateCourse: (id: string, c: Partial<Course>) => Promise<void>;
+  addCourse: (c: Omit<Course, "id">) => Promise<Course>;
+  updateCourse: (id: string, c: Partial<Course>) => Promise<Course>;
   deleteCourse: (id: string) => Promise<void>;
   
   // periods / days
@@ -383,16 +383,47 @@ export const useStore = create<StoreState>((set, get) => ({
 
   addCourse: async (c) => {
     try {
-      const res = await api.post<Course>('/courses', c);
+      const payload = {
+        ...c,
+        credit: Number(c.credit || 0),
+        theory: Number(c.theory || 0),
+        sessional: Number(c.sessional || 0),
+        level: Number(c.level || 1),
+      };
+      const res = await api.post<Course>('/courses', payload);
       set((s) => ({ courses: [...s.courses, res] }));
-    } catch (err: any) { set({ error: err.message }); }
+      return res;
+    } catch (err: any) { 
+      set({ error: err.message });
+      throw err;
+    }
   },
   updateCourse: async (id, c) => {
     try {
-      const { id: _id, ...payload } = c as any;
+      // Clean payload for backend
+      const payload = {
+        code: c.code,
+        name: c.name,
+        credit: c.credit !== undefined ? Number(c.credit) : undefined,
+        course_type: c.course_type,
+        level: c.level !== undefined ? Number(c.level) : undefined,
+        term: c.term,
+        theory: c.theory !== undefined ? Number(c.theory) : undefined,
+        sessional: c.sessional !== undefined ? Number(c.sessional) : undefined,
+      };
+
+      // Remove undefined fields
+      Object.keys(payload).forEach(key => 
+        (payload as any)[key] === undefined && delete (payload as any)[key]
+      );
+
       const res = await api.patch<Course>(`/courses/${id}`, payload);
       set((s) => ({ courses: s.courses.map((x) => (x.id === id ? res : x)) }));
-    } catch (err: any) { set({ error: err.message }); }
+      return res;
+    } catch (err: any) { 
+      set({ error: err.message });
+      throw err;
+    }
   },
   deleteCourse: async (id) => {
     try {

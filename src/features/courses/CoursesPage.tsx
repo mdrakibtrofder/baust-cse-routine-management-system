@@ -46,12 +46,23 @@ export function CoursesPage() {
   const dup = (code: string, ignoreId?: string) =>
     courses.some(c => c.id !== ignoreId && c.code.trim().toLowerCase() === code.trim().toLowerCase());
 
-  const submit = () => {
+  const submit = async () => {
     if (!form.code.trim() || !form.name.trim()) return toast.error("Code and name required");
     if (dup(form.code, editing?.id)) return toast.error(`Course code "${form.code}" already exists`);
-    if (editing) { updateCourse(editing.id, form); toast.success("Updated"); }
-    else { addCourse(form); toast.success("Added"); }
-    setOpen(false);
+    try {
+      if (editing) { 
+        await updateCourse(editing.id, form); 
+        toast.success("Updated"); 
+      }
+      else { 
+        await addCourse(form); 
+        toast.success("Added"); 
+      }
+      setOpen(false);
+      data.init();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || err.message || "Operation failed");
+    }
   };
 
   const tryDelete = async (c: Course) => {
@@ -62,7 +73,15 @@ export function CoursesPage() {
       description: `${c.name} (Level ${c.level}, Term ${c.term}, ${c.credit} cr) has no schedule. This cannot be undone.`,
       destructive: true, confirmLabel: "Delete",
     });
-    if (ok) { deleteCourse(c.id); toast.success("Deleted"); }
+    if (ok) { 
+      try {
+        await deleteCourse(c.id); 
+        toast.success("Deleted"); 
+        data.init();
+      } catch (err: any) {
+        toast.error(err.response?.data?.message || err.message || "Deletion failed");
+      }
+    }
   };
 
   return (
