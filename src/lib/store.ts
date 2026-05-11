@@ -121,8 +121,8 @@ export const useStore = create<StoreState>((set, get) => ({
   init: async () => {
     set({ isLoading: true, error: null });
     try {
-      const [teachers, rooms, sections, courses, periods, days, semesters, years, types, unavailTeachers, unavailRooms] = await Promise.all([
-        api.get<any>('/teachers').then(res => res.data),
+      const [teacherRes, rooms, sections, courses, periods, days, semesters, years, types, unavailTeachers, unavailRooms] = await Promise.all([
+        api.get<any>('/teachers?limit=1000'),
         api.get<Room[]>('/rooms'),
         api.get<Section[]>('/sections'),
         api.get<Course[]>('/courses'),
@@ -134,6 +134,8 @@ export const useStore = create<StoreState>((set, get) => ({
         api.get<TeacherUnavailability[]>('/teacher-unavailability').catch(() => []),
         api.get<RoomUnavailability[]>('/room-unavailability').catch(() => []),
       ]);
+
+      const teachers = Array.isArray(teacherRes) ? teacherRes : (teacherRes.data || []);
 
       const active_semester_entity = semesters.find(s => s.is_active) || semesters[0];
       const active_semester = active_semester_entity ? active_semester_entity.id : "";

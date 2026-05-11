@@ -59,6 +59,11 @@ export function TeachersPage() {
     [teachers, q]
   );
 
+  // Reset to first page when search changes
+  useMemo(() => {
+    setCurrentPage(1);
+  }, [q]);
+
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const paginatedTeachers = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
