@@ -1015,19 +1015,19 @@ function RoomDayGrid({
                         </div>
                       )}
                       {teacherBusy && (
-                        <div className="font-mono truncate">{teacherBusy.teacherShort} assigned</div>
+                        <div className="font-mono truncate">{teacherBusy.teacherShort} ({teacherBusy.teacherName}) already assigned in {teacherBusy.courseCode}</div>
                       )}
                       {teacherUnavail && (
-                        <div className="font-mono truncate">{teacherUnavail.teacherShort} unavailable</div>
+                        <div className="font-mono truncate">{teacherUnavail.teacherShort} is Unavailable</div>
                       )}
                       {roomUnavail && (
-                        <div className="font-mono truncate">room unavailable</div>
+                        <div className="font-mono truncate">Room {r.name} is Unavailable</div>
                       )}
                       {dup && !booking && !teacherBusy && !teacherUnavail && !roomUnavail && (
-                        <div>duplicate</div>
-                      )}
+                        <div>Another class for this section is already on {day} {fmtRange12(p.start, p.end)}</div>
+                      )}  
                       {dup && (booking || teacherBusy || teacherUnavail || roomUnavail) && (
-                        <div className="opacity-80">+ duplicate</div>
+                        <div className="opacity-80">+ duplicate slot</div>
                       )}
                     </div>
                   );
