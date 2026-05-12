@@ -377,7 +377,7 @@ function RoomTimeMapping() {
                     <div className="font-bold text-orange-600 font-mono flex items-center gap-1.5">
                       <MapPin className="h-3 w-3" /> {r.name}
                     </div>
-                    <div className="text-[10px] text-muted-foreground truncate">{r.room_type} · Cap: {r.capacity}</div>
+                    <div className="text-[10px] text-muted-foreground truncate">{r.room_type} · Capacity: {r.capacity}</div>
                   </td>
                   {periods.map(p => {
                     const assigned = slotsBySemester.find(s => s.room_id === r.id && s.day === selectedDay && timesOverlap(s.start, s.end, p.start, p.end));

@@ -193,14 +193,19 @@ export function checkConflicts(input: ConflictCheckInput): Conflict[] {
 
   if (input.siblingDrafts) {
     for (const sd of input.siblingDrafts) {
+      if (!sd.day || !sd.start) continue;
       if (sd === (candidate as any)) continue;
       if (sd.day !== candidate.day) continue;
-      if (!timesOverlap(sd.start, sd.end, candidate.start, candidate.end)) continue;
-      if (!weeksOverlap(sd.week, candidate.week)) continue;
-      conflicts.push({
-        type: "self_duplicate",
-        message: `Duplicate slot: another class for this section is already on ${candidate.day} ${fmtRange12(sd.start, sd.end)}.`,
-      });
+      
+      // Multiple classes of the same course must be on different days
+      // Unless they are on different weeks (ODD/EVEN)
+      if (weeksOverlap(sd.week, candidate.week)) {
+        conflicts.push({
+          type: "self_duplicate",
+          message: `Another class for ${course.code} is already scheduled on ${candidate.day}.`,
+        });
+        break;
+      }
     }
   }
 
@@ -286,31 +291,93 @@ export function findAvailableRooms(
   candidate: { day: string; start: string; end: string; week: WeekPattern },
   ignoreSlotId?: string,
   teacherIds: string[] = [],
+  siblingDrafts: { day: string; start: string; end: string; week: WeekPattern }[] = [],
 ): Room[] {
-  const info = COURSE_TYPE_INFO[course.course_type];
-  if (teacherIds.length > 0) {
-    const busy = teachersBusyAt(data, teacherIds, candidate, ignoreSlotId, {
-      course_id: course.id,
-      section_id: section.id,
-    });
-    if (busy) return [];
-  }
-  const slots = semSlots(data);
-  return data.rooms.filter((room) => {
-    if (info.roomKind === "sessional" && room.room_type !== "Sessional") return false;
-    if (info.roomKind === "theory" && room.room_type !== "Theory") return false;
-    if (room.capacity < section.total_students) return false;
-    if (roomUnavailableAt(data, room.id, candidate)) return false;
-    const conflict = slots.some((slot) => {
-      if (slot.id === ignoreSlotId) return false;
-      if (slot.room_id !== room.id) return false;
-      if (slot.day !== candidate.day) return false;
-      if (!timesOverlap(slot.start, slot.end, candidate.start, candidate.end)) return false;
-      if (!weeksOverlap(slot.week, candidate.week)) return false;
-      return true;
-    });
-    return !conflict;
+  // First, check if there's any conflict that is NOT room-dependent (Teacher, Section, or Self-Duplicate)
+  const baseConflicts = checkConflicts({
+    data,
+    course,
+    section,
+    teacherIds,
+    candidate: { ...candidate, room_id: null },
+    ignoreSlotId,
+    siblingDrafts,
   });
+
+  // If there are teacher, section, or day-duplicate conflicts, no room can fix that
+  const fatalConflicts = baseConflicts.filter(c => 
+    c.type === 'teacher_double' || 
+    c.type === 'teacher_unavailable' || 
+    c.type === 'section_double' || 
+    c.type === 'self_duplicate'
+  );
+
+  if (fatalConflicts.length > 0) return [];
+
+  // Now check each room for capacity, type, double-booking, and room-unavailability
+  return data.rooms.filter((room) => {
+    const roomConflicts = checkConflicts({
+      data,
+      course,
+      section,
+      teacherIds,
+      candidate: { ...candidate, room_id: room.id },
+      ignoreSlotId,
+      siblingDrafts,
+    });
+    return roomConflicts.length === 0;
+  });
+}
+
+export interface SuggestedSlot {
+  day: string;
+  start: string;
+  end: string;
+  room: Room;
+}
+
+export function findAllConflictFreeSlots(
+  data: AppData,
+  course: Course,
+  section: Section,
+  teacherIds: string[],
+  ignoreSlotId?: string,
+  siblingDrafts: { day: string; start: string; end: string; week: WeekPattern }[] = [],
+  week: WeekPattern = "EVERY"
+): SuggestedSlot[] {
+  const suggestions: SuggestedSlot[] = [];
+  const info = COURSE_TYPE_INFO[course.course_type];
+  const periods = data.periods
+    .filter((p) => p.kind === info.roomKind)
+    .sort((a, b) => a.start.localeCompare(b.start));
+
+  for (const day of data.days) {
+    for (const period of periods) {
+      const candidate = { day: day.name, start: period.start, end: period.end, week };
+      
+      const rooms = findAvailableRooms(
+        data,
+        course,
+        section,
+        candidate,
+        ignoreSlotId,
+        teacherIds,
+        siblingDrafts
+      );
+
+      for (const room of rooms) {
+        suggestions.push({
+          day: day.name,
+          start: period.start,
+          end: period.end,
+          room,
+        });
+        // Stop if we have plenty of options to avoid performance issues
+        if (suggestions.length >= 100) return suggestions;
+      }
+    }
+  }
+  return suggestions;
 }
 
 // ---------- Dependency analysis (for protected deletes) ----------

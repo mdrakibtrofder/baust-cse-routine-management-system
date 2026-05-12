@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Stepper } from "@/components/Stepper";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -41,6 +42,7 @@ import {
   timesOverlap,
   weeksOverlap,
   teacherWouldExceed,
+  findAllConflictFreeSlots,
   type Conflict,
 } from "@/lib/conflicts";
 import { toast } from "sonner";
@@ -52,7 +54,7 @@ import { CourseDetailsDialog } from "@/components/CourseDetailsDialog";
 import { useConfirm } from "@/components/ConfirmDialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { UserPlus, X, Info } from "lucide-react";
+import { UserPlus, X } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface DraftClass {
@@ -172,8 +174,19 @@ export function ClassAssignDialog({
 
   const availableRooms = useMemo(() => {
     if (drafts.length === 0) return [];
-    return findAvailableRooms(data, course, section, current, current.id, teacherIds);
-  }, [data, course, section, current, drafts.length, teacherIds]);
+    const siblings = drafts.filter((_, i) => i !== safeStep).map((d) => ({
+      day: d.day, start: d.start, end: d.end, week: d.week,
+    }));
+    return findAvailableRooms(data, course, section, current, current.id, teacherIds, siblings);
+  }, [data, course, section, current, drafts, teacherIds, safeStep]);
+
+  const globalSuggestions = useMemo(() => {
+    if (!open || conflicts.length === 0) return [];
+    const siblings = drafts.filter((_, i) => i !== safeStep).map((d) => ({
+      day: d.day, start: d.start, end: d.end, week: d.week,
+    }));
+    return findAllConflictFreeSlots(data, course, section, teacherIds, current.id, siblings, current.week);
+  }, [data, course, section, teacherIds, current.id, current.week, drafts, safeStep, conflicts.length, open]);
 
   /** Per-class status used for the stepper indicator */
   const draftStatuses = useMemo(
@@ -675,20 +688,49 @@ export function ClassAssignDialog({
                       <li key={i}>• {c.message}</li>
                     ))}
                   </ul>
-                  {availableRooms.length > 0 && (
-                    <div className="pt-2 border-t border-destructive/20">
-                      <div className="text-xs font-medium mb-1.5">Suggested available rooms:</div>
+                  {availableRooms.length > 0 ? (
+                    <div className="pt-3 border-t border-rose-200/50">
+                      <div className="text-[10px] font-black text-rose-500 uppercase tracking-widest mb-2">Available Rooms at current time:</div>
                       <div className="flex flex-wrap gap-1.5">
-                        {availableRooms.slice(0, 8).map((r) => (
+                        {availableRooms.map((r) => (
                           <button
                             key={r.id}
                             onClick={() => setCurrent({ room_id: r.id })}
-                            className="text-xs font-mono px-2 py-1 rounded bg-card border hover:border-primary"
+                            className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-md bg-white border border-rose-200 text-rose-600 hover:bg-rose-500 hover:text-white hover:border-rose-500 transition-all shadow-sm"
                           >
-                            {r.name} <span className="text-muted-foreground">({r.capacity})</span>
+                            {r.name}
                           </button>
                         ))}
                       </div>
+                    </div>
+                  ) : globalSuggestions.length > 0 ? (
+                    <div className="pt-3 border-t border-rose-200/50">
+                      <div className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-2">Suggested non-conflict slots (Other times/days):</div>
+                      <ScrollArea className="h-32">
+                        <div className="grid grid-cols-1 gap-1.5 pr-3">
+                          {globalSuggestions.slice(0, 30).map((s, idx) => (
+                            <button
+                              key={`${s.day}-${s.start}-${s.room.id}-${idx}`}
+                              onClick={() => setCurrent({ day: s.day, start: s.start, end: s.end, room_id: s.room.id })}
+                              className="text-[10px] text-left px-3 py-2 rounded-md bg-white border border-rose-100 hover:border-emerald-500 hover:bg-emerald-50 transition-all shadow-sm flex items-center justify-between group"
+                            >
+                              <div className="flex flex-col">
+                                <span className="font-bold text-blue-600 group-hover:text-emerald-700">
+                                  {fmtDayTitle(s.day)} {fmtRange12(s.start, s.end)}
+                                </span>
+                                <span className="text-[9px] text-muted-foreground font-bold">
+                                  Room: {s.room.name} (Capacity: {s.room.capacity})
+                                </span>
+                              </div>
+                              <Check className="h-3 w-3 opacity-0 group-hover:opacity-100 text-emerald-600" />
+                            </button>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    </div>
+                  ) : (
+                    <div className="pt-2 text-[10px] text-rose-400 italic">
+                      No conflict-free slots found for this class across any day or time.
                     </div>
                   )}
                 </div>
