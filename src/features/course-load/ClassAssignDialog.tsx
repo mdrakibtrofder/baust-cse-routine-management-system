@@ -688,45 +688,53 @@ export function ClassAssignDialog({
                       <li key={i}>• {c.message}</li>
                     ))}
                   </ul>
-                  {availableRooms.length > 0 ? (
+                  {globalSuggestions.length > 0 ? (
                     <div className="pt-3 border-t border-rose-200/50">
-                      <div className="text-[10px] font-black text-rose-500 uppercase tracking-widest mb-2">Available Rooms at current time:</div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {availableRooms.map((r) => (
-                          <button
-                            key={r.id}
-                            onClick={() => setCurrent({ room_id: r.id })}
-                            className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-md bg-white border border-rose-200 text-rose-600 hover:bg-rose-500 hover:text-white hover:border-rose-500 transition-all shadow-sm"
-                          >
-                            {r.name}
-                          </button>
-                        ))}
+                      <div className="text-[10px] font-black text-rose-500 uppercase tracking-widest mb-2">
+                        Suggested conflict-free slots:
                       </div>
-                    </div>
-                  ) : globalSuggestions.length > 0 ? (
-                    <div className="pt-3 border-t border-rose-200/50">
-                      <div className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-2">Suggested non-conflict slots (Other times/days):</div>
-                      <ScrollArea className="h-32">
+                      <ScrollArea className="h-40">
                         <div className="grid grid-cols-1 gap-1.5 pr-3">
-                          {globalSuggestions.slice(0, 30).map((s, idx) => (
-                            <button
-                              key={`${s.day}-${s.start}-${s.room.id}-${idx}`}
-                              onClick={() => setCurrent({ day: s.day, start: s.start, end: s.end, room_id: s.room.id })}
-                              className="text-[10px] text-left px-3 py-2 rounded-md bg-white border border-rose-100 hover:border-emerald-500 hover:bg-emerald-50 transition-all shadow-sm flex items-center justify-between group"
-                            >
-                              <div className="flex flex-col">
-                                <span className="font-bold text-blue-600 group-hover:text-emerald-700">
-                                  {fmtDayTitle(s.day)} {fmtRange12(s.start, s.end)}
-                                </span>
-                                <span className="text-[9px] text-muted-foreground font-bold">
-                                  Room: {s.room.name} (Capacity: {s.room.capacity})
-                                </span>
-                              </div>
-                              <Check className="h-3 w-3 opacity-0 group-hover:opacity-100 text-emerald-600" />
-                            </button>
-                          ))}
+                          {globalSuggestions.slice(0, 40).map((s, idx) => {
+                            const isCurrentTime = s.day === current.day && s.start === current.start;
+                            return (
+                              <button
+                                key={`${s.day}-${s.start}-${s.room.id}-${idx}`}
+                                onClick={() => setCurrent({ day: s.day, start: s.start, end: s.end, room_id: s.room.id })}
+                                className={cn(
+                                  "text-[10px] text-left px-3 py-2 rounded-md border transition-all shadow-sm flex items-center justify-between group",
+                                  isCurrentTime 
+                                    ? "bg-emerald-50 border-emerald-200 hover:bg-emerald-100" 
+                                    : "bg-white border-rose-100 hover:border-emerald-500 hover:bg-emerald-50"
+                                )}
+                              >
+                                <div className="flex flex-col">
+                                  <div className="flex items-center gap-2">
+                                    <span className={cn(
+                                      "font-bold uppercase tracking-tight",
+                                      isCurrentTime ? "text-emerald-700" : "text-rose-600 group-hover:text-emerald-700"
+                                    )}>
+                                      {fmtDayTitle(s.day)} {fmtRange12(s.start, s.end)}
+                                    </span>
+                                    {isCurrentTime && (
+                                      <Badge variant="outline" className="text-[7px] py-0 h-3 bg-emerald-100 text-emerald-700 border-emerald-200 uppercase font-black">
+                                        Current Time
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  <span className="text-[9px] text-muted-foreground font-medium">
+                                    Room: <span className="font-bold text-foreground">{s.room.name}</span> (Capacity: {s.room.capacity})
+                                  </span>
+                                </div>
+                                <Check className="h-3 w-3 opacity-0 group-hover:opacity-100 text-emerald-600" />
+                              </button>
+                            );
+                          })}
                         </div>
                       </ScrollArea>
+                      <div className="mt-2 text-[9px] text-muted-foreground italic text-center">
+                        Showing top {Math.min(40, globalSuggestions.length)} out of {globalSuggestions.length} available slots.
+                      </div>
                     </div>
                   ) : (
                     <div className="pt-2 text-[10px] text-rose-400 italic">
