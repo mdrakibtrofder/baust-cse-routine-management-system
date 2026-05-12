@@ -94,6 +94,13 @@ interface StoreState extends AppData {
 
   // bulk
   resetToSeed: () => Promise<void>;
+
+  // routine generator
+  startRoutineGeneration: () => Promise<void>;
+  pauseRoutineGeneration: () => Promise<void>;
+  resumeRoutineGeneration: () => Promise<void>;
+  stopRoutineGeneration: () => Promise<void>;
+  getRoutineGenerationStatus: () => Promise<any>;
 }
 
 export const useStore = create<StoreState>((set, get) => ({
@@ -536,6 +543,35 @@ export const useStore = create<StoreState>((set, get) => ({
       await api.post('/bulk/reset', {});
       await get().init();
     } catch (err: any) { set({ error: err.message, isLoading: false }); }
+  },
+
+  startRoutineGeneration: async () => {
+    try {
+      await api.post('/routine-generator/start', { semester_id: get().active_semester_id });
+    } catch (err: any) { set({ error: err.message }); }
+  },
+  pauseRoutineGeneration: async () => {
+    try {
+      await api.post('/routine-generator/pause', {});
+    } catch (err: any) { set({ error: err.message }); }
+  },
+  resumeRoutineGeneration: async () => {
+    try {
+      await api.post('/routine-generator/resume', {});
+    } catch (err: any) { set({ error: err.message }); }
+  },
+  stopRoutineGeneration: async () => {
+    try {
+      await api.post('/routine-generator/stop', {});
+    } catch (err: any) { set({ error: err.message }); }
+  },
+  getRoutineGenerationStatus: async () => {
+    try {
+      return await api.get('/routine-generator/status');
+    } catch (err: any) { 
+      set({ error: err.message });
+      return null;
+    }
   },
 
   addTeacherUnavailability: async (u) => {

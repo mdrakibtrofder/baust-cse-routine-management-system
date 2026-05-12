@@ -1,11 +1,12 @@
-import { Upload, Download, RotateCcw } from "lucide-react";
+import { Upload, Download, RotateCcw, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/lib/store";
 import { readExcelFile } from "@/lib/excel";
 import { utils, writeFileXLSX } from "xlsx";
 import { toast } from "sonner";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useConfirm } from "@/components/ConfirmDialog";
+import { RoutineGeneratorDialog } from "./RoutineGeneratorDialog";
 
 interface Props {
   title: string;
@@ -29,6 +30,7 @@ export function PageHeader({
   const fileRef = useRef<HTMLInputElement>(null);
   const reset = useStore((s) => s.resetToSeed);
   const confirmDialog = useConfirm();
+  const [genOpen, setGenOpen] = useState(false);
 
   return (
     <div
@@ -92,27 +94,18 @@ export function PageHeader({
           )}
           {showReset && (
             <Button
-              variant="outline"
+              variant="default"
               size="sm"
-              onClick={async () => {
-                const ok = await confirmDialog({
-                  title: "Reset all data?",
-                  description: "This will overwrite ALL teachers, courses, sections, rooms, and class schedules with the Winter 2026 seed data. This cannot be undone.",
-                  destructive: true,
-                  confirmLabel: "Reset everything",
-                });
-                if (ok) {
-                  reset();
-                  toast.success("Reset complete");
-                }
-              }}
+              className="bg-primary hover:bg-primary/90"
+              onClick={() => setGenOpen(true)}
             >
-              <RotateCcw className="h-4 w-4 mr-1.5" />
-              Reset
+              <Play className="h-4 w-4 mr-1.5 fill-current" />
+              Generate Routine
             </Button>
           )}
         </div>
       </div>
+      <RoutineGeneratorDialog open={genOpen} onOpenChange={setGenOpen} />
     </div>
   );
 }
