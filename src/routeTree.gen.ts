@@ -17,6 +17,7 @@ import { Route as RoutineRouteImport } from './routes/routine'
 import { Route as RoomsRouteImport } from './routes/rooms'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as MappingRouteImport } from './routes/mapping'
+import { Route as GenerateRoutineRouteImport } from './routes/generate-routine'
 import { Route as CoursesRouteImport } from './routes/courses'
 import { Route as AvailabilityRouteImport } from './routes/availability'
 import { Route as IndexRouteImport } from './routes/index'
@@ -61,6 +62,11 @@ const MappingRoute = MappingRouteImport.update({
   path: '/mapping',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GenerateRoutineRoute = GenerateRoutineRouteImport.update({
+  id: '/generate-routine',
+  path: '/generate-routine',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CoursesRoute = CoursesRouteImport.update({
   id: '/courses',
   path: '/courses',
@@ -81,6 +87,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/availability': typeof AvailabilityRoute
   '/courses': typeof CoursesRoute
+  '/generate-routine': typeof GenerateRoutineRoute
   '/mapping': typeof MappingRoute
   '/reports': typeof ReportsRoute
   '/rooms': typeof RoomsRoute
@@ -94,6 +101,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/availability': typeof AvailabilityRoute
   '/courses': typeof CoursesRoute
+  '/generate-routine': typeof GenerateRoutineRoute
   '/mapping': typeof MappingRoute
   '/reports': typeof ReportsRoute
   '/rooms': typeof RoomsRoute
@@ -108,6 +116,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/availability': typeof AvailabilityRoute
   '/courses': typeof CoursesRoute
+  '/generate-routine': typeof GenerateRoutineRoute
   '/mapping': typeof MappingRoute
   '/reports': typeof ReportsRoute
   '/rooms': typeof RoomsRoute
@@ -123,6 +132,7 @@ export interface FileRouteTypes {
     | '/'
     | '/availability'
     | '/courses'
+    | '/generate-routine'
     | '/mapping'
     | '/reports'
     | '/rooms'
@@ -136,6 +146,7 @@ export interface FileRouteTypes {
     | '/'
     | '/availability'
     | '/courses'
+    | '/generate-routine'
     | '/mapping'
     | '/reports'
     | '/rooms'
@@ -149,6 +160,7 @@ export interface FileRouteTypes {
     | '/'
     | '/availability'
     | '/courses'
+    | '/generate-routine'
     | '/mapping'
     | '/reports'
     | '/rooms'
@@ -163,6 +175,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AvailabilityRoute: typeof AvailabilityRoute
   CoursesRoute: typeof CoursesRoute
+  GenerateRoutineRoute: typeof GenerateRoutineRoute
   MappingRoute: typeof MappingRoute
   ReportsRoute: typeof ReportsRoute
   RoomsRoute: typeof RoomsRoute
@@ -231,6 +244,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MappingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/generate-routine': {
+      id: '/generate-routine'
+      path: '/generate-routine'
+      fullPath: '/generate-routine'
+      preLoaderRoute: typeof GenerateRoutineRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/courses': {
       id: '/courses'
       path: '/courses'
@@ -259,6 +279,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AvailabilityRoute: AvailabilityRoute,
   CoursesRoute: CoursesRoute,
+  GenerateRoutineRoute: GenerateRoutineRoute,
   MappingRoute: MappingRoute,
   ReportsRoute: ReportsRoute,
   RoomsRoute: RoomsRoute,

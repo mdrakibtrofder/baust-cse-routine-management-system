@@ -29,6 +29,7 @@ import {
   ChevronUp,
   CalendarDays,
   MapPin,
+  Loader2,
 } from "lucide-react";
 import { COURSE_TYPE_INFO, type Course, type Section, type WeekPattern } from "@/lib/types";
 import {
@@ -121,6 +122,7 @@ export function ClassAssignDialog({
   const [teacherDetailsId, setTeacherDetailsId] = useState<string | null>(null);
   const [showSectionRoutine, setShowSectionRoutine] = useState(false);
   const [showCourseDetails, setShowCourseDetails] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const confirmDialog = useConfirm();
 
   const maxTeachers = info.roomKind === "sessional" ? 2 : 1;
@@ -202,22 +204,29 @@ export function ClassAssignDialog({
     (p) => p.start === current.start && p.end === current.end,
   )?.id ?? "";
 
-  const persist = () => {
-    data.deleteClassSlotsForCourseSection(course.id, section.id);
-    for (const d of drafts) {
-      if (!d.room_id) continue; // skip incomplete
-      data.upsertClassSlot({
-        course_id: course.id,
-        section_id: section.id,
-        day: d.day,
-        start: d.start,
-        end: d.end,
-        room_id: d.room_id,
-        week: d.week,
-      });
+  const persist = async () => {
+    setSubmitting(true);
+    try {
+      await data.deleteClassSlotsForCourseSection(course.id, section.id);
+      for (const d of drafts) {
+        if (!d.room_id) continue; // skip incomplete
+        await data.upsertClassSlot({
+          course_id: course.id,
+          section_id: section.id,
+          day: d.day,
+          start: d.start,
+          end: d.end,
+          room_id: d.room_id,
+          week: d.week,
+        });
+      }
+      toast.success("Schedule saved");
+      onOpenChange(false);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save schedule");
+    } finally {
+      setSubmitting(false);
     }
-    toast.success("Schedule saved");
-    onOpenChange(false);
   };
 
   const save = () => {
@@ -728,9 +737,11 @@ export function ClassAssignDialog({
               <Button
                 size="sm"
                 onClick={save}
+                disabled={submitting}
                 className="h-9 px-6 font-bold"
                 style={{ background: "var(--gradient-primary)", color: "var(--primary-foreground)" }}
               >
+                {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 Save Schedule
               </Button>
             </div>

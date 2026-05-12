@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Pencil, Trash2, Plus, Search, CalendarDays, Clock } from "lucide-react";
+import { Pencil, Trash2, Plus, Search, CalendarDays, Clock, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import type { Room } from "@/lib/types";
 import { useConfirm } from "@/components/ConfirmDialog";
@@ -34,6 +34,7 @@ export function RoomsPage() {
   const [blocked, setBlocked] = useState<{ room: Room; deps: ReturnType<typeof roomDependencies> } | null>(null);
   const [routineFor, setRoutineFor] = useState<Room | null>(null);
   const [unavailFor, setUnavailFor] = useState<Room | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const filtered = useMemo(
     () => rooms.filter(r => r.name.toLowerCase().includes(q.toLowerCase()) || r.room_type.toLowerCase().includes(q.toLowerCase())),
@@ -46,15 +47,22 @@ export function RoomsPage() {
   const submit = async () => {
     if (!form.name.trim()) return toast.error("Room name required");
     if (dup(form.name, editing?.id)) return toast.error(`Room name "${form.name}" already exists`);
-    if (editing) {
-      await updateRoom(editing.id, form);
-      toast.success("Room updated");
-    } else {
-      await addRoom(form);
-      toast.success("Room added");
+    setSubmitting(true);
+    try {
+      if (editing) {
+        await updateRoom(editing.id, form);
+        toast.success("Room updated");
+      } else {
+        await addRoom(form);
+        toast.success("Room added");
+      }
+      setOpen(false);
+      data.init(); // Refresh data to reflect changes
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || err.message || "Operation failed");
+    } finally {
+      setSubmitting(false);
     }
-    setOpen(false);
-    data.init(); // Refresh data to reflect changes
   };
 
   const tryDelete = async (r: Room) => {
@@ -184,8 +192,13 @@ export function RoomsPage() {
               onChange={(e) => setForm({ ...form, capacity: Number(e.target.value) || 0 })} /></div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button onClick={submit} style={{ background: "var(--gradient-primary)", color: "var(--primary-foreground)" }}>
+            <Button variant="outline" onClick={() => setOpen(false)} disabled={submitting}>Cancel</Button>
+            <Button 
+              onClick={submit} 
+              disabled={submitting}
+              style={{ background: "var(--gradient-primary)", color: "var(--primary-foreground)" }}
+            >
+              {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               {editing ? "Save" : "Add"}
             </Button>
           </DialogFooter>

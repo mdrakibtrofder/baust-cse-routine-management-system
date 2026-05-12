@@ -4,9 +4,9 @@ import { useStore } from "@/lib/store";
 import { readExcelFile } from "@/lib/excel";
 import { utils, writeFileXLSX } from "xlsx";
 import { toast } from "sonner";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { useConfirm } from "@/components/ConfirmDialog";
-import { RoutineGeneratorDialog } from "./RoutineGeneratorDialog";
+import { Link } from "@tanstack/react-router";
 
 interface Props {
   title: string;
@@ -30,7 +30,6 @@ export function PageHeader({
   const fileRef = useRef<HTMLInputElement>(null);
   const reset = useStore((s) => s.resetToSeed);
   const confirmDialog = useConfirm();
-  const [genOpen, setGenOpen] = useState(false);
 
   return (
     <div
@@ -93,19 +92,19 @@ export function PageHeader({
             </Button>
           )}
           {showReset && (
-            <Button
-              variant="default"
-              size="sm"
-              className="bg-primary hover:bg-primary/90"
-              onClick={() => setGenOpen(true)}
-            >
-              <Play className="h-4 w-4 mr-1.5 fill-current" />
-              Generate Routine
-            </Button>
+            <Link to="/generate-routine">
+              <Button
+                variant="default"
+                size="sm"
+                className="bg-primary hover:bg-primary/90"
+              >
+                <Play className="h-4 w-4 mr-1.5 fill-current" />
+                Generate Routine
+              </Button>
+            </Link>
           )}
         </div>
       </div>
-      <RoutineGeneratorDialog open={genOpen} onOpenChange={setGenOpen} />
     </div>
   );
 }

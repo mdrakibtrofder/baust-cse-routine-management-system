@@ -19,7 +19,7 @@ import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Trash2, Plus, Search, ArrowRightLeft, CalendarDays, Clock } from "lucide-react";
+import { Pencil, Trash2, Plus, Search, ArrowRightLeft, CalendarDays, Clock, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { teacherAssignedCreditUsed, teacherDependencies } from "@/lib/conflicts";
 import type { Teacher } from "@/lib/types";
@@ -46,6 +46,7 @@ export function TeachersPage() {
   const [moveTarget, setMoveTarget] = useState<Teacher | null>(null);
   const [routineFor, setRoutineFor] = useState<Teacher | null>(null);
   const [unavailFor, setUnavailFor] = useState<Teacher | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -94,6 +95,7 @@ export function TeachersPage() {
       toast.error(`Short name "${form.short_name}" is already used by another teacher`);
       return;
     }
+    setSubmitting(true);
     try {
       if (editing) {
         await updateTeacher(editing.id, form);
@@ -106,6 +108,8 @@ export function TeachersPage() {
       data.init(); // Refresh data to reflect changes
     } catch (err: any) {
       toast.error(err.response?.data?.message || err.message || "Operation failed");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -355,8 +359,13 @@ export function TeachersPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button onClick={submit} style={{ background: "var(--gradient-primary)", color: "var(--primary-foreground)" }}>
+            <Button variant="outline" onClick={() => setOpen(false)} disabled={submitting}>Cancel</Button>
+            <Button 
+              onClick={submit} 
+              disabled={submitting}
+              style={{ background: "var(--gradient-primary)", color: "var(--primary-foreground)" }}
+            >
+              {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               {editing ? "Save" : "Add"}
             </Button>
           </DialogFooter>

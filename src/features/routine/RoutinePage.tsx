@@ -115,16 +115,23 @@ export function RoutinePage() {
 
             <TabsContent value="section" className="mt-3">
               <Select value={sectionId} onValueChange={setSectionId}>
-                <SelectTrigger className="max-w-sm">
+                <SelectTrigger className="w-[380px] max-w-full">
                   <SelectValue placeholder="Choose a section" />
                 </SelectTrigger>
-                <SelectContent className="max-h-[60vh]">
+                <SelectContent className="max-h-[60vh] w-[380px]">
                   {[...sectionsByLT.entries()].map(([label, list]) => (
                     <SelectGroup key={label}>
-                      <SelectLabel className="text-[10px] uppercase">{label}</SelectLabel>
+                      <SelectLabel className="text-[10px] uppercase font-bold text-primary px-3 py-2 bg-muted/50">{label}</SelectLabel>
                       {list.map((s) => (
                         <SelectItem key={s.id} value={s.id}>
-                          Section {s.name} · {s.total_students} students
+                          <div className="flex flex-col gap-0.5 py-1">
+                            <div className="font-semibold text-sm">
+                              Level {s.level}, Term {s.term} · Section {s.name}
+                            </div>
+                            <div className="text-[10px] text-muted-foreground font-medium">
+                              {s.total_students} Students · CSE Dept
+                            </div>
+                          </div>
                         </SelectItem>
                       ))}
                     </SelectGroup>
