@@ -16,6 +16,7 @@ import { Route as SectionsRouteImport } from './routes/sections'
 import { Route as RoutineRouteImport } from './routes/routine'
 import { Route as RoomsRouteImport } from './routes/rooms'
 import { Route as ReportsRouteImport } from './routes/reports'
+import { Route as MappingRouteImport } from './routes/mapping'
 import { Route as CoursesRouteImport } from './routes/courses'
 import { Route as AvailabilityRouteImport } from './routes/availability'
 import { Route as IndexRouteImport } from './routes/index'
@@ -55,6 +56,11 @@ const ReportsRoute = ReportsRouteImport.update({
   path: '/reports',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MappingRoute = MappingRouteImport.update({
+  id: '/mapping',
+  path: '/mapping',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CoursesRoute = CoursesRouteImport.update({
   id: '/courses',
   path: '/courses',
@@ -75,6 +81,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/availability': typeof AvailabilityRoute
   '/courses': typeof CoursesRoute
+  '/mapping': typeof MappingRoute
   '/reports': typeof ReportsRoute
   '/rooms': typeof RoomsRoute
   '/routine': typeof RoutineRoute
@@ -87,6 +94,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/availability': typeof AvailabilityRoute
   '/courses': typeof CoursesRoute
+  '/mapping': typeof MappingRoute
   '/reports': typeof ReportsRoute
   '/rooms': typeof RoomsRoute
   '/routine': typeof RoutineRoute
@@ -100,6 +108,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/availability': typeof AvailabilityRoute
   '/courses': typeof CoursesRoute
+  '/mapping': typeof MappingRoute
   '/reports': typeof ReportsRoute
   '/rooms': typeof RoomsRoute
   '/routine': typeof RoutineRoute
@@ -114,6 +123,7 @@ export interface FileRouteTypes {
     | '/'
     | '/availability'
     | '/courses'
+    | '/mapping'
     | '/reports'
     | '/rooms'
     | '/routine'
@@ -126,6 +136,7 @@ export interface FileRouteTypes {
     | '/'
     | '/availability'
     | '/courses'
+    | '/mapping'
     | '/reports'
     | '/rooms'
     | '/routine'
@@ -138,6 +149,7 @@ export interface FileRouteTypes {
     | '/'
     | '/availability'
     | '/courses'
+    | '/mapping'
     | '/reports'
     | '/rooms'
     | '/routine'
@@ -151,6 +163,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AvailabilityRoute: typeof AvailabilityRoute
   CoursesRoute: typeof CoursesRoute
+  MappingRoute: typeof MappingRoute
   ReportsRoute: typeof ReportsRoute
   RoomsRoute: typeof RoomsRoute
   RoutineRoute: typeof RoutineRoute
@@ -211,6 +224,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReportsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mapping': {
+      id: '/mapping'
+      path: '/mapping'
+      fullPath: '/mapping'
+      preLoaderRoute: typeof MappingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/courses': {
       id: '/courses'
       path: '/courses'
@@ -239,6 +259,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AvailabilityRoute: AvailabilityRoute,
   CoursesRoute: CoursesRoute,
+  MappingRoute: MappingRoute,
   ReportsRoute: ReportsRoute,
   RoomsRoute: RoomsRoute,
   RoutineRoute: RoutineRoute,
