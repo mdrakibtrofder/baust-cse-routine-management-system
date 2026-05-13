@@ -10,12 +10,26 @@ import {
 import { fmtRange12 } from "./utils";
 
 function toMin(t: string) {
-  const [h, m] = t.split(":").map(Number);
+  if (!t) return 0;
+  // Handle both HH:MM and HH.MM formats, and trim any whitespace or AM/PM
+  const cleanTime = t.replace(/[AP]M/i, "").trim();
+  const parts = cleanTime.includes(":") ? cleanTime.split(":") : cleanTime.split(".");
+  const h = Number(parts[0] || 0);
+  const m = Number(parts[1] || 0);
   return h * 60 + m;
 }
 
 export function timesOverlap(aStart: string, aEnd: string, bStart: string, bEnd: string) {
-  return toMin(aStart) < toMin(bEnd) && toMin(bStart) < toMin(aEnd);
+  const as = toMin(aStart);
+  let ae = toMin(aEnd);
+  const bs = toMin(bStart);
+  let be = toMin(bEnd);
+
+  // If end time is before start time, assume it spans to the next day
+  if (ae <= as) ae += 24 * 60;
+  if (be <= bs) be += 24 * 60;
+
+  return as < be && bs < ae;
 }
 
 export function weeksOverlap(a: WeekPattern, b: WeekPattern) {

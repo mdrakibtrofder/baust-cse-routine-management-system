@@ -26,7 +26,8 @@ const DAY_MAP: Record<string, string> = {
 
 function parseTimeParts(t?: string | null) {
   if (!t) return null;
-  const m = /^(\d{1,2}):(\d{2})(?::(\d{2}))?$/.exec(t.trim());
+  const cleanTime = t.replace(/[AP]M/i, "").trim();
+  const m = /^(\d{1,2})[:.](\d{2})(?::(\d{2}))?$/.exec(cleanTime);
   if (!m) return null;
   return {
     hours: Number(m[1]),
