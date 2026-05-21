@@ -21,6 +21,8 @@ import { useStore } from "@/lib/store";
 const nav = [
   { to: "/", label: "Course Load", icon: LayoutGrid },
   { to: "/routine", label: "Routine View", icon: CalendarDays },
+  { to: "/ct-schedule", label: "CT Schedule", icon: CalendarDays },
+  { to: "/ct-schedule/course-wise", label: "Course CT Schedule", icon: CalendarDays },
   { to: "/mapping", label: "Room & Time Mapping", icon: Boxes },
   { to: "/availability", label: "Teacher Availability", icon: UserSearch },
   { to: "/reports", label: "Reports", icon: BarChart3 },

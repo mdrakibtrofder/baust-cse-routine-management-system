@@ -18,9 +18,11 @@ import { Route as RoomsRouteImport } from './routes/rooms'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as MappingRouteImport } from './routes/mapping'
 import { Route as GenerateRoutineRouteImport } from './routes/generate-routine'
+import { Route as CtScheduleRouteImport } from './routes/ct-schedule'
 import { Route as CoursesRouteImport } from './routes/courses'
 import { Route as AvailabilityRouteImport } from './routes/availability'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CtScheduleCourseWiseRouteImport } from './routes/ct-schedule.course-wise'
 
 const TeachersRoute = TeachersRouteImport.update({
   id: '/teachers',
@@ -67,6 +69,11 @@ const GenerateRoutineRoute = GenerateRoutineRouteImport.update({
   path: '/generate-routine',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CtScheduleRoute = CtScheduleRouteImport.update({
+  id: '/ct-schedule',
+  path: '/ct-schedule',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CoursesRoute = CoursesRouteImport.update({
   id: '/courses',
   path: '/courses',
@@ -82,11 +89,17 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CtScheduleCourseWiseRoute = CtScheduleCourseWiseRouteImport.update({
+  id: '/course-wise',
+  path: '/course-wise',
+  getParentRoute: () => CtScheduleRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/availability': typeof AvailabilityRoute
   '/courses': typeof CoursesRoute
+  '/ct-schedule': typeof CtScheduleRouteWithChildren
   '/generate-routine': typeof GenerateRoutineRoute
   '/mapping': typeof MappingRoute
   '/reports': typeof ReportsRoute
@@ -96,11 +109,13 @@ export interface FileRoutesByFullPath {
   '/semester-settings': typeof SemesterSettingsRoute
   '/settings': typeof SettingsRoute
   '/teachers': typeof TeachersRoute
+  '/ct-schedule/course-wise': typeof CtScheduleCourseWiseRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/availability': typeof AvailabilityRoute
   '/courses': typeof CoursesRoute
+  '/ct-schedule': typeof CtScheduleRouteWithChildren
   '/generate-routine': typeof GenerateRoutineRoute
   '/mapping': typeof MappingRoute
   '/reports': typeof ReportsRoute
@@ -110,12 +125,14 @@ export interface FileRoutesByTo {
   '/semester-settings': typeof SemesterSettingsRoute
   '/settings': typeof SettingsRoute
   '/teachers': typeof TeachersRoute
+  '/ct-schedule/course-wise': typeof CtScheduleCourseWiseRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/availability': typeof AvailabilityRoute
   '/courses': typeof CoursesRoute
+  '/ct-schedule': typeof CtScheduleRouteWithChildren
   '/generate-routine': typeof GenerateRoutineRoute
   '/mapping': typeof MappingRoute
   '/reports': typeof ReportsRoute
@@ -125,6 +142,7 @@ export interface FileRoutesById {
   '/semester-settings': typeof SemesterSettingsRoute
   '/settings': typeof SettingsRoute
   '/teachers': typeof TeachersRoute
+  '/ct-schedule/course-wise': typeof CtScheduleCourseWiseRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -132,6 +150,7 @@ export interface FileRouteTypes {
     | '/'
     | '/availability'
     | '/courses'
+    | '/ct-schedule'
     | '/generate-routine'
     | '/mapping'
     | '/reports'
@@ -141,11 +160,13 @@ export interface FileRouteTypes {
     | '/semester-settings'
     | '/settings'
     | '/teachers'
+    | '/ct-schedule/course-wise'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/availability'
     | '/courses'
+    | '/ct-schedule'
     | '/generate-routine'
     | '/mapping'
     | '/reports'
@@ -155,11 +176,13 @@ export interface FileRouteTypes {
     | '/semester-settings'
     | '/settings'
     | '/teachers'
+    | '/ct-schedule/course-wise'
   id:
     | '__root__'
     | '/'
     | '/availability'
     | '/courses'
+    | '/ct-schedule'
     | '/generate-routine'
     | '/mapping'
     | '/reports'
@@ -169,12 +192,14 @@ export interface FileRouteTypes {
     | '/semester-settings'
     | '/settings'
     | '/teachers'
+    | '/ct-schedule/course-wise'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AvailabilityRoute: typeof AvailabilityRoute
   CoursesRoute: typeof CoursesRoute
+  CtScheduleRoute: typeof CtScheduleRouteWithChildren
   GenerateRoutineRoute: typeof GenerateRoutineRoute
   MappingRoute: typeof MappingRoute
   ReportsRoute: typeof ReportsRoute
@@ -251,6 +276,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GenerateRoutineRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ct-schedule': {
+      id: '/ct-schedule'
+      path: '/ct-schedule'
+      fullPath: '/ct-schedule'
+      preLoaderRoute: typeof CtScheduleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/courses': {
       id: '/courses'
       path: '/courses'
@@ -272,13 +304,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ct-schedule/course-wise': {
+      id: '/ct-schedule/course-wise'
+      path: '/course-wise'
+      fullPath: '/ct-schedule/course-wise'
+      preLoaderRoute: typeof CtScheduleCourseWiseRouteImport
+      parentRoute: typeof CtScheduleRoute
+    }
   }
 }
+
+interface CtScheduleRouteChildren {
+  CtScheduleCourseWiseRoute: typeof CtScheduleCourseWiseRoute
+}
+
+const CtScheduleRouteChildren: CtScheduleRouteChildren = {
+  CtScheduleCourseWiseRoute: CtScheduleCourseWiseRoute,
+}
+
+const CtScheduleRouteWithChildren = CtScheduleRoute._addFileChildren(
+  CtScheduleRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AvailabilityRoute: AvailabilityRoute,
   CoursesRoute: CoursesRoute,
+  CtScheduleRoute: CtScheduleRouteWithChildren,
   GenerateRoutineRoute: GenerateRoutineRoute,
   MappingRoute: MappingRoute,
   ReportsRoute: ReportsRoute,

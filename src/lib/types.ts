@@ -138,6 +138,35 @@ export interface AppData {
   room_unavailability: RoomUnavailability[];
 }
 
+export interface CTSetting {
+  id: string;
+  semester_id: string;
+  total_weeks: number;
+  start_date: string | null;
+}
+
+export interface CTWeekConfig {
+  id: string;
+  semester_id: string;
+  week_number: number;
+  date: string;
+  is_available: boolean;
+}
+
+export interface CTAssignment {
+  id: string;
+  semester_id: string;
+  course_id: string;
+  section_id: string;
+  room_id: string;
+  week_number: number;
+  date: string;
+  ct_number: number;
+  course?: Course;
+  section?: Section;
+  room?: Room;
+}
+
 export const COURSE_TYPE_INFO: Record<
   CourseType,
   {
