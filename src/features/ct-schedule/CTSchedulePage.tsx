@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useStore } from "@/lib/store";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -8,8 +8,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format, addDays, startOfWeek, isSameDay, parseISO } from "date-fns";
-import { CalendarIcon, Loader2, Save, Wand2 } from "lucide-react";
+import { format, addDays, isSameDay, parseISO, isValid } from "date-fns";
+import { CalendarIcon, Loader2, Save, Wand2, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
 import { CTSetting, CTWeekConfig, CTAssignment } from "@/lib/types";
@@ -25,13 +25,8 @@ export function CTSchedulePage() {
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
 
-  useEffect(() => {
-    if (active_semester_id) {
-      loadData();
-    }
-  }, [active_semester_id]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
+    if (!active_semester_id) return;
     setLoading(true);
     try {
       const [s, w, a] = await Promise.all([
@@ -47,7 +42,11 @@ export function CTSchedulePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [active_semester_id]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleUpdateSettings = async () => {
     if (!settings || !active_semester_id) return;
@@ -58,6 +57,8 @@ export function CTSchedulePage() {
       });
       setSettings(updated);
       toast.success("Settings updated");
+      // Refresh to ensure weeks are recalculated correctly
+      loadData();
     } catch (error) {
       toast.error("Failed to update settings");
     }
@@ -65,10 +66,10 @@ export function CTSchedulePage() {
 
   const toggleDayAvailability = (weekNum: number, date: string) => {
     setWeekConfigs((prev) => {
-      const existing = prev.find((w) => w.week_number === weekNum && w.date === date);
+      const existing = prev.find((w) => w.week_number === weekNum && w.date.startsWith(date));
       if (existing) {
         return prev.map((w) =>
-          w.week_number === weekNum && w.date === date ? { ...w, is_available: !w.is_available } : w
+          w.week_number === weekNum && w.date.startsWith(date) ? { ...w, is_available: !w.is_available } : w
         );
       } else {
         return [...prev, { id: "", semester_id: active_semester_id!, week_number: weekNum, date, is_available: true }];
@@ -79,8 +80,14 @@ export function CTSchedulePage() {
   const saveWeekConfigs = async () => {
     if (!active_semester_id) return;
     try {
-      await api.put(`/ct-schedule/week-configs/${active_semester_id}`, { configs: weekConfigs });
+      // Normalize dates before saving
+      const configsToSave = weekConfigs.map(c => ({
+        ...c,
+        date: c.date.split('T')[0]
+      }));
+      await api.put(`/ct-schedule/week-configs/${active_semester_id}`, { configs: configsToSave });
       toast.success("Week configurations saved");
+      loadData();
     } catch (error) {
       toast.error("Failed to save week configurations");
     }
@@ -102,14 +109,18 @@ export function CTSchedulePage() {
 
   const weeks = useMemo(() => {
     if (!settings?.total_weeks || !settings.start_date) return [];
+    
+    // Ensure we handle both ISO strings and YYYY-MM-DD
     const startDate = parseISO(settings.start_date);
+    if (!isValid(startDate)) return [];
+
     const result = [];
     for (let i = 1; i <= settings.total_weeks; i++) {
       const weekStart = addDays(startDate, (i - 1) * 7);
       const daysInWeek = DAYS.map((_, idx) => {
         const d = addDays(weekStart, idx);
         const dateStr = format(d, "yyyy-MM-dd");
-        const config = weekConfigs.find((c) => c.week_number === i && c.date === dateStr);
+        const config = weekConfigs.find((c) => c.week_number === i && c.date.startsWith(dateStr));
         return {
           date: dateStr,
           label: format(d, "dd MMM (EEE)"),
@@ -122,32 +133,35 @@ export function CTSchedulePage() {
   }, [settings, weekConfigs]);
 
   const scheduleTable = useMemo(() => {
-    // Group assignments by date and room
     const grouped: Record<string, Record<string, CTAssignment>> = {};
     const uniqueDates: string[] = [];
-    const roomsInUse = rooms.filter(r => assignments.some(a => a.room_id === r.id));
+    const roomsInUseSet = new Set<string>();
 
     assignments.forEach((a) => {
-      const dateStr = a.date.split('T')[0];
+      const dateStr = typeof a.date === 'string' ? a.date.split('T')[0] : format(new Date(a.date), "yyyy-MM-dd");
       if (!grouped[dateStr]) {
         grouped[dateStr] = {};
         uniqueDates.push(dateStr);
       }
       grouped[dateStr][a.room_id] = a;
+      roomsInUseSet.add(a.room_id);
     });
 
     uniqueDates.sort();
+    const roomsInUse = rooms.filter(r => roomsInUseSet.has(r.id));
 
     return { uniqueDates, roomsInUse, grouped };
   }, [assignments, rooms]);
 
-  if (loading) {
+  if (loading && !settings) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
+
+  const safeStartDate = settings?.start_date ? parseISO(settings.start_date) : undefined;
 
   return (
     <div className="pb-10">
@@ -161,7 +175,7 @@ export function CTSchedulePage() {
             <Input
               type="number"
               value={settings?.total_weeks ?? 14}
-              onChange={(e) => setSettings((s) => s ? { ...s, total_weeks: parseInt(e.target.value) } : null)}
+              onChange={(e) => setSettings((s) => s ? { ...s, total_weeks: parseInt(e.target.value) || 0 } : null)}
             />
           </div>
           <div className="space-y-2 flex flex-col">
@@ -170,26 +184,35 @@ export function CTSchedulePage() {
               <PopoverTrigger asChild>
                 <Button variant="outline" className={cn("justify-start text-left font-normal", !settings?.start_date && "text-muted-foreground")}>
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {settings?.start_date ? format(parseISO(settings.start_date), "PPP") : "Pick a date"}
+                  {settings?.start_date && isValid(safeStartDate) ? format(safeStartDate!, "PPP") : "Pick a date"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
                 <Calendar
                   mode="single"
-                  selected={settings?.start_date ? parseISO(settings.start_date) : undefined}
-                  onSelect={(date) => setSettings((s) => s ? { ...s, start_date: date ? format(date, "yyyy-MM-dd") : null } : null)}
+                  selected={isValid(safeStartDate) ? safeStartDate : undefined}
+                  onSelect={(date) => {
+                    if (date) {
+                      setSettings((s) => s ? { ...s, start_date: format(date, "yyyy-MM-dd") } : null);
+                    }
+                  }}
                   initialFocus
                 />
               </PopoverContent>
             </Popover>
           </div>
-          <Button onClick={handleUpdateSettings} className="w-full md:w-auto">
-            <Save className="mr-2 h-4 w-4" /> Save Settings
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={handleUpdateSettings} className="flex-1">
+              <Save className="mr-2 h-4 w-4" /> Save Settings
+            </Button>
+            <Button variant="outline" onClick={loadData} title="Refresh Data">
+              <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+            </Button>
+          </div>
         </div>
 
         {/* Week Configuration */}
-        {settings?.start_date && (
+        {settings?.start_date && isValid(safeStartDate) && (
           <div className="bg-card p-6 rounded-xl border space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">Map Available Days for CT</h3>
@@ -225,10 +248,16 @@ export function CTSchedulePage() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">Generated Schedule</h3>
-            <Button onClick={handleGenerate} disabled={generating || weekConfigs.length === 0}>
-              {generating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
-              Generate Random Schedule
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={loadData}>
+                <RefreshCw className={cn("mr-2 h-4 w-4", loading && "animate-spin")} />
+                Reload
+              </Button>
+              <Button onClick={handleGenerate} disabled={generating || weekConfigs.filter(w => w.is_available).length === 0}>
+                {generating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
+                Generate Random Schedule
+              </Button>
+            </div>
           </div>
 
           {assignments.length > 0 ? (

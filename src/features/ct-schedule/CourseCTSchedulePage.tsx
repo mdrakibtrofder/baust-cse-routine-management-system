@@ -1,10 +1,12 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useStore } from "@/lib/store";
 import { PageHeader } from "@/components/PageHeader";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, BookOpen } from "lucide-react";
-import { format, parseISO } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { Loader2, BookOpen, RefreshCw } from "lucide-react";
+import { format, parseISO, isValid } from "date-fns";
+import { cn } from "@/lib/utils";
 import api from "@/lib/api";
 import { CTAssignment } from "@/lib/types";
 import { toast } from "sonner";
@@ -15,13 +17,8 @@ export function CourseCTSchedulePage() {
   const [loading, setLoading] = useState(false);
   const [selectedSectionId, setSelectedSectionId] = useState<string>("all");
 
-  useEffect(() => {
-    if (active_semester_id) {
-      loadAssignments();
-    }
-  }, [active_semester_id]);
-
-  const loadAssignments = async () => {
+  const loadAssignments = useCallback(async () => {
+    if (!active_semester_id) return;
     setLoading(true);
     try {
       const res = await api.get<CTAssignment[]>(`/ct-schedule/assignments/${active_semester_id}`);
@@ -31,7 +28,11 @@ export function CourseCTSchedulePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [active_semester_id]);
+
+  useEffect(() => {
+    loadAssignments();
+  }, [loadAssignments]);
 
   const filteredAssignments = useMemo(() => {
     if (selectedSectionId === "all") return assignments;
@@ -41,7 +42,11 @@ export function CourseCTSchedulePage() {
   const groupedAssignments = useMemo(() => {
     const grouped: Record<string, CTAssignment[]> = {};
     filteredAssignments.forEach(a => {
-      const key = `${a.course?.code} - ${a.course?.name}`;
+      const courseCode = a.course?.code || "Unknown";
+      const courseName = a.course?.name || "";
+      const sectionName = a.section?.name || "";
+      const key = `${courseCode} - ${courseName} (Sec ${sectionName})`;
+      
       if (!grouped[key]) grouped[key] = [];
       grouped[key].push(a);
     });
@@ -56,7 +61,12 @@ export function CourseCTSchedulePage() {
     return [...sections].sort((a, b) => a.level - b.level || a.term.localeCompare(b.term) || a.name.localeCompare(b.name));
   }, [sections]);
 
-  if (loading) {
+  const formatDate = (dateStr: string) => {
+    const d = parseISO(dateStr);
+    return isValid(d) ? format(d, "dd MMM yyyy") : "Invalid Date";
+  };
+
+  if (loading && assignments.length === 0) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -86,6 +96,9 @@ export function CourseCTSchedulePage() {
               </SelectContent>
             </Select>
           </div>
+          <Button variant="outline" size="icon" onClick={loadAssignments} title="Refresh">
+            <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+          </Button>
         </div>
 
         {Object.keys(groupedAssignments).length > 0 ? (
@@ -108,7 +121,7 @@ export function CourseCTSchedulePage() {
                         <span className="font-medium">Class Test {ct.ct_number}</span>
                       </div>
                       <div className="text-right">
-                        <div className="font-semibold">{format(parseISO(ct.date), "dd MMM yyyy")}</div>
+                        <div className="font-semibold">{formatDate(ct.date)}</div>
                         <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
                           Room {ct.room?.name} · Week {ct.week_number}
                         </div>
@@ -122,6 +135,9 @@ export function CourseCTSchedulePage() {
         ) : (
           <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed rounded-xl text-muted-foreground">
             <p>No CT assignments found.</p>
+            <Button variant="link" onClick={loadAssignments} className="mt-2">
+              Try reloading
+            </Button>
           </div>
         )}
       </div>
