@@ -80,10 +80,11 @@ export function CTSchedulePage() {
   const saveWeekConfigs = async () => {
     if (!active_semester_id) return;
     try {
-      // Normalize dates before saving
+      // Normalize dates and only send necessary fields to match backend DTO
       const configsToSave = weekConfigs.map(c => ({
-        ...c,
-        date: c.date.split('T')[0]
+        week_number: c.week_number,
+        date: c.date.split('T')[0],
+        is_available: c.is_available
       }));
       await api.put(`/ct-schedule/week-configs/${active_semester_id}`, { configs: configsToSave });
       toast.success("Week configurations saved");
