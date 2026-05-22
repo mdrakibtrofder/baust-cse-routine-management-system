@@ -142,6 +142,7 @@ export interface CTSetting {
   id: string;
   semester_id: string;
   total_weeks: number;
+  start_week: number;
   start_date: string | null;
 }
 

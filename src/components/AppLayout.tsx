@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
 import {
   LayoutGrid,
@@ -12,6 +12,8 @@ import {
   UserSearch,
   BarChart3,
   Loader2,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ConfirmProvider } from "@/components/ConfirmDialog";
@@ -21,8 +23,14 @@ import { useStore } from "@/lib/store";
 const nav = [
   { to: "/", label: "Course Load", icon: LayoutGrid },
   { to: "/routine", label: "Routine View", icon: CalendarDays },
-  { to: "/ct-schedule", label: "CT Schedule", icon: CalendarDays },
-  { to: "/ct-schedule/course-wise", label: "Course CT Schedule", icon: CalendarDays },
+  {
+    label: "CT Schedule",
+    icon: CalendarDays,
+    sub: [
+      { to: "/ct-schedule/config", label: "Configuration" },
+      { to: "/ct-schedule/view", label: "Schedule View" },
+    ],
+  },
   { to: "/mapping", label: "Room & Time Mapping", icon: Boxes },
   { to: "/availability", label: "Teacher Availability", icon: UserSearch },
   { to: "/reports", label: "Reports", icon: BarChart3 },
@@ -37,6 +45,8 @@ const nav = [
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const loc = useLocation();
   const init = useStore((s) => s.init);
+  const [openSub, setOpenSub] = useState<string | null>("CT Schedule");
+
   const isLoading = useStore((s) => s.isLoading);
   const activeSemester = useStore((s) =>
     s.semesters.find((x) => x.id === s.active_semester_id),
@@ -69,6 +79,46 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1">
           {nav.map((item) => {
+            if ("sub" in item) {
+              const isOpen = openSub === item.label;
+              const Icon = item.icon;
+              return (
+                <div key={item.label} className="space-y-1">
+                  <button
+                    onClick={() => setOpenSub(isOpen ? null : item.label)}
+                    className="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Icon className="h-4 w-4" />
+                      {item.label}
+                    </div>
+                    {isOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                  </button>
+                  {isOpen && (
+                    <div className="pl-9 space-y-1">
+                      {item.sub.map((sub) => {
+                        const active = loc.pathname.startsWith(sub.to);
+                        return (
+                          <Link
+                            key={sub.to}
+                            to={sub.to}
+                            className={cn(
+                              "block px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
+                              active
+                                ? "bg-accent text-primary font-semibold"
+                                : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                            )}
+                          >
+                            {sub.label}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
             const active =
               item.to === "/" ? loc.pathname === "/" : loc.pathname.startsWith(item.to);
             const Icon = item.icon;
@@ -109,6 +159,25 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </header>
         <nav className="md:hidden border-b bg-card px-2 py-1 flex gap-1 overflow-x-auto">
           {nav.map((item) => {
+            if ("sub" in item) {
+               return item.sub.map(sub => {
+                  const active = loc.pathname.startsWith(sub.to);
+                  return (
+                    <Link
+                      key={sub.to}
+                      to={sub.to}
+                      className={cn(
+                        "px-3 py-1.5 rounded-md text-xs whitespace-nowrap",
+                        active
+                          ? "bg-accent text-foreground font-medium"
+                          : "text-muted-foreground",
+                      )}
+                    >
+                      {sub.label}
+                    </Link>
+                  )
+               })
+            }
             const active =
               item.to === "/" ? loc.pathname === "/" : loc.pathname.startsWith(item.to);
             return (
@@ -133,3 +202,4 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     </ConfirmProvider>
   );
 }
+

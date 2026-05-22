@@ -8,12 +8,15 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format, addDays, isSameDay, parseISO, isValid } from "date-fns";
 import { CalendarIcon, Loader2, Save, Wand2, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
 import { CTSetting, CTWeekConfig, CTAssignment } from "@/lib/types";
 import { toast } from "sonner";
+
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"];
 
@@ -24,6 +27,7 @@ export function CTSchedulePage() {
   const [assignments, setAssignments] = useState<CTAssignment[]>([]);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [editingAssignment, setEditingAssignment] = useState<CTAssignment | null>(null);
 
   const loadData = useCallback(async () => {
     if (!active_semester_id) return;
@@ -53,6 +57,7 @@ export function CTSchedulePage() {
     try {
       const updated = await api.put<CTSetting>(`/ct-schedule/settings/${active_semester_id}`, {
         total_weeks: settings.total_weeks,
+        start_week: settings.start_week,
         start_date: settings.start_date,
       });
       setSettings(updated);
@@ -61,6 +66,17 @@ export function CTSchedulePage() {
       loadData();
     } catch (error) {
       toast.error("Failed to update settings");
+    }
+  };
+
+  const handleUpdateAssignment = async (id: string, updates: Partial<CTAssignment>) => {
+    try {
+      await api.put(`/ct-schedule/assignments/${id}`, updates);
+      toast.success("Assignment updated");
+      loadData();
+      setEditingAssignment(null);
+    } catch (error) {
+      toast.error("Failed to update assignment");
     }
   };
 
@@ -170,13 +186,21 @@ export function CTSchedulePage() {
       
       <div className="p-4 sm:p-6 space-y-6">
         {/* Settings */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end bg-card p-6 rounded-xl border">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end bg-card p-6 rounded-xl border">
           <div className="space-y-2">
             <Label>Total Weeks</Label>
             <Input
               type="number"
               value={settings?.total_weeks ?? 14}
               onChange={(e) => setSettings((s) => s ? { ...s, total_weeks: parseInt(e.target.value) || 0 } : null)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>CT Start Week</Label>
+            <Input
+              type="number"
+              value={settings?.start_week ?? 4}
+              onChange={(e) => setSettings((s) => s ? { ...s, start_week: parseInt(e.target.value) || 0 } : null)}
             />
           </div>
           <div className="space-y-2 flex flex-col">
@@ -287,9 +311,12 @@ export function CTSchedulePage() {
                           return (
                             <TableCell key={r.id} className="text-center">
                               {a ? (
-                                <div className="bg-primary/10 text-primary border border-primary/20 rounded-full py-1 px-3 text-xs font-bold">
+                                <button
+                                  onClick={() => setEditingAssignment(a)}
+                                  className="w-full bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-full py-1 px-3 text-xs font-bold transition-colors"
+                                >
                                   {a.course?.code} CT {a.ct_number}
-                                </div>
+                                </button>
                               ) : (
                                 <span className="text-muted-foreground/30">—</span>
                               )}
@@ -310,6 +337,77 @@ export function CTSchedulePage() {
           )}
         </div>
       </div>
+
+      {/* Edit Assignment Dialog */}
+      <Dialog open={!!editingAssignment} onOpenChange={(open) => !open && setEditingAssignment(null)}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Edit CT Assignment</DialogTitle>
+          </DialogHeader>
+          {editingAssignment && (
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label>Course</Label>
+                <div className="text-sm font-medium">{editingAssignment.course?.code} - {editingAssignment.course?.name}</div>
+              </div>
+              <div className="grid gap-2">
+                <Label>Section</Label>
+                <div className="text-sm font-medium">{editingAssignment.section?.name}</div>
+              </div>
+              <div className="grid gap-2">
+                <Label>CT Number</Label>
+                <div className="text-sm font-medium">CT {editingAssignment.ct_number}</div>
+              </div>
+              <div className="grid gap-2">
+                <Label>Room</Label>
+                <Select
+                  value={editingAssignment.room_id}
+                  onValueChange={(v) => setEditingAssignment({ ...editingAssignment, room_id: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {rooms.map((r) => (
+                      <SelectItem key={r.id} value={r.id}>
+                        {r.name} ({r.capacity})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label>Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="justify-start text-left font-normal">
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {format(parseISO(editingAssignment.date), "PPP")}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={parseISO(editingAssignment.date)}
+                      onSelect={(date) => date && setEditingAssignment({ ...editingAssignment, date: format(date, "yyyy-MM-dd") })}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingAssignment(null)}>Cancel</Button>
+            <Button onClick={() => editingAssignment && handleUpdateAssignment(editingAssignment.id, {
+              room_id: editingAssignment.room_id,
+              date: editingAssignment.date
+            })}>
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -11,11 +11,18 @@ import api from "@/lib/api";
 import { CTAssignment } from "@/lib/types";
 import { toast } from "sonner";
 
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon, Edit2 } from "lucide-react";
+
 export function CourseCTSchedulePage() {
-  const { active_semester_id, sections } = useStore();
+  const { active_semester_id, sections, rooms } = useStore();
   const [assignments, setAssignments] = useState<CTAssignment[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedSectionId, setSelectedSectionId] = useState<string>("all");
+  const [editingAssignment, setEditingAssignment] = useState<CTAssignment | null>(null);
 
   const loadAssignments = useCallback(async () => {
     if (!active_semester_id) return;
@@ -33,6 +40,17 @@ export function CourseCTSchedulePage() {
   useEffect(() => {
     loadAssignments();
   }, [loadAssignments]);
+
+  const handleUpdateAssignment = async (id: string, updates: Partial<CTAssignment>) => {
+    try {
+      await api.put(`/ct-schedule/assignments/${id}`, updates);
+      toast.success("Assignment updated");
+      loadAssignments();
+      setEditingAssignment(null);
+    } catch (error) {
+      toast.error("Failed to update assignment");
+    }
+  };
 
   const filteredAssignments = useMemo(() => {
     if (selectedSectionId === "all") return assignments;
@@ -113,18 +131,28 @@ export function CourseCTSchedulePage() {
                 </div>
                 <div className="p-4 space-y-3">
                   {cts.map(ct => (
-                    <div key={ct.id} className="flex items-center justify-between text-sm">
+                    <div key={ct.id} className="flex items-center justify-between text-sm group">
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
                           {ct.ct_number}
                         </div>
                         <span className="font-medium">Class Test {ct.ct_number}</span>
                       </div>
-                      <div className="text-right">
-                        <div className="font-semibold">{formatDate(ct.date)}</div>
-                        <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                          Room {ct.room?.name} · Week {ct.week_number}
+                      <div className="flex items-center gap-3">
+                        <div className="text-right">
+                          <div className="font-semibold">{formatDate(ct.date)}</div>
+                          <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                            Room {ct.room?.name} · Week {ct.week_number}
+                          </div>
                         </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => setEditingAssignment(ct)}
+                        >
+                          <Edit2 className="h-3.5 w-3.5" />
+                        </Button>
                       </div>
                     </div>
                   ))}
@@ -141,6 +169,77 @@ export function CourseCTSchedulePage() {
           </div>
         )}
       </div>
+
+      {/* Edit Assignment Dialog */}
+      <Dialog open={!!editingAssignment} onOpenChange={(open) => !open && setEditingAssignment(null)}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Edit CT Assignment</DialogTitle>
+          </DialogHeader>
+          {editingAssignment && (
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label>Course</Label>
+                <div className="text-sm font-medium">{editingAssignment.course?.code} - {editingAssignment.course?.name}</div>
+              </div>
+              <div className="grid gap-2">
+                <Label>Section</Label>
+                <div className="text-sm font-medium">{editingAssignment.section?.name}</div>
+              </div>
+              <div className="grid gap-2">
+                <Label>CT Number</Label>
+                <div className="text-sm font-medium">CT {editingAssignment.ct_number}</div>
+              </div>
+              <div className="grid gap-2">
+                <Label>Room</Label>
+                <Select
+                  value={editingAssignment.room_id}
+                  onValueChange={(v) => setEditingAssignment({ ...editingAssignment, room_id: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {rooms.map((r) => (
+                      <SelectItem key={r.id} value={r.id}>
+                        {r.name} ({r.capacity})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label>Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="justify-start text-left font-normal">
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {formatDate(editingAssignment.date)}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={parseISO(editingAssignment.date)}
+                      onSelect={(date) => date && setEditingAssignment({ ...editingAssignment, date: format(date, "yyyy-MM-dd") })}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingAssignment(null)}>Cancel</Button>
+            <Button onClick={() => editingAssignment && handleUpdateAssignment(editingAssignment.id, {
+              room_id: editingAssignment.room_id,
+              date: editingAssignment.date
+            })}>
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
