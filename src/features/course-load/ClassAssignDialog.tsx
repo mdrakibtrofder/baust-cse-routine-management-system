@@ -302,8 +302,8 @@ export function ClassAssignDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-5xl max-h-[92vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="max-w-[1200px] max-h-[95vh] flex flex-col p-0 overflow-hidden">
+          <DialogHeader className="px-6 py-4 border-b">
             <DialogTitle className="flex items-center gap-2 flex-wrap">
               <button
                 type="button"
@@ -352,7 +352,8 @@ export function ClassAssignDialog({
             </div>
           </DialogHeader>
 
-          <div className="grid md:grid-cols-[180px_1fr] gap-4">
+          <div className="flex-1 overflow-y-auto p-6">
+            <div className="grid md:grid-cols-[180px_1fr] gap-4">
             {/* Left: list view */}
             <div className="space-y-2 md:border-r md:pr-3">
               <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
@@ -745,8 +746,9 @@ export function ClassAssignDialog({
               )}
             </div>
           </div>
+        </div>
 
-          <DialogFooter className="flex-row justify-between sm:justify-between">
+        <DialogFooter className="px-6 py-4 border-t bg-muted/20 flex-row justify-between sm:justify-between">
             <div className="flex gap-2">
               {drafts.length > 1 && (
                 <Button variant="ghost" size="sm" onClick={clearAll} className="h-9 px-3">
@@ -979,11 +981,11 @@ function RoomDayGrid({
   }
 
   return (
-    <div className="overflow-auto max-h-[40vh]">
-      <table className="w-full text-xs">
-        <thead className="sticky top-0 bg-muted/80 backdrop-blur z-10">
+    <div className="overflow-auto max-h-[50vh] border rounded-md">
+      <table className="w-full text-xs table-fixed border-collapse">
+        <thead className="sticky top-0 bg-muted z-20 shadow-sm">
           <tr>
-            <th className="text-left px-2 py-1.5 font-medium border-b border-r min-w-[90px]">Room</th>
+            <th className="sticky left-0 top-0 z-30 text-left px-2 py-1.5 font-bold border-b border-r w-[100px] min-w-[100px] max-w-[100px] bg-muted shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">Room</th>
             {periods.map((p) => {
               const status = teacherStatusByPeriod.get(p.id);
               const dup = siblingDuplicate(p);
@@ -992,25 +994,24 @@ function RoomDayGrid({
                 <th
                   key={p.id}
                   className={cn(
-                    "text-center px-1.5 py-1.5 font-medium border-b border-r min-w-[110px]",
+                    "text-center px-1.5 py-2 font-bold border-b border-r w-[180px] min-w-[180px] max-w-[180px] whitespace-normal align-top break-words",
                     issueCount === 1 && "bg-red-200/40",
                     issueCount >= 2 && "bg-red-500/30",
                   )}
                 >
-                  <div className="font-mono">{fmtRange12(p.start, p.end)}</div>
+                  <div className="font-mono text-[11px] mb-1">{fmtRange12(p.start, p.end)}</div>
                   {status?.busy && (
-                    <div className="text-[9px] font-normal text-destructive font-mono leading-tight">
-                      {status.busy.teacherShort} ({status.busy.teacherName}) assigned in {status.busy.courseCode}
+                    <div className="text-[10px] font-bold text-destructive font-mono leading-tight mb-1">
+                      {status.busy.teacherShort} assigned in {status.busy.courseCode}
                     </div>
                   )}
                   {status?.unavailable && (
-                    <div className="text-[9px] font-normal text-warning font-mono leading-tight">
+                    <div className="text-[10px] font-bold text-warning font-mono leading-tight mb-1">
                       {status.unavailable.teacherShort} unavailable
-                      {status.unavailable.reason ? ` (${status.unavailable.reason})` : ""}
                     </div>
                   )}
                   {dup && (
-                    <div className="text-[9px] font-normal text-destructive">duplicate slot</div>
+                    <div className="text-[10px] font-bold text-destructive uppercase tracking-tighter">Duplicate</div>
                   )}
                 </th>
               );
@@ -1019,8 +1020,8 @@ function RoomDayGrid({
         </thead>
         <tbody>
           {rooms.map((r) => (
-            <tr key={r.id} className="border-b">
-              <td className={cn("px-2 py-1 border-r", currentRoomId === r.id && "bg-primary/5")}>
+            <tr key={r.id} className="border-b hover:bg-muted/30 transition-colors">
+              <td className={cn("sticky left-0 z-10 px-2 py-2 border-r w-[100px] min-w-[100px] max-w-[100px] bg-muted font-medium shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]", currentRoomId === r.id && "bg-primary/10")}>
                 <div className="font-mono font-semibold">{r.name}</div>
                 <div className="text-[10px] text-muted-foreground">Capacity {r.capacity}</div>
               </td>
@@ -1063,45 +1064,45 @@ function RoomDayGrid({
                 let inner: React.ReactNode;
                 if (conflictCount === 0) {
                   inner = (
-                    <div className={cn("w-full h-full min-h-[44px] flex items-center justify-center rounded border px-1.5 py-1.5 text-[10px] font-medium transition", tone)}>
+                    <div className={cn("w-full h-full min-h-[44px] flex items-center justify-center rounded border px-1.5 py-1.5 text-[10px] font-black transition uppercase", tone)}>
                       Free
                     </div>
                   );
                 } else {
                   inner = (
-                    <div className={cn("w-full h-full min-h-[44px] rounded border px-1.5 py-1 text-[10px] cursor-pointer transition space-y-0.5", tone)}>
+                    <div className={cn("w-full h-full min-h-[44px] rounded border px-2 py-2 text-[10px] cursor-pointer transition space-y-1.5 whitespace-normal break-words", tone)}>
                       {booking && (
-                        <div className="font-semibold truncate">
+                        <div className="font-black text-xs leading-tight">
                           {bookedCourse?.code} · Sec {bookedSec?.name}
                         </div>
                       )}
                       {teacherBusy && (
-                        <div className="font-mono truncate">{teacherBusy.teacherShort} ({teacherBusy.teacherName}) already assigned in {teacherBusy.courseCode}</div>
+                        <div className="font-bold leading-tight text-[9px] opacity-90">{teacherBusy.teacherShort} assigned in {teacherBusy.courseCode}</div>
                       )}
                       {teacherUnavail && (
-                        <div className="font-mono truncate">{teacherUnavail.teacherShort} is Unavailable</div>
+                        <div className="font-bold leading-tight text-[9px] opacity-90">{teacherUnavail.teacherShort} is Unavailable</div>
                       )}
                       {roomUnavail && (
-                        <div className="font-mono truncate">Room {r.name} is Unavailable</div>
+                        <div className="font-bold leading-tight text-[9px] opacity-90">Room {r.name} is Unavailable</div>
                       )}
                       {dup && !booking && !teacherBusy && !teacherUnavail && !roomUnavail && (
-                        <div>Another class for this section is already on {day} {fmtRange12(p.start, p.end)}</div>
+                        <div className="font-bold leading-tight text-[9px] opacity-90">Another class for this section is already on {day} {fmtRange12(p.start, p.end)}</div>
                       )}  
                       {dup && (booking || teacherBusy || teacherUnavail || roomUnavail) && (
-                        <div className="opacity-80">+ duplicate slot</div>
+                        <div className="font-black text-[8px] uppercase tracking-tighter opacity-70">+ Duplicate</div>
                       )}
                     </div>
                   );
                 }
 
                 return (
-                  <td key={p.id} className="border-r p-0.5 h-full">
+                  <td key={p.id} className="border-r p-1 w-[180px] min-w-[180px] max-w-[180px] align-top">
                     <button
                       type="button"
                       onClick={() => handlePick(r.id, p, issues)}
                       className={cn(
-                        "block w-full h-full text-left rounded transition",
-                        isCurrent && "ring-2 ring-blue-500 ring-offset-1 ring-offset-background",
+                        "block w-full h-full text-left rounded transition-all hover:scale-[0.98]",
+                        isCurrent && "ring-2 ring-primary ring-offset-1 ring-offset-background shadow-lg",
                       )}
                       title={issues.length > 0 ? issues.join(" · ") : "Free — click to select"}
                     >
