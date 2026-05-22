@@ -27,26 +27,50 @@ export function CourseLoadPage() {
   [data.semesters, data.active_semester_id]);
 
   const grouped = useMemo(() => {
-    const map = new Map<string, { level: number; term: string; courses: Course[]; sections: Section[] }>();
+    const deptMap = new Map<string, { level: number; term: string; departmental_type: string; courses: Course[]; sections: Section[] }>();
+    const nonDeptCourses: Course[] = [];
+    const nonDeptSections = new Set<Section>();
+
     for (const c of data.courses) {
-      const k = `${c.level}|${c.term}`;
-      if (!map.has(k)) {
-        map.set(k, {
-          level: c.level, term: c.term,
-          courses: [],
-          sections: data.sections
-            .filter(s => s.level === c.level && s.term === c.term)
-            .sort((a, b) => a.name.localeCompare(b.name)),
-        });
+      if (c.departmental_type === "Departmental") {
+        const k = `${c.level}|${c.term}`;
+        if (!deptMap.has(k)) {
+          deptMap.set(k, {
+            level: c.level, term: c.term, departmental_type: "Departmental",
+            courses: [],
+            sections: data.sections
+              .filter(s => s.level === c.level && s.term === c.term)
+              .sort((a, b) => a.name.localeCompare(b.name)),
+          });
+        }
+        deptMap.get(k)!.courses.push(c);
+      } else {
+        nonDeptCourses.push(c);
+        data.sections
+          .filter(s => s.level === c.level && s.term === c.term)
+          .forEach(s => nonDeptSections.add(s));
       }
-      map.get(k)!.courses.push(c);
     }
-    for (const g of map.values()) {
+
+    const result = Array.from(deptMap.values())
+      .sort((a, b) => a.level - b.level || TERM_ORDER.indexOf(a.term) - TERM_ORDER.indexOf(b.term));
+
+    for (const g of result) {
       g.courses.sort((a, b) => a.code.localeCompare(b.code));
     }
-    return Array.from(map.values()).sort(
-      (a, b) => a.level - b.level || TERM_ORDER.indexOf(a.term) - TERM_ORDER.indexOf(b.term)
-    );
+
+    if (nonDeptCourses.length > 0) {
+      nonDeptCourses.sort((a, b) => a.level - b.level || TERM_ORDER.indexOf(a.term) - TERM_ORDER.indexOf(b.term) || a.code.localeCompare(b.code));
+      result.push({
+        level: 0, // Not used for title
+        term: "Non-Departmental", // Used for title
+        departmental_type: "Non-Departmental",
+        courses: nonDeptCourses,
+        sections: Array.from(nonDeptSections).sort((a, b) => a.level - b.level || TERM_ORDER.indexOf(a.term) - TERM_ORDER.indexOf(b.term) || a.name.localeCompare(b.name)),
+      });
+    }
+
+    return result;
   }, [data.courses, data.sections]);
 
   return (
@@ -57,11 +81,12 @@ export function CourseLoadPage() {
         showReset
       />
       <div className="p-4 sm:p-6 space-y-6">
-        {grouped.map((g) => (
+        {grouped.map((g, idx) => (
           <LevelTermBlock
-            key={`${g.level}-${g.term}`}
+            key={g.departmental_type === "Departmental" ? `${g.level}-${g.term}` : "non-dept"}
             level={g.level}
             term={g.term}
+            departmental_type={g.departmental_type as any}
             courses={g.courses}
             sections={g.sections}
             onAssign={(c, s) => setOpenAssign({ course: c, section: s })}
@@ -94,8 +119,8 @@ export function CourseLoadPage() {
   );
 }
 
-function LevelTermBlock({ level, term, courses, sections, onAssign, onSectionRoutine, onCourseDetails }: {
-  level: number; term: string; courses: Course[]; sections: Section[];
+function LevelTermBlock({ level, term, departmental_type, courses, sections, onAssign, onSectionRoutine, onCourseDetails }: {
+  level: number; term: string; departmental_type: "Departmental" | "Non-Departmental"; courses: Course[]; sections: Section[];
   onAssign: (c: Course, s: Section) => void;
   onSectionRoutine: (s: Section) => void;
   onCourseDetails: (c: Course) => void;
@@ -108,16 +133,16 @@ function LevelTermBlock({ level, term, courses, sections, onAssign, onSectionRou
         style={{ background: "var(--gradient-primary)", color: "var(--primary-foreground)" }}
       >
         <div>
-          <h2 className="font-bold text-base">Level {level}, Term {term}</h2>
+          <h2 className="font-bold text-base">
+            {departmental_type === "Departmental" ? `Level ${level}, Term ${term}` : "Non-Departmental Courses"}
+          </h2>
           <div className="flex items-center gap-2 mt-0.5">
             <p className="text-xs opacity-90">
               {courses.length} courses · {sections.length} section{sections.length !== 1 ? "s" : ""} · {totalCredit.toFixed(2)} credits
             </p>
-            {courses.length > 0 && (
-              <Badge variant="outline" className="bg-white/20 border-white/30 text-white text-[10px] py-0 h-4 backdrop-blur-sm">
-                {courses[0].departmental_type}
-              </Badge>
-            )}
+            <Badge variant="outline" className="bg-white/20 border-white/30 text-white text-[10px] py-0 h-4 backdrop-blur-sm">
+              {departmental_type}
+            </Badge>
           </div>
         </div>
         <div className="flex gap-1">

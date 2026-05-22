@@ -13,6 +13,8 @@ import type { Course, Section, Teacher, Room, Period, ClassSlot } from "@/lib/ty
 import { RoomPicker } from "@/features/course-load/RoomPicker";
 import { Input } from "@/components/ui/input";
 
+const TERM_ORDER = ["I", "II"];
+
 export function RoomTimeMappingPage() {
   return (
     <div className="flex flex-col h-full">
@@ -55,25 +57,101 @@ function SectionRoomMapping() {
   const data = useStore();
   const [q, setQ] = useState("");
 
-  const sections = useMemo(() => {
-    return data.sections
-      .filter(s => 
-        s.name.toLowerCase().includes(q.toLowerCase()) || 
-        `Level ${s.level} Term ${s.term}`.toLowerCase().includes(q.toLowerCase())
-      )
-      .sort((a, b) => a.level - b.level || a.term.localeCompare(b.term) || a.name.localeCompare(b.name));
-  }, [data.sections, q]);
+  const grouped = useMemo(() => {
+    const deptMap = new Map<string, { level: number; term: string; departmental_type: string; coursesBySid: Record<string, Course[]>; sections: Section[] }>();
+    const nonDeptCoursesBySid: Record<string, Course[]> = {};
+    const nonDeptSectionsSet = new Set<string>();
 
-  const coursesBySection = (sid: string) => {
-    return data.courses.filter(c => {
-      return data.course_section_teachers.some(
-        cst => cst.semester_id === data.active_semester_id && cst.course_id === c.id && cst.section_id === sid
-      );
+    const filterByQ = (text: string) => text.toLowerCase().includes(q.toLowerCase());
+
+    for (const s of data.sections) {
+      if (q && !filterByQ(s.name) && !filterByQ(`Level ${s.level} Term ${s.term}`)) continue;
+
+      const courses = data.courses.filter(c => {
+        return data.course_section_teachers.some(
+          cst => cst.semester_id === data.active_semester_id && cst.course_id === c.id && cst.section_id === s.id
+        );
+      });
+
+      if (courses.length === 0) continue;
+
+      const deptCourses = courses.filter(c => c.departmental_type === "Departmental");
+      const nonDeptCourses = courses.filter(c => c.departmental_type === "Non-Departmental");
+
+      if (deptCourses.length > 0) {
+        const k = `${s.level}|${s.term}`;
+        if (!deptMap.has(k)) {
+          deptMap.set(k, {
+            level: s.level, term: s.term, departmental_type: "Departmental",
+            coursesBySid: {},
+            sections: [],
+          });
+        }
+        const g = deptMap.get(k)!;
+        if (!g.sections.find(x => x.id === s.id)) {
+          g.sections.push(s);
+          g.coursesBySid[s.id] = deptCourses.sort((a, b) => a.code.localeCompare(b.code));
+        }
+      }
+
+      if (nonDeptCourses.length > 0) {
+        nonDeptCoursesBySid[s.id] = nonDeptCourses.sort((a, b) => a.code.localeCompare(b.code));
+        nonDeptSectionsSet.add(s.id);
+      }
+    }
+
+    const result = Array.from(deptMap.values())
+      .sort((a, b) => a.level - b.level || TERM_ORDER.indexOf(a.term) - TERM_ORDER.indexOf(b.term));
+    
+    result.forEach(g => {
+      g.sections.sort((a, b) => a.name.localeCompare(b.name));
     });
-  };
 
-  const getSectionRoomSummary = (sid: string) => {
-    const courses = coursesBySection(sid);
+    if (nonDeptSectionsSet.size > 0) {
+      const nonDeptSections = data.sections
+        .filter(s => nonDeptSectionsSet.has(s.id))
+        .sort((a, b) => a.level - b.level || TERM_ORDER.indexOf(a.term) - TERM_ORDER.indexOf(b.term) || a.name.localeCompare(b.name));
+
+      result.push({
+        level: 0,
+        term: "Non-Departmental",
+        departmental_type: "Non-Departmental",
+        coursesBySid: nonDeptCoursesBySid,
+        sections: nonDeptSections,
+      });
+    }
+
+    return result;
+  }, [data.sections, data.courses, data.course_section_teachers, data.active_semester_id, q]);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-2 max-w-sm">
+        <Search className="h-4 w-4 text-muted-foreground" />
+        <Input 
+          placeholder="Search level, term or section..." 
+          value={q} 
+          onChange={e => setQ(e.target.value)}
+          className="h-9"
+        />
+      </div>
+
+      <div className="space-y-8">
+        {grouped.map((g) => (
+          <SectionRoomBlock 
+            key={g.departmental_type === "Departmental" ? `${g.level}-${g.term}` : "non-dept"}
+            group={g} 
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SectionRoomBlock({ group }: { group: any }) {
+  const data = useStore();
+  
+  const getSectionRoomSummary = (sid: string, courses: Course[]) => {
     const roomCounts: Record<string, number> = {};
     
     courses.forEach(c => {
@@ -97,21 +175,22 @@ function SectionRoomMapping() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 max-w-sm">
-        <Search className="h-4 w-4 text-muted-foreground" />
-        <Input 
-          placeholder="Search level, term or section..." 
-          value={q} 
-          onChange={e => setQ(e.target.value)}
-          className="h-9"
-        />
+      <div className="flex items-center gap-3">
+        <h3 className="font-bold text-lg text-primary">
+          {group.departmental_type === "Departmental" 
+            ? `Level ${group.level}, Term ${group.term}` 
+            : "Non-Departmental Courses"}
+        </h3>
+        <Badge variant="secondary" className="text-[10px] uppercase tracking-wider">
+          {group.departmental_type}
+        </Badge>
+        <div className="h-px flex-1 bg-border" />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {sections.map(s => {
-          const courses = coursesBySection(s.id);
-          if (courses.length === 0) return null;
-          const summary = getSectionRoomSummary(s.id);
+        {group.sections.map((s: Section) => {
+          const courses = group.coursesBySid[s.id];
+          const summary = getSectionRoomSummary(s.id, courses);
 
           return (
             <Card key={s.id} className="overflow-hidden shadow-sm hover:shadow-md transition-shadow">
@@ -134,7 +213,7 @@ function SectionRoomMapping() {
               </CardHeader>
               <CardContent className="p-0">
                 <div className="divide-y">
-                  {courses.map(c => {
+                  {courses.map((c: Course) => {
                     const cst = data.course_section_teachers.find(
                       x => x.semester_id === data.active_semester_id && x.course_id === c.id && x.section_id === s.id
                     );
@@ -159,6 +238,7 @@ function SectionRoomMapping() {
     </div>
   );
 }
+
 
 function TeacherTimeMapping() {
   const data = useStore();

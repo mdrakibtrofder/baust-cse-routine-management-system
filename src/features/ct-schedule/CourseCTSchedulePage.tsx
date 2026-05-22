@@ -69,13 +69,18 @@ export function CourseCTSchedulePage() {
       if (!grouped[key]) grouped[key] = [];
       grouped[key].push(a);
     });
-    // Sort courses by level and term
+    // Sort courses by departmental_type, level and term
     const sortedKeys = Object.keys(grouped).sort((a, b) => {
       const firstA = grouped[a][0];
       const firstB = grouped[b][0];
       
       if (!firstA.course || !firstB.course) return 0;
       
+      // Compare Departmental Type (Departmental first)
+      if (firstA.course.departmental_type !== firstB.course.departmental_type) {
+        return firstA.course.departmental_type === "Departmental" ? -1 : 1;
+      }
+
       // Compare Level
       if (firstA.course.level !== firstB.course.level) {
         return firstA.course.level - firstB.course.level;
