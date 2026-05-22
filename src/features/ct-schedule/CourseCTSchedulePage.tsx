@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Loader2, BookOpen, RefreshCw } from "lucide-react";
 import { format, parseISO, isValid } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -146,7 +147,12 @@ export function CourseCTSchedulePage() {
             {Object.entries(groupedAssignments).map(([courseLabel, cts]) => (
               <div key={courseLabel} className="bg-card rounded-xl border overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                 <div className="bg-muted/50 p-4 border-b">
-                  <h4 className="font-bold text-sm truncate">{courseLabel}</h4>
+                  <div className="flex items-center justify-between gap-2">
+                    <h4 className="font-bold text-sm truncate">{courseLabel}</h4>
+                    <Badge variant="outline" className="text-[10px] py-0 h-4 whitespace-nowrap">
+                      {cts[0].course?.departmental_type}
+                    </Badge>
+                  </div>
                   <p className="text-xs text-muted-foreground mt-1">
                     Level {cts[0].course?.level}, Term {cts[0].course?.term} · Section {cts[0].section?.name}
                   </p>

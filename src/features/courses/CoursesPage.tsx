@@ -152,7 +152,21 @@ export function CoursesPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button size="icon" variant="ghost" onClick={() => { setEditing(c); setForm(c); setOpen(true); }}>
+                    <Button size="icon" variant="ghost" onClick={() => { 
+                      setEditing(c); 
+                      setForm({
+                        code: c.code,
+                        name: c.name,
+                        credit: c.credit,
+                        course_type: c.course_type,
+                        departmental_type: c.departmental_type,
+                        level: c.level,
+                        term: c.term,
+                        theory: c.theory,
+                        sessional: c.sessional
+                      }); 
+                      setOpen(true); 
+                    }}>
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
                     <Button size="icon" variant="ghost" onClick={() => tryDelete(c)}>

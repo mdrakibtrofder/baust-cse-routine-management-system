@@ -109,9 +109,16 @@ function LevelTermBlock({ level, term, courses, sections, onAssign, onSectionRou
       >
         <div>
           <h2 className="font-bold text-base">Level {level}, Term {term}</h2>
-          <p className="text-xs opacity-90">
-            {courses.length} courses · {sections.length} section{sections.length !== 1 ? "s" : ""} · {totalCredit.toFixed(2)} credits
-          </p>
+          <div className="flex items-center gap-2 mt-0.5">
+            <p className="text-xs opacity-90">
+              {courses.length} courses · {sections.length} section{sections.length !== 1 ? "s" : ""} · {totalCredit.toFixed(2)} credits
+            </p>
+            {courses.length > 0 && (
+              <Badge variant="outline" className="bg-white/20 border-white/30 text-white text-[10px] py-0 h-4 backdrop-blur-sm">
+                {courses[0].departmental_type}
+              </Badge>
+            )}
+          </div>
         </div>
         <div className="flex gap-1">
           {sections.map(s => (
