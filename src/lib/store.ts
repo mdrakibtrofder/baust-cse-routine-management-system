@@ -415,6 +415,7 @@ export const useStore = create<StoreState>((set, get) => ({
         name: c.name,
         credit: c.credit !== undefined ? Number(c.credit) : undefined,
         course_type: c.course_type,
+        departmental_type: c.departmental_type,
         level: c.level !== undefined ? Number(c.level) : undefined,
         term: c.term,
         theory: c.theory !== undefined ? Number(c.theory) : undefined,
