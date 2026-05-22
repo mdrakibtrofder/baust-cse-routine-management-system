@@ -4,6 +4,8 @@ export type CourseType =
   | "sessional_1.5"
   | "sessional_0.75";
 
+export type DepartmentalType = "Departmental" | "Non-Departmental";
+
 export type WeekPattern = "EVERY" | "EVEN" | "ODD";
 
 export interface Teacher {
@@ -22,6 +24,7 @@ export interface Course {
   name: string;
   credit: number;
   course_type: CourseType;
+  departmental_type: DepartmentalType;
   level: number;
   term: string; // I | II
   theory: number;

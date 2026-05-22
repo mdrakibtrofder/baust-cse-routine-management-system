@@ -13,8 +13,9 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Pencil, Trash2, Plus, Search } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import type { Course, CourseType } from "@/lib/types";
+import type { Course, CourseType, DepartmentalType } from "@/lib/types";
 import { COURSE_TYPE_INFO } from "@/lib/types";
 import { useConfirm } from "@/components/ConfirmDialog";
 import { courseDependencies } from "@/lib/conflicts";
@@ -22,10 +23,12 @@ import { BlockedDeleteDialog } from "@/components/BlockedDeleteDialog";
 
 const empty: Omit<Course, "id"> = {
   code: "", name: "", credit: 3, course_type: "theory_3.0",
+  departmental_type: "Departmental",
   level: 1, term: "I", theory: 3, sessional: 0,
 };
 
 const TYPES: CourseType[] = ["theory_2.0", "theory_3.0", "sessional_1.5", "sessional_0.75"];
+const DEPT_TYPES: DepartmentalType[] = ["Departmental", "Non-Departmental"];
 
 export function CoursesPage() {
   const data = useStore();
@@ -90,8 +93,15 @@ export function CoursesPage() {
         title="Courses"
         subtitle={`${courses.length} courses across all level-terms`}
         exportRows={() => courses.map(c => ({
-          "Course Code": c.code, "Course Title": c.name, Theory: c.theory, Sessional: c.sessional,
-          "Total Cr.": c.credit, Level: c.level, Term: c.term, Type: COURSE_TYPE_INFO[c.course_type].label,
+          "Course Code": c.code, 
+          "Course Title": c.name, 
+          Theory: c.theory, 
+          Sessional: c.sessional,
+          "Total Cr.": c.credit, 
+          Level: c.level, 
+          Term: c.term, 
+          Type: COURSE_TYPE_INFO[c.course_type].label,
+          "Dept. Type": c.departmental_type,
         }))}
         exportName="courses.xlsx"
       />
@@ -116,6 +126,7 @@ export function CoursesPage() {
                 <TableHead>Level-Term</TableHead>
                 <TableHead className="text-right">Credit</TableHead>
                 <TableHead>Type</TableHead>
+                <TableHead>Dept. Type</TableHead>
                 <TableHead className="text-right w-24">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -131,6 +142,13 @@ export function CoursesPage() {
                   <TableCell>
                     <Badge variant={c.sessional > 0 ? "default" : "secondary"}>
                       {COURSE_TYPE_INFO[c.course_type].label}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className={cn(
+                      c.departmental_type === "Departmental" ? "border-primary text-primary" : "border-muted-foreground text-muted-foreground"
+                    )}>
+                      {c.departmental_type}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
@@ -173,6 +191,15 @@ export function CoursesPage() {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {TYPES.map(t => <SelectItem key={t} value={t}>{COURSE_TYPE_INFO[t].label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Dept. Type</Label>
+              <Select value={form.departmental_type} onValueChange={(v: DepartmentalType) => setForm({ ...form, departmental_type: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {DEPT_TYPES.map(dt => <SelectItem key={dt} value={dt}>{dt}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>

@@ -52,6 +52,9 @@ export function CourseDetailsDialog({
                 Level {course.level} · Term {course.term}
               </span>
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/20 backdrop-blur">
+                {course.departmental_type}
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/20 backdrop-blur">
                 {course.credit} cr
               </span>
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/20 backdrop-blur">
