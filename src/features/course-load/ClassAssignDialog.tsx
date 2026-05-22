@@ -367,7 +367,7 @@ export function ClassAssignDialog({
                     key={i}
                     className={cn(
                       "rounded-md border px-2 py-1.5 text-xs transition group",
-                      isActive ? "border-primary bg-primary/5" : "hover:border-primary/40",
+                      isActive ? "border-primary border-2 bg-primary/5 shadow-sm" : "hover:border-primary/40",
                       st.conflicts.length > 0 && "border-destructive/50",
                     )}
                   >
@@ -704,26 +704,26 @@ export function ClassAssignDialog({
                                 className={cn(
                                   "text-[10px] text-left px-3 py-2 rounded-md border transition-all shadow-sm flex items-center justify-between group",
                                   isCurrentTime 
-                                    ? "bg-emerald-50 border-emerald-200 hover:bg-emerald-100" 
-                                    : "bg-white border-rose-100 hover:border-emerald-500 hover:bg-emerald-50"
+                                    ? "bg-blue-50 border-blue-400 hover:bg-blue-100 text-blue-700" 
+                                    : "bg-white border-blue-100 hover:border-emerald-500 hover:bg-emerald-50 text-blue-600 hover:text-emerald-700"
                                 )}
                               >
                                 <div className="flex flex-col">
                                   <div className="flex items-center gap-2">
                                     <span className={cn(
                                       "font-bold uppercase tracking-tight",
-                                      isCurrentTime ? "text-emerald-700" : "text-rose-600 group-hover:text-emerald-700"
+                                      isCurrentTime ? "text-blue-800" : "text-blue-600 group-hover:text-emerald-700"
                                     )}>
                                       {fmtDayTitle(s.day)} {fmtRange12(s.start, s.end)}
                                     </span>
                                     {isCurrentTime && (
-                                      <Badge variant="outline" className="text-[7px] py-0 h-3 bg-emerald-100 text-emerald-700 border-emerald-200 uppercase font-black">
+                                      <Badge variant="outline" className="text-[7px] py-0 h-3 bg-blue-100 text-blue-700 border-blue-200 uppercase font-black">
                                         Current Time
                                       </Badge>
                                     )}
                                   </div>
-                                  <span className="text-[9px] text-muted-foreground font-medium">
-                                    Room: <span className="font-bold text-foreground">{s.room.name}</span> (Capacity: {s.room.capacity})
+                                  <span className="text-[9px] text-muted-foreground font-medium group-hover:text-emerald-600/80">
+                                    Room: <span className={cn("font-bold", isCurrentTime ? "text-blue-900" : "text-foreground group-hover:text-emerald-800")}>{s.room.name}</span> (Capacity: {s.room.capacity})
                                   </span>
                                 </div>
                                 <Check className="h-3 w-3 opacity-0 group-hover:opacity-100 text-emerald-600" />

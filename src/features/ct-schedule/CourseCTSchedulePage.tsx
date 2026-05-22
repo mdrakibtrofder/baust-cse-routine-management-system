@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Loader2, BookOpen, RefreshCw, CalendarIcon, MapPin, Clock, CalendarDays } from "lucide-react";
+import { Loader2, BookOpen, RefreshCw, CalendarIcon, MapPin, Clock, CalendarDays, Edit3 } from "lucide-react";
 import { format, parseISO, isValid } from "date-fns";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
@@ -242,12 +242,13 @@ export function CourseCTSchedulePage() {
                             variant="ghost" 
                             size="icon" 
                             className="h-8 w-8 rounded-full hover:bg-primary hover:text-primary-foreground"
-                            onClick={() => {
+                            onClick={(e) => {
+                               e.stopPropagation();
                                setEditingAssignment(ct);
                                setViewingCourseKey(null);
                             }}
                          >
-                            <RefreshCw className="h-3.5 w-3.5" />
+                            <Edit3 className="h-3.5 w-3.5" />
                          </Button>
                       </div>
                     </div>
@@ -268,7 +269,7 @@ export function CourseCTSchedulePage() {
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-               <RefreshCw className="h-5 w-5 text-primary" />
+               <Edit3 className="h-5 w-5 text-primary" />
                Update CT Assignment
             </DialogTitle>
           </DialogHeader>
