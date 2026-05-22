@@ -22,6 +22,10 @@ export function CourseLoadPage() {
   const [routineSection, setRoutineSection] = useState<Section | null>(null);
   const [courseDetails, setCourseDetails] = useState<Course | null>(null);
 
+  const activeSemester = useMemo(() => 
+    data.semesters.find(s => s.id === data.active_semester_id),
+  [data.semesters, data.active_semester_id]);
+
   const grouped = useMemo(() => {
     const map = new Map<string, { level: number; term: string; courses: Course[]; sections: Section[] }>();
     for (const c of data.courses) {
@@ -48,7 +52,7 @@ export function CourseLoadPage() {
   return (
     <div>
       <PageHeader
-        title="Course Load · Winter 2026"
+        title={`Course Load · ${activeSemester?.name ?? "..."}`}
         subtitle="Assign teachers, rooms, and class times for each course-section"
         showReset
       />
@@ -96,7 +100,7 @@ function LevelTermBlock({ level, term, courses, sections, onAssign, onSectionRou
   onSectionRoutine: (s: Section) => void;
   onCourseDetails: (c: Course) => void;
 }) {
-  const totalCredit = courses.reduce((s, c) => s + c.credit, 0);
+  const totalCredit = courses.reduce((s, c) => s + (Number(c.credit) || 0), 0);
   return (
     <div className="rounded-xl border bg-card overflow-hidden shadow-sm">
       <div
@@ -106,7 +110,7 @@ function LevelTermBlock({ level, term, courses, sections, onAssign, onSectionRou
         <div>
           <h2 className="font-bold text-base">Level {level}, Term {term}</h2>
           <p className="text-xs opacity-90">
-            {courses.length} courses · {sections.length} section{sections.length !== 1 ? "s" : ""} · {Number(totalCredit).toFixed(2)} credits
+            {courses.length} courses · {sections.length} section{sections.length !== 1 ? "s" : ""} · {totalCredit.toFixed(2)} credits
           </p>
         </div>
         <div className="flex gap-1">

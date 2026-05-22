@@ -68,11 +68,33 @@ export function CourseCTSchedulePage() {
       if (!grouped[key]) grouped[key] = [];
       grouped[key].push(a);
     });
-    // Sort CTs by number
-    Object.keys(grouped).forEach(key => {
-      grouped[key].sort((a, b) => a.ct_number - b.ct_number);
+    // Sort courses by level and term
+    const sortedKeys = Object.keys(grouped).sort((a, b) => {
+      const firstA = grouped[a][0];
+      const firstB = grouped[b][0];
+      
+      if (!firstA.course || !firstB.course) return 0;
+      
+      // Compare Level
+      if (firstA.course.level !== firstB.course.level) {
+        return firstA.course.level - firstB.course.level;
+      }
+      
+      // Compare Term (I before II)
+      if (firstA.course.term !== firstB.course.term) {
+        return firstA.course.term.localeCompare(firstB.course.term);
+      }
+      
+      // Finally compare by course code
+      return firstA.course.code.localeCompare(firstB.course.code);
     });
-    return grouped;
+
+    const sortedGrouped: Record<string, CTAssignment[]> = {};
+    sortedKeys.forEach(key => {
+      sortedGrouped[key] = grouped[key];
+    });
+
+    return sortedGrouped;
   }, [filteredAssignments]);
 
   const sortedSections = useMemo(() => {
