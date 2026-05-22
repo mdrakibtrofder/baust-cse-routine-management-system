@@ -110,7 +110,8 @@ function SectionRoomMapping() {
     if (nonDeptSectionsSet.size > 0) {
       const nonDeptSections = data.sections
         .filter(s => nonDeptSectionsSet.has(s.id))
-        .sort((a, b) => a.level - b.level || TERM_ORDER.indexOf(a.term) - TERM_ORDER.indexOf(b.term) || a.name.localeCompare(b.name));
+        .sort((a, b) => a.level - b.level || TERM_ORDER.indexOf(a.term) - TERM_ORDER.indexOf(b.term) || a.name.localeCompare(b.name))
+        .slice(0, 1); // Initially only show one section for Non-Departmental
 
       result.push({
         level: 0,

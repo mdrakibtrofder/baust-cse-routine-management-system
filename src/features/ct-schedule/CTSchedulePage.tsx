@@ -5,42 +5,33 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { format, addDays, isSameDay, parseISO, isValid } from "date-fns";
-import { CalendarIcon, Loader2, Save, Wand2, RefreshCw } from "lucide-react";
+import { format, addDays, parseISO, isValid } from "date-fns";
+import { CalendarIcon, Loader2, Save, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
-import { CTSetting, CTWeekConfig, CTAssignment } from "@/lib/types";
+import { CTSetting, CTWeekConfig } from "@/lib/types";
 import { toast } from "sonner";
-
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"];
 
-export function CTSchedulePage() {
-  const { active_semester_id, rooms } = useStore();
+export function CTScheduleConfigPage() {
+  const { active_semester_id } = useStore();
   const [settings, setSettings] = useState<CTSetting | null>(null);
   const [weekConfigs, setWeekConfigs] = useState<CTWeekConfig[]>([]);
-  const [assignments, setAssignments] = useState<CTAssignment[]>([]);
   const [loading, setLoading] = useState(false);
-  const [generating, setGenerating] = useState(false);
-  const [editingAssignment, setEditingAssignment] = useState<CTAssignment | null>(null);
 
   const loadData = useCallback(async () => {
     if (!active_semester_id) return;
     setLoading(true);
     try {
-      const [s, w, a] = await Promise.all([
+      const [s, w] = await Promise.all([
         api.get<CTSetting>(`/ct-schedule/settings/${active_semester_id}`),
         api.get<CTWeekConfig[]>(`/ct-schedule/week-configs/${active_semester_id}`),
-        api.get<CTAssignment[]>(`/ct-schedule/assignments/${active_semester_id}`),
       ]);
       setSettings(s);
       setWeekConfigs(w);
-      setAssignments(a);
     } catch (error) {
       toast.error("Failed to load CT schedule data");
     } finally {
@@ -62,21 +53,9 @@ export function CTSchedulePage() {
       });
       setSettings(updated);
       toast.success("Settings updated");
-      // Refresh to ensure weeks are recalculated correctly
       loadData();
     } catch (error) {
       toast.error("Failed to update settings");
-    }
-  };
-
-  const handleUpdateAssignment = async (id: string, updates: Partial<CTAssignment>) => {
-    try {
-      await api.put(`/ct-schedule/assignments/${id}`, updates);
-      toast.success("Assignment updated");
-      loadData();
-      setEditingAssignment(null);
-    } catch (error) {
-      toast.error("Failed to update assignment");
     }
   };
 
@@ -96,7 +75,6 @@ export function CTSchedulePage() {
   const saveWeekConfigs = async () => {
     if (!active_semester_id) return;
     try {
-      // Normalize dates and only send necessary fields to match backend DTO
       const configsToSave = weekConfigs.map(c => ({
         week_number: c.week_number,
         date: c.date.split('T')[0],
@@ -110,29 +88,17 @@ export function CTSchedulePage() {
     }
   };
 
-  const handleGenerate = async () => {
-    if (!active_semester_id) return;
-    setGenerating(true);
-    try {
-      const res = await api.post<CTAssignment[]>(`/ct-schedule/generate/${active_semester_id}`, {});
-      setAssignments(res);
-      toast.success("CT Schedule generated successfully");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to generate schedule");
-    } finally {
-      setGenerating(false);
-    }
-  };
-
   const weeks = useMemo(() => {
     if (!settings?.total_weeks || !settings.start_date) return [];
     
-    // Ensure we handle both ISO strings and YYYY-MM-DD
     const startDate = parseISO(settings.start_date);
     if (!isValid(startDate)) return [];
 
     const result = [];
     for (let i = 1; i <= settings.total_weeks; i++) {
+      // Filter weeks based on start_week configuration
+      if (i < settings.start_week) continue;
+
       const weekStart = addDays(startDate, (i - 1) * 7);
       const daysInWeek = DAYS.map((_, idx) => {
         const d = addDays(weekStart, idx);
@@ -149,27 +115,6 @@ export function CTSchedulePage() {
     return result;
   }, [settings, weekConfigs]);
 
-  const scheduleTable = useMemo(() => {
-    const grouped: Record<string, Record<string, CTAssignment>> = {};
-    const uniqueDates: string[] = [];
-    const roomsInUseSet = new Set<string>();
-
-    assignments.forEach((a) => {
-      const dateStr = typeof a.date === 'string' ? a.date.split('T')[0] : format(new Date(a.date), "yyyy-MM-dd");
-      if (!grouped[dateStr]) {
-        grouped[dateStr] = {};
-        uniqueDates.push(dateStr);
-      }
-      grouped[dateStr][a.room_id] = a;
-      roomsInUseSet.add(a.room_id);
-    });
-
-    uniqueDates.sort();
-    const roomsInUse = rooms.filter(r => roomsInUseSet.has(r.id));
-
-    return { uniqueDates, roomsInUse, grouped };
-  }, [assignments, rooms]);
-
   if (loading && !settings) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
@@ -182,32 +127,34 @@ export function CTSchedulePage() {
 
   return (
     <div className="pb-10">
-      <PageHeader title="Class Test Schedule" subtitle="Configure weeks and generate random CT schedule" />
+      <PageHeader title="CT Configuration" subtitle="Configure semester weeks and map available days for Class Tests" />
       
       <div className="p-4 sm:p-6 space-y-6">
         {/* Settings */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end bg-card p-6 rounded-xl border">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end bg-card p-6 rounded-xl border shadow-sm">
           <div className="space-y-2">
-            <Label>Total Weeks</Label>
+            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Total Weeks</Label>
             <Input
               type="number"
               value={settings?.total_weeks ?? 14}
               onChange={(e) => setSettings((s) => s ? { ...s, total_weeks: parseInt(e.target.value) || 0 } : null)}
+              className="font-bold"
             />
           </div>
           <div className="space-y-2">
-            <Label>CT Start Week</Label>
+            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">CT Start Week</Label>
             <Input
               type="number"
               value={settings?.start_week ?? 4}
               onChange={(e) => setSettings((s) => s ? { ...s, start_week: parseInt(e.target.value) || 0 } : null)}
+              className="font-bold"
             />
           </div>
           <div className="space-y-2 flex flex-col">
-            <Label>Start Date (Week 1 Sunday)</Label>
+            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Start Date</Label>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className={cn("justify-start text-left font-normal", !settings?.start_date && "text-muted-foreground")}>
+                <Button variant="outline" className={cn("justify-start text-left font-bold", !settings?.start_date && "text-muted-foreground")}>
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {settings?.start_date && isValid(safeStartDate) ? format(safeStartDate!, "PPP") : "Pick a date"}
                 </Button>
@@ -227,7 +174,7 @@ export function CTSchedulePage() {
             </Popover>
           </div>
           <div className="flex gap-2">
-            <Button onClick={handleUpdateSettings} className="flex-1">
+            <Button onClick={handleUpdateSettings} className="flex-1 font-bold">
               <Save className="mr-2 h-4 w-4" /> Save Settings
             </Button>
             <Button variant="outline" onClick={loadData} title="Refresh Data">
@@ -238,28 +185,39 @@ export function CTSchedulePage() {
 
         {/* Week Configuration */}
         {settings?.start_date && isValid(safeStartDate) && (
-          <div className="bg-card p-6 rounded-xl border space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Map Available Days for CT</h3>
-              <Button variant="outline" size="sm" onClick={saveWeekConfigs}>
+          <div className="bg-card p-6 rounded-xl border shadow-sm space-y-6">
+            <div className="flex items-center justify-between border-b pb-4">
+              <div>
+                <h3 className="text-lg font-bold text-primary">Map Available Days</h3>
+                <p className="text-xs text-muted-foreground">Select days when Class Tests can be scheduled (Weeks {settings.start_week} to {settings.total_weeks})</p>
+              </div>
+              <Button variant="default" size="sm" onClick={saveWeekConfigs} className="font-bold">
                 <Save className="mr-2 h-4 w-4" /> Save Week Mapping
               </Button>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {weeks.map((w) => (
-                <div key={w.number} className="p-3 border rounded-lg space-y-2">
-                  <div className="font-bold text-sm text-primary">Week {w.number}</div>
-                  <div className="space-y-1.5">
+                <div key={w.number} className="p-4 border-2 rounded-xl space-y-4 hover:border-primary/20 transition-colors bg-muted/5">
+                  <div className="flex items-center justify-between">
+                    <div className="font-black text-sm text-primary">WEEK {w.number}</div>
+                    <div className="h-1.5 w-8 rounded-full bg-primary/20" />
+                  </div>
+                  <div className="space-y-3">
                     {w.days.map((d) => (
-                      <div key={d.date} className="flex items-center space-x-2">
+                      <div key={d.date} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-muted transition-colors cursor-pointer group" onClick={() => toggleDayAvailability(w.number, d.date)}>
                         <Checkbox
                           id={`w${w.number}-${d.date}`}
                           checked={d.isAvailable}
                           onCheckedChange={() => toggleDayAvailability(w.number, d.date)}
+                          onClick={(e) => e.stopPropagation()}
                         />
-                        <label htmlFor={`w${w.number}-${d.date}`} className="text-xs font-medium cursor-pointer">
-                          {d.label}
-                        </label>
+                        <div className="flex-1">
+                           <label htmlFor={`w${w.number}-${d.date}`} className="text-xs font-bold cursor-pointer block">
+                            {d.label.split(' ')[2]} {/* Day Name */}
+                          </label>
+                          <span className="text-[10px] text-muted-foreground">{d.label.split(' ').slice(0, 2).join(' ')}</span>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -268,146 +226,7 @@ export function CTSchedulePage() {
             </div>
           </div>
         )}
-
-        {/* Schedule Generation */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">Generated Schedule</h3>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={loadData}>
-                <RefreshCw className={cn("mr-2 h-4 w-4", loading && "animate-spin")} />
-                Reload
-              </Button>
-              <Button onClick={handleGenerate} disabled={generating || weekConfigs.filter(w => w.is_available).length === 0}>
-                {generating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
-                Generate Random Schedule
-              </Button>
-            </div>
-          </div>
-
-          {assignments.length > 0 ? (
-            <div className="rounded-xl border bg-card overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/50">
-                    <TableHead className="w-[100px]">Week No</TableHead>
-                    <TableHead className="w-[120px]">Date</TableHead>
-                    {scheduleTable.roomsInUse.map((r) => (
-                      <TableHead key={r.id} className="text-center min-w-[120px]">
-                        {r.name} ({r.capacity})
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {scheduleTable.uniqueDates.map((dateStr) => {
-                    const firstAssignment = Object.values(scheduleTable.grouped[dateStr])[0];
-                    return (
-                      <TableRow key={dateStr}>
-                        <TableCell className="font-bold">Week {firstAssignment.week_number}</TableCell>
-                        <TableCell className="font-medium">{format(parseISO(dateStr), "dd-MMM")}</TableCell>
-                        {scheduleTable.roomsInUse.map((r) => {
-                          const a = scheduleTable.grouped[dateStr][r.id];
-                          return (
-                            <TableCell key={r.id} className="text-center">
-                              {a ? (
-                                <button
-                                  onClick={() => setEditingAssignment(a)}
-                                  className="w-full bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-full py-1 px-3 text-xs font-bold transition-colors"
-                                >
-                                  {a.course?.code} CT {a.ct_number}
-                                </button>
-                              ) : (
-                                <span className="text-muted-foreground/30">—</span>
-                              )}
-                            </TableCell>
-                          );
-                        })}
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed rounded-xl text-muted-foreground">
-              <p>No CT schedule generated yet.</p>
-              <p className="text-sm">Configure weeks and click generate button above.</p>
-            </div>
-          )}
-        </div>
       </div>
-
-      {/* Edit Assignment Dialog */}
-      <Dialog open={!!editingAssignment} onOpenChange={(open) => !open && setEditingAssignment(null)}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Edit CT Assignment</DialogTitle>
-          </DialogHeader>
-          {editingAssignment && (
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label>Course</Label>
-                <div className="text-sm font-medium">{editingAssignment.course?.code} - {editingAssignment.course?.name}</div>
-              </div>
-              <div className="grid gap-2">
-                <Label>Section</Label>
-                <div className="text-sm font-medium">{editingAssignment.section?.name}</div>
-              </div>
-              <div className="grid gap-2">
-                <Label>CT Number</Label>
-                <div className="text-sm font-medium">CT {editingAssignment.ct_number}</div>
-              </div>
-              <div className="grid gap-2">
-                <Label>Room</Label>
-                <Select
-                  value={editingAssignment.room_id}
-                  onValueChange={(v) => setEditingAssignment({ ...editingAssignment, room_id: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {rooms.map((r) => (
-                      <SelectItem key={r.id} value={r.id}>
-                        {r.name} ({r.capacity})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label>Date</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="justify-start text-left font-normal">
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {format(parseISO(editingAssignment.date), "PPP")}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={parseISO(editingAssignment.date)}
-                      onSelect={(date) => date && setEditingAssignment({ ...editingAssignment, date: format(date, "yyyy-MM-dd") })}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingAssignment(null)}>Cancel</Button>
-            <Button onClick={() => editingAssignment && handleUpdateAssignment(editingAssignment.id, {
-              room_id: editingAssignment.room_id,
-              date: editingAssignment.date
-            })}>
-              Save Changes
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

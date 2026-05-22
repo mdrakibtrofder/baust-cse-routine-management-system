@@ -61,12 +61,19 @@ export function CourseLoadPage() {
 
     if (nonDeptCourses.length > 0) {
       nonDeptCourses.sort((a, b) => a.level - b.level || TERM_ORDER.indexOf(a.term) - TERM_ORDER.indexOf(b.term) || a.code.localeCompare(b.code));
+      
+      // For Non-Departmental, we initially only show one representative section per course or just one section overall
+      // to avoid redundant columns. Let's pick the first section available for these courses.
+      const representativeSections = Array.from(nonDeptSections)
+        .sort((a, b) => a.level - b.level || TERM_ORDER.indexOf(a.term) - TERM_ORDER.indexOf(b.term) || a.name.localeCompare(b.name))
+        .slice(0, 1);
+
       result.push({
         level: 0, // Not used for title
         term: "Non-Departmental", // Used for title
         departmental_type: "Non-Departmental",
         courses: nonDeptCourses,
-        sections: Array.from(nonDeptSections).sort((a, b) => a.level - b.level || TERM_ORDER.indexOf(a.term) - TERM_ORDER.indexOf(b.term) || a.name.localeCompare(b.name)),
+        sections: representativeSections,
       });
     }
 

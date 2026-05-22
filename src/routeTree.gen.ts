@@ -22,6 +22,7 @@ import { Route as CoursesRouteImport } from './routes/courses'
 import { Route as AvailabilityRouteImport } from './routes/availability'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CtScheduleViewRouteImport } from './routes/ct-schedule.view'
+import { Route as CtScheduleTableRouteImport } from './routes/ct-schedule.table'
 import { Route as CtScheduleConfigRouteImport } from './routes/ct-schedule.config'
 
 const TeachersRoute = TeachersRouteImport.update({
@@ -89,6 +90,11 @@ const CtScheduleViewRoute = CtScheduleViewRouteImport.update({
   path: '/ct-schedule/view',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CtScheduleTableRoute = CtScheduleTableRouteImport.update({
+  id: '/ct-schedule/table',
+  path: '/ct-schedule/table',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CtScheduleConfigRoute = CtScheduleConfigRouteImport.update({
   id: '/ct-schedule/config',
   path: '/ct-schedule/config',
@@ -109,6 +115,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/teachers': typeof TeachersRoute
   '/ct-schedule/config': typeof CtScheduleConfigRoute
+  '/ct-schedule/table': typeof CtScheduleTableRoute
   '/ct-schedule/view': typeof CtScheduleViewRoute
 }
 export interface FileRoutesByTo {
@@ -125,6 +132,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/teachers': typeof TeachersRoute
   '/ct-schedule/config': typeof CtScheduleConfigRoute
+  '/ct-schedule/table': typeof CtScheduleTableRoute
   '/ct-schedule/view': typeof CtScheduleViewRoute
 }
 export interface FileRoutesById {
@@ -142,6 +150,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/teachers': typeof TeachersRoute
   '/ct-schedule/config': typeof CtScheduleConfigRoute
+  '/ct-schedule/table': typeof CtScheduleTableRoute
   '/ct-schedule/view': typeof CtScheduleViewRoute
 }
 export interface FileRouteTypes {
@@ -160,6 +169,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/teachers'
     | '/ct-schedule/config'
+    | '/ct-schedule/table'
     | '/ct-schedule/view'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -176,6 +186,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/teachers'
     | '/ct-schedule/config'
+    | '/ct-schedule/table'
     | '/ct-schedule/view'
   id:
     | '__root__'
@@ -192,6 +203,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/teachers'
     | '/ct-schedule/config'
+    | '/ct-schedule/table'
     | '/ct-schedule/view'
   fileRoutesById: FileRoutesById
 }
@@ -209,6 +221,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   TeachersRoute: typeof TeachersRoute
   CtScheduleConfigRoute: typeof CtScheduleConfigRoute
+  CtScheduleTableRoute: typeof CtScheduleTableRoute
   CtScheduleViewRoute: typeof CtScheduleViewRoute
 }
 
@@ -305,6 +318,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CtScheduleViewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ct-schedule/table': {
+      id: '/ct-schedule/table'
+      path: '/ct-schedule/table'
+      fullPath: '/ct-schedule/table'
+      preLoaderRoute: typeof CtScheduleTableRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ct-schedule/config': {
       id: '/ct-schedule/config'
       path: '/ct-schedule/config'
@@ -329,6 +349,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   TeachersRoute: TeachersRoute,
   CtScheduleConfigRoute: CtScheduleConfigRoute,
+  CtScheduleTableRoute: CtScheduleTableRoute,
   CtScheduleViewRoute: CtScheduleViewRoute,
 }
 export const routeTree = rootRouteImport
