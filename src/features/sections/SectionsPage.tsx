@@ -27,7 +27,7 @@ export function SectionsPage() {
   const confirmDialog = useConfirm();
   const [editing, setEditing] = useState<Section | null>(null);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState<Omit<Section, "id">>(empty);
+  const [form, setForm] = useState<any>(empty);
   const [blocked, setBlocked] = useState<{ section: Section; deps: ReturnType<typeof sectionDependencies> } | null>(null);
   const [routineFor, setRoutineFor] = useState<Section | null>(null);
 
@@ -46,13 +46,25 @@ export function SectionsPage() {
     sections.some(s => s.id !== ignoreId && s.level === level && s.term === term &&
       s.name.trim().toLowerCase() === name.trim().toLowerCase());
 
-  const submit = () => {
+  const submit = async () => {
     if (!form.name.trim()) return toast.error("Section name required");
     if (dup(form.name, form.level, form.term, editing?.id))
       return toast.error(`Section ${form.name} already exists in Level ${form.level}, Term ${form.term}`);
-    if (editing) { updateSection(editing.id, form); toast.success("Updated"); }
-    else { addSection(form); toast.success("Added"); }
-    setOpen(false);
+    
+    try {
+      if (editing) { 
+        await updateSection(editing.id, form); 
+        toast.success("Updated"); 
+      }
+      else { 
+        await addSection(form); 
+        toast.success("Added"); 
+      }
+      setOpen(false);
+      await data.init(); // Refresh data to ensure UI is in sync
+    } catch (err: any) {
+      toast.error(err.message || "Operation failed");
+    }
   };
 
   const tryDelete = async (s: Section) => {
@@ -164,8 +176,14 @@ export function SectionsPage() {
                 <p className="text-[11px] text-destructive mt-1">Already exists in this level-term</p>
               )}
             </div>
-            <div><Label>Total students</Label><Input type="number" value={form.total_students}
-              onChange={(e) => setForm({ ...form, total_students: Number(e.target.value) || 0 })} /></div>
+            <div>
+              <Label>Total students</Label>
+              <Input 
+                type="number" 
+                value={form.total_students}
+                onChange={(e) => setForm({ ...form, total_students: e.target.value })} 
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>

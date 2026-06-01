@@ -42,7 +42,7 @@ export function TeachersPage() {
   const [q, setQ] = useState("");
   const [editing, setEditing] = useState<Teacher | null>(null);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState<Omit<Teacher, "id">>(empty);
+  const [form, setForm] = useState<any>(empty);
   const [moveTarget, setMoveTarget] = useState<Teacher | null>(null);
   const [routineFor, setRoutineFor] = useState<Teacher | null>(null);
   const [unavailFor, setUnavailFor] = useState<Teacher | null>(null);
@@ -105,9 +105,9 @@ export function TeachersPage() {
         toast.success("Teacher added");
       }
       setOpen(false);
-      data.init(); // Refresh data to reflect changes
+      await data.init(); // Refresh data to reflect changes
     } catch (err: any) {
-      toast.error(err.response?.data?.message || err.message || "Operation failed");
+      toast.error(err.message || "Operation failed");
     } finally {
       setSubmitting(false);
     }
@@ -354,8 +354,12 @@ export function TeachersPage() {
             </div>
             <div className="col-span-2">
               <Label>Total credit</Label>
-              <Input type="number" step="0.25" value={form.assigned_credit_hours}
-                onChange={(e) => setForm({ ...form, assigned_credit_hours: Number(e.target.value) || 0 })} />
+              <Input 
+                type="number" 
+                step="0.25" 
+                value={form.assigned_credit_hours}
+                onChange={(e) => setForm({ ...form, assigned_credit_hours: e.target.value })} 
+              />
             </div>
           </div>
           <DialogFooter>

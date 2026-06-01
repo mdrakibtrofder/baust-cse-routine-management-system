@@ -37,7 +37,7 @@ export function CoursesPage() {
   const [q, setQ] = useState("");
   const [editing, setEditing] = useState<Course | null>(null);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState<Omit<Course, "id">>(empty);
+  const [form, setForm] = useState<any>(empty);
   const [blocked, setBlocked] = useState<{ course: Course; deps: ReturnType<typeof courseDependencies> } | null>(null);
 
   const filtered = useMemo(
@@ -62,9 +62,9 @@ export function CoursesPage() {
         toast.success("Added"); 
       }
       setOpen(false);
-      data.init();
+      await data.init();
     } catch (err: any) {
-      toast.error(err.response?.data?.message || err.message || "Operation failed");
+      toast.error(err.message || "Operation failed");
     }
   };
 
@@ -232,8 +232,15 @@ export function CoursesPage() {
                 <SelectContent><SelectItem value="I">I</SelectItem><SelectItem value="II">II</SelectItem></SelectContent>
               </Select>
             </div>
-            <div><Label>Credit</Label><Input type="number" step="0.25" value={form.credit}
-              onChange={(e) => setForm({ ...form, credit: Number(e.target.value) || 0 })} /></div>
+            <div>
+              <Label>Credit</Label>
+              <Input 
+                type="number" 
+                step="0.25" 
+                value={form.credit}
+                onChange={(e) => setForm({ ...form, credit: e.target.value })} 
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>

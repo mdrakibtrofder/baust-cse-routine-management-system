@@ -32,18 +32,18 @@ interface StoreState extends AppData {
   
   // years
   addYear: (value: number) => Promise<void>;
-  updateYear: (id: string, value: number) => Promise<void>;
+  updateYear: (id: string, value: number) => Promise<Year>;
   deleteYear: (id: string) => Promise<void>;
 
   // semester types
   addSemesterType: (name: string) => Promise<void>;
-  updateSemesterType: (id: string, name: string) => Promise<void>;
+  updateSemesterType: (id: string, name: string) => Promise<SemesterType>;
   deleteSemesterType: (id: string) => Promise<void>;
 
   // semesters
   setActiveSemester: (id: string) => void;
   addSemester: (s: Omit<Semester, "id">) => Promise<void>;
-  updateSemester: (id: string, s: Partial<Semester>) => Promise<void>;
+  updateSemester: (id: string, s: Partial<Semester>) => Promise<Semester>;
   deleteSemester: (id: string) => Promise<void>;
   
   // teachers
@@ -55,14 +55,15 @@ interface StoreState extends AppData {
   
   // rooms
   addRoom: (r: Omit<Room, "id">) => Promise<void>;
-  updateRoom: (id: string, r: Partial<Room>) => Promise<void>;
+  updateRoom: (id: string, r: Partial<Room>) => Promise<Room>;
   deleteRoom: (id: string) => Promise<void>;
   replaceRooms: (rooms: Room[]) => Promise<void>;
   
   // sections
   addSection: (s: Omit<Section, "id">) => Promise<void>;
-  updateSection: (id: string, s: Partial<Section>) => Promise<void>;
+  updateSection: (id: string, s: Partial<Section>) => Promise<Section>;
   deleteSection: (id: string) => Promise<void>;
+  replaceSections: (sections: Section[]) => Promise<void>;
   
   // courses
   addCourse: (c: Omit<Course, "id">) => Promise<Course>;
@@ -71,7 +72,7 @@ interface StoreState extends AppData {
   
   // periods / days
   addPeriod: (p: Omit<Period, "id">) => Promise<void>;
-  updatePeriod: (id: string, p: Partial<Period>) => Promise<void>;
+  updatePeriod: (id: string, p: Partial<Period>) => Promise<Period>;
   deletePeriod: (id: string) => Promise<void>;
   addDay: (name: string) => Promise<void>;
   deleteDay: (id: string) => Promise<void>;
@@ -86,10 +87,10 @@ interface StoreState extends AppData {
   
   // unavailability
   addTeacherUnavailability: (u: Omit<TeacherUnavailability, "id">) => Promise<void>;
-  updateTeacherUnavailability: (id: string, u: Partial<TeacherUnavailability>) => Promise<void>;
+  updateTeacherUnavailability: (id: string, u: Partial<TeacherUnavailability>) => Promise<TeacherUnavailability>;
   deleteTeacherUnavailability: (id: string) => Promise<void>;
   addRoomUnavailability: (u: Omit<RoomUnavailability, "id">) => Promise<void>;
-  updateRoomUnavailability: (id: string, u: Partial<RoomUnavailability>) => Promise<void>;
+  updateRoomUnavailability: (id: string, u: Partial<RoomUnavailability>) => Promise<RoomUnavailability>;
   deleteRoomUnavailability: (id: string) => Promise<void>;
 
   // bulk
@@ -189,7 +190,11 @@ export const useStore = create<StoreState>((set, get) => ({
     try {
       const res = await api.patch<Year>(`/years/${id}`, { value });
       set((s) => ({ years: s.years.map((x) => (x.id === id ? res : x)).sort((a, b) => a.value - b.value) }));
-    } catch (err: any) { set({ error: err.message }); }
+      return res;
+    } catch (err: any) { 
+      set({ error: err.message });
+      throw err;
+    }
   },
   deleteYear: async (id) => {
     try {
@@ -208,7 +213,11 @@ export const useStore = create<StoreState>((set, get) => ({
     try {
       const res = await api.patch<SemesterType>(`/semester-types/${id}`, { name });
       set((s) => ({ semester_types: s.semester_types.map((x) => (x.id === id ? res : x)).sort((a, b) => a.name.localeCompare(b.name)) }));
-    } catch (err: any) { set({ error: err.message }); }
+      return res;
+    } catch (err: any) { 
+      set({ error: err.message });
+      throw err;
+    }
   },
   deleteSemesterType: async (id) => {
     try {
@@ -229,7 +238,11 @@ export const useStore = create<StoreState>((set, get) => ({
       const res = await api.patch<Semester>(`/semesters/${id}`, s);
       set((state) => ({ semesters: state.semesters.map((x) => (x.id === id ? res : x)) }));
       if (res.is_active) await get().setActiveSemester(res.id);
-    } catch (err: any) { set({ error: err.message }); }
+      return res;
+    } catch (err: any) { 
+      set({ error: err.message });
+      throw err;
+    }
   },
   deleteSemester: async (id) => {
     try {
@@ -352,10 +365,25 @@ export const useStore = create<StoreState>((set, get) => ({
   },
   updateRoom: async (id, r) => {
     try {
-      const { id: _id, ...payload } = r as any;
+      // Clean payload for backend
+      const payload = {
+        name: r.name,
+        room_type: r.room_type,
+        capacity: r.capacity !== undefined ? Number(r.capacity) : undefined,
+      };
+
+      // Remove undefined fields
+      Object.keys(payload).forEach(key => 
+        (payload as any)[key] === undefined && delete (payload as any)[key]
+      );
+
       const res = await api.patch<Room>(`/rooms/${id}`, payload);
       set((s) => ({ rooms: s.rooms.map((x) => (x.id === id ? res : x)) }));
-    } catch (err: any) { set({ error: err.message }); }
+      return res;
+    } catch (err: any) { 
+      set({ error: err.message });
+      throw err;
+    }
   },
   deleteRoom: async (id) => {
     try {
@@ -378,15 +406,37 @@ export const useStore = create<StoreState>((set, get) => ({
   },
   updateSection: async (id, sec) => {
     try {
-      const { id: _id, ...payload } = sec as any;
+      // Clean payload for backend
+      const payload = {
+        level: sec.level !== undefined ? Number(sec.level) : undefined,
+        term: sec.term,
+        name: sec.name,
+        total_students: sec.total_students !== undefined ? Number(sec.total_students) : undefined,
+      };
+
+      // Remove undefined fields
+      Object.keys(payload).forEach(key => 
+        (payload as any)[key] === undefined && delete (payload as any)[key]
+      );
+
       const res = await api.patch<Section>(`/sections/${id}`, payload);
       set((s) => ({ sections: s.sections.map((x) => (x.id === id ? res : x)) }));
-    } catch (err: any) { set({ error: err.message }); }
+      return res;
+    } catch (err: any) { 
+      set({ error: err.message });
+      throw err;
+    }
   },
   deleteSection: async (id) => {
     try {
       await api.delete(`/sections/${id}`);
       set((s) => ({ sections: s.sections.filter((x) => x.id !== id) }));
+    } catch (err: any) { set({ error: err.message }); }
+  },
+  replaceSections: async (sections: Section[]) => {
+    try {
+      await api.post('/sections', sections);
+      await get().init();
     } catch (err: any) { set({ error: err.message }); }
   },
 
@@ -458,7 +508,11 @@ export const useStore = create<StoreState>((set, get) => ({
         periods: s.periods.map((p) => (p.id === id ? res : p)),
         class_slots: slots,
       }));
-    } catch (err: any) { set({ error: err.message }); }
+      return res;
+    } catch (err: any) { 
+      set({ error: err.message });
+      throw err;
+    }
   },
   deletePeriod: async (id) => {
     try {
@@ -583,9 +637,14 @@ export const useStore = create<StoreState>((set, get) => ({
   },
   updateTeacherUnavailability: async (id, u) => {
     try {
-      const res = await api.patch<TeacherUnavailability>(`/teacher-unavailability/${id}`, u);
+      const { id: _id, ...payload } = u as any;
+      const res = await api.patch<TeacherUnavailability>(`/teacher-unavailability/${id}`, payload);
       set((s) => ({ teacher_unavailability: s.teacher_unavailability.map(x => x.id === id ? res : x) }));
-    } catch (err: any) { set({ error: err.message }); }
+      return res;
+    } catch (err: any) { 
+      set({ error: err.message });
+      throw err;
+    }
   },
   deleteTeacherUnavailability: async (id) => {
     try {
@@ -602,9 +661,14 @@ export const useStore = create<StoreState>((set, get) => ({
   },
   updateRoomUnavailability: async (id, u) => {
     try {
-      const res = await api.patch<RoomUnavailability>(`/room-unavailability/${id}`, u);
+      const { id: _id, ...payload } = u as any;
+      const res = await api.patch<RoomUnavailability>(`/room-unavailability/${id}`, payload);
       set((s) => ({ room_unavailability: s.room_unavailability.map(x => x.id === id ? res : x) }));
-    } catch (err: any) { set({ error: err.message }); }
+      return res;
+    } catch (err: any) { 
+      set({ error: err.message });
+      throw err;
+    }
   },
   deleteRoomUnavailability: async (id) => {
     try {

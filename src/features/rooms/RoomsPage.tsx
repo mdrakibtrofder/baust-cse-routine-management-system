@@ -30,7 +30,7 @@ export function RoomsPage() {
   const [q, setQ] = useState("");
   const [editing, setEditing] = useState<Room | null>(null);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState<Omit<Room, "id">>(empty);
+  const [form, setForm] = useState<any>(empty);
   const [blocked, setBlocked] = useState<{ room: Room; deps: ReturnType<typeof roomDependencies> } | null>(null);
   const [routineFor, setRoutineFor] = useState<Room | null>(null);
   const [unavailFor, setUnavailFor] = useState<Room | null>(null);
@@ -57,9 +57,9 @@ export function RoomsPage() {
         toast.success("Room added");
       }
       setOpen(false);
-      data.init(); // Refresh data to reflect changes
+      await data.init(); // Refresh data to reflect changes
     } catch (err: any) {
-      toast.error(err.response?.data?.message || err.message || "Operation failed");
+      toast.error(err.message || "Operation failed");
     } finally {
       setSubmitting(false);
     }
@@ -188,8 +188,14 @@ export function RoomsPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div><Label>Capacity</Label><Input type="number" value={form.capacity}
-              onChange={(e) => setForm({ ...form, capacity: Number(e.target.value) || 0 })} /></div>
+            <div>
+              <Label>Capacity</Label>
+              <Input 
+                type="number" 
+                value={form.capacity}
+                onChange={(e) => setForm({ ...form, capacity: e.target.value })} 
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)} disabled={submitting}>Cancel</Button>
