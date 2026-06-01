@@ -104,6 +104,11 @@ interface StoreState extends AppData {
   getRoutineGenerationStatus: () => Promise<any>;
 }
 
+const safeNum = (v: any) => {
+  const n = Number(v);
+  return isNaN(n) ? 0 : n;
+};
+
 export const useStore = create<StoreState>((set, get) => ({
   teachers: [],
   rooms: [],
@@ -297,7 +302,7 @@ export const useStore = create<StoreState>((set, get) => ({
     try {
       const payload = {
         ...t,
-        assigned_credit_hours: Number(t.assigned_credit_hours || 0)
+        assigned_credit_hours: safeNum(t.assigned_credit_hours)
       };
       const res = await api.post<Teacher>('/teachers', payload);
       set((s) => ({ teachers: [...s.teachers, res] }));
@@ -316,7 +321,7 @@ export const useStore = create<StoreState>((set, get) => ({
         designation: t.designation,
         department: t.department,
         status: t.status,
-        assigned_credit_hours: t.assigned_credit_hours !== undefined ? Number(t.assigned_credit_hours) : undefined,
+        assigned_credit_hours: t.assigned_credit_hours !== undefined ? safeNum(t.assigned_credit_hours) : undefined,
       };
 
       // Remove undefined fields so they aren't sent in PATCH
@@ -369,7 +374,7 @@ export const useStore = create<StoreState>((set, get) => ({
       const payload = {
         name: r.name,
         room_type: r.room_type,
-        capacity: r.capacity !== undefined ? Number(r.capacity) : undefined,
+        capacity: r.capacity !== undefined ? safeNum(r.capacity) : undefined,
       };
 
       // Remove undefined fields
@@ -408,10 +413,10 @@ export const useStore = create<StoreState>((set, get) => ({
     try {
       // Clean payload for backend
       const payload = {
-        level: sec.level !== undefined ? Number(sec.level) : undefined,
+        level: sec.level !== undefined ? safeNum(sec.level) : undefined,
         term: sec.term,
         name: sec.name,
-        total_students: sec.total_students !== undefined ? Number(sec.total_students) : undefined,
+        total_students: sec.total_students !== undefined ? safeNum(sec.total_students) : undefined,
       };
 
       // Remove undefined fields
@@ -444,10 +449,10 @@ export const useStore = create<StoreState>((set, get) => ({
     try {
       const payload = {
         ...c,
-        credit: Number(c.credit || 0),
-        theory: Number(c.theory || 0),
-        sessional: Number(c.sessional || 0),
-        level: Number(c.level || 1),
+        credit: safeNum(c.credit),
+        theory: safeNum(c.theory),
+        sessional: safeNum(c.sessional),
+        level: safeNum(c.level),
       };
       const res = await api.post<Course>('/courses', payload);
       set((s) => ({ courses: [...s.courses, res] }));
@@ -463,13 +468,13 @@ export const useStore = create<StoreState>((set, get) => ({
       const payload = {
         code: c.code,
         name: c.name,
-        credit: c.credit !== undefined ? Number(c.credit) : undefined,
+        credit: c.credit !== undefined ? safeNum(c.credit) : undefined,
         course_type: c.course_type,
         departmental_type: c.departmental_type,
-        level: c.level !== undefined ? Number(c.level) : undefined,
+        level: c.level !== undefined ? safeNum(c.level) : undefined,
         term: c.term,
-        theory: c.theory !== undefined ? Number(c.theory) : undefined,
-        sessional: c.sessional !== undefined ? Number(c.sessional) : undefined,
+        theory: c.theory !== undefined ? safeNum(c.theory) : undefined,
+        sessional: c.sessional !== undefined ? safeNum(c.sessional) : undefined,
       };
 
       // Remove undefined fields
