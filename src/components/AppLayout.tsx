@@ -59,8 +59,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <ConfirmProvider>
-    <div className="min-h-screen bg-background flex">
-      <aside className="hidden md:flex w-64 shrink-0 border-r bg-card flex-col">
+    <div className="h-screen bg-background flex overflow-hidden">
+      <aside className="hidden md:flex w-64 shrink-0 border-r bg-card flex-col sticky top-0 h-full overflow-y-auto">
         <div className="px-5 py-5 border-b flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5">
             <div
@@ -197,7 +197,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
-        <main className="flex-1 min-w-0">{children}</main>
+        <main className="flex-1 min-w-0 overflow-y-auto">{children}</main>
       </div>
     </div>
     </ConfirmProvider>
