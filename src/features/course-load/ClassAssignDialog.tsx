@@ -243,10 +243,6 @@ export function ClassAssignDialog({
   };
 
   const save = () => {
-    if (teacherIds.length < info.teachersRequired) {
-      toast.error(`Assign ${info.teachersRequired} teacher(s) first.`);
-      return;
-    }
     const incompleteCount = drafts.filter((d) => !d.room_id).length;
     const conflictCount = draftStatuses.filter((s) => s.conflicts.length > 0).length;
     const total = drafts.length;
