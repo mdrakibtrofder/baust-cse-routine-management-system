@@ -120,7 +120,7 @@ export function ClassAssignDialog({
   const [drafts, setDrafts] = useState<DraftClass[]>([]);
   const [step, setStep] = useState(0);
   const [showRoomTable, setShowRoomTable] = useState(true);
-  const [confirmSave, setConfirmSave] = useState<{ msg: string } | null>(null);
+  const [confirmSave, setConfirmSave] = useState<{ msg: string; hasConflicts: boolean } | null>(null);
   const [teacherDetailsId, setTeacherDetailsId] = useState<string | null>(null);
   const [showSectionRoutine, setShowSectionRoutine] = useState(false);
   const [showCourseDetails, setShowCourseDetails] = useState(false);
@@ -217,22 +217,13 @@ export function ClassAssignDialog({
     (p) => p.start === current.start && p.end === current.end,
   )?.id ?? "";
 
-  const persist = async () => {
+  const persist = async (force = false) => {
     setSubmitting(true);
     try {
-      await data.deleteClassSlotsForCourseSection(course.id, section.id);
-      for (const d of drafts) {
-        if (!d.room_id) continue; // skip incomplete
-        await data.upsertClassSlot({
-          course_id: course.id,
-          section_id: section.id,
-          day: d.day,
-          start: d.start,
-          end: d.end,
-          room_id: d.room_id,
-          week: d.week,
-        });
-      }
+      const readySlots = drafts
+        .filter((d) => d.room_id && d.day && d.start && d.end)
+        .map((d) => ({ day: d.day, start: d.start, end: d.end, room_id: d.room_id!, week: d.week }));
+      await data.batchReplaceClassSlots(course.id, section.id, readySlots, force);
       toast.success("Schedule saved");
       onOpenChange(false);
     } catch (err: any) {
@@ -251,10 +242,10 @@ export function ClassAssignDialog({
       const parts: string[] = [];
       if (incompleteCount > 0) parts.push(`${filled}/${total} class${total > 1 ? "es" : ""} filled`);
       if (conflictCount > 0) parts.push(`${conflictCount} class${conflictCount > 1 ? "es have" : " has"} conflicts`);
-      setConfirmSave({ msg: parts.join(" · ") });
+      setConfirmSave({ msg: parts.join(" · "), hasConflicts: conflictCount > 0 });
       return;
     }
-    persist();
+    persist(false);
   };
 
   /** Delete one class (reset its draft to empty) */
@@ -812,8 +803,9 @@ export function ClassAssignDialog({
             <AlertDialogCancel>Keep editing</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
+                const force = confirmSave?.hasConflicts ?? false;
                 setConfirmSave(null);
-                persist();
+                persist(force);
               }}
             >
               Save anyway

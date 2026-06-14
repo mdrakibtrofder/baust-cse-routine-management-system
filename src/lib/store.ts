@@ -84,6 +84,7 @@ interface StoreState extends AppData {
   upsertClassSlot: (slot: Omit<ClassSlot, "id" | "semester_id"> & { id?: string; semester_id?: string }) => Promise<string>;
   deleteClassSlot: (id: string) => Promise<void>;
   deleteClassSlotsForCourseSection: (course_id: string, section_id: string) => Promise<void>;
+  batchReplaceClassSlots: (course_id: string, section_id: string, slots: Array<{ day: string; start: string; end: string; room_id: string; week: string }>, force?: boolean) => Promise<void>;
   
   // unavailability
   addTeacherUnavailability: (u: Omit<TeacherUnavailability, "id">) => Promise<void>;
@@ -598,6 +599,22 @@ export const useStore = create<StoreState>((set, get) => ({
         class_slots: s.class_slots.filter(x => !(x.course_id === course_id && x.section_id === section_id))
       }));
     } catch (err: any) { set({ error: err.message }); }
+  },
+  batchReplaceClassSlots: async (course_id, section_id, slots, force = false) => {
+    const semester_id = get().active_semester_id;
+    const res = await api.post<ClassSlot[]>('/class-slots/batch-replace', {
+      semester_id,
+      course_id,
+      section_id,
+      slots,
+      force,
+    });
+    set((s) => ({
+      class_slots: [
+        ...s.class_slots.filter((x) => !(x.course_id === course_id && x.section_id === section_id)),
+        ...res,
+      ],
+    }));
   },
 
   resetToSeed: async () => {
