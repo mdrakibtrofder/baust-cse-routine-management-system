@@ -190,10 +190,12 @@ export function RoomsPage() {
             </div>
             <div>
               <Label>Capacity</Label>
-              <Input 
-                type="number" 
+              <Input
+                type="number"
+                min={1}
+                step={1}
                 value={form.capacity}
-                onChange={(e) => setForm({ ...form, capacity: e.target.value })} 
+                onChange={(e) => setForm({ ...form, capacity: Math.max(1, Math.trunc(Number(e.target.value))) || 1 })}
               />
             </div>
           </div>

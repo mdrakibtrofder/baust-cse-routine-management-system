@@ -366,7 +366,10 @@ export const useStore = create<StoreState>((set, get) => ({
     try {
       const res = await api.post<Room>('/rooms', r);
       set((s) => ({ rooms: [...s.rooms, res] }));
-    } catch (err: any) { set({ error: err.message }); }
+    } catch (err: any) {
+      set({ error: err.message });
+      throw err;
+    }
   },
   updateRoom: async (id, r) => {
     try {
