@@ -135,7 +135,7 @@ export const useStore = create<StoreState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const [teacherRes, rooms, sections, courses, periods, days, semesters, years, types, unavailTeachers, unavailRooms] = await Promise.all([
-        api.get<any>('/teachers?limit=1000'),
+        api.get<Teacher[]>('/teachers'),
         api.get<Room[]>('/rooms'),
         api.get<Section[]>('/sections'),
         api.get<Course[]>('/courses'),
@@ -148,7 +148,7 @@ export const useStore = create<StoreState>((set, get) => ({
         api.get<RoomUnavailability[]>('/room-unavailability').catch(() => []),
       ]);
 
-      const teachers = Array.isArray(teacherRes) ? teacherRes : (teacherRes.data || []);
+      const teachers = teacherRes;
 
       const active_semester_entity = semesters.find(s => s.is_active) || semesters[0];
       const active_semester = active_semester_entity ? active_semester_entity.id : "";

@@ -5,14 +5,6 @@ import { Button } from "@/components/ui/button";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -48,10 +40,6 @@ export function TeachersPage() {
   const [unavailFor, setUnavailFor] = useState<Teacher | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 20;
-
   const filtered = useMemo(
     () => teachers.filter(t =>
       [t.short_name, t.name, t.designation, t.department, t.status]
@@ -59,17 +47,6 @@ export function TeachersPage() {
     ),
     [teachers, q]
   );
-
-  // Reset to first page when search changes
-  useMemo(() => {
-    setCurrentPage(1);
-  }, [q]);
-
-  const totalPages = Math.ceil(filtered.length / itemsPerPage);
-  const paginatedTeachers = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return filtered.slice(start, start + itemsPerPage);
-  }, [filtered, currentPage]);
 
   const startEdit = (t: Teacher) => {
     setEditing(t);
@@ -210,7 +187,7 @@ export function TeachersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedTeachers.map(t => {
+              {filtered.map(t => {
                 const used = teacherAssignedCreditUsed(data, t.id);
                 const over = t.assigned_credit_hours > 0 && used > t.assigned_credit_hours + 0.001;
                 const depCount = teacherDependencies(data, t.id).length;
@@ -272,55 +249,6 @@ export function TeachersPage() {
           </Table>
         </div>
 
-        {totalPages > 1 && (
-          <div className="flex items-center justify-center py-4">
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious 
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                  />
-                </PaginationItem>
-                
-                {Array.from({ length: totalPages }).map((_, i) => {
-                  const page = i + 1;
-                  // Show current page, first, last, and pages around current
-                  if (
-                    page === 1 || 
-                    page === totalPages || 
-                    (page >= currentPage - 1 && page <= currentPage + 1)
-                  ) {
-                    return (
-                      <PaginationItem key={page}>
-                        <PaginationLink 
-                          onClick={() => setCurrentPage(page)}
-                          isActive={currentPage === page}
-                          className="cursor-pointer"
-                        >
-                          {page}
-                        </PaginationLink>
-                      </PaginationItem>
-                    );
-                  } else if (
-                    page === currentPage - 2 || 
-                    page === currentPage + 2
-                  ) {
-                    return <PaginationItem key={page}><span className="px-2">...</span></PaginationItem>;
-                  }
-                  return null;
-                })}
-
-                <PaginationItem>
-                  <PaginationNext 
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          </div>
-        )}
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
