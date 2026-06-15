@@ -28,7 +28,7 @@ const empty: Omit<Course, "id"> = {
   level: 1, term: "I", theory: 3, sessional: 0,
 };
 
-const TYPES: CourseType[] = ["theory_2.0", "theory_3.0", "sessional_1.5", "sessional_0.75"];
+const TYPES: CourseType[] = ["theory_2.0", "theory_3.0", "sessional_1.5", "sessional_0.75", "sessional_3.0"];
 const DEPT_TYPES: DepartmentalType[] = ["Departmental", "Non-Departmental"];
 
 export function CoursesPage() {
@@ -201,7 +201,7 @@ export function CoursesPage() {
               <Label>Type</Label>
               <Select value={form.course_type} onValueChange={(v: CourseType) => {
                 const info = COURSE_TYPE_INFO[v];
-                const credit = v === "theory_2.0" ? 2 : v === "theory_3.0" ? 3 : v === "sessional_1.5" ? 1.5 : 0.75;
+                const credit = v === "theory_2.0" ? 2 : v === "theory_3.0" ? 3 : v === "sessional_1.5" ? 1.5 : v === "sessional_3.0" ? 3 : 0.75;
                 setForm({
                   ...form, course_type: v, credit,
                   theory: info.roomKind === "theory" ? credit : 0,

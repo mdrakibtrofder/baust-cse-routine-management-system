@@ -2,7 +2,8 @@ export type CourseType =
   | "theory_2.0"
   | "theory_3.0"
   | "sessional_1.5"
-  | "sessional_0.75";
+  | "sessional_0.75"
+  | "sessional_3.0";
 
 export type DepartmentalType = "Departmental" | "Non-Departmental";
 
@@ -226,5 +227,13 @@ export const COURSE_TYPE_INFO: Record<
     teachersRequired: 2,
     roomKind: "sessional",
     weekPattern: "EVEN",
+  },
+  "sessional_3.0": {
+    label: "Sessional 3.0 cr",
+    classCount: 2,
+    classDuration: 180,
+    teachersRequired: 2,
+    roomKind: "sessional",
+    weekPattern: "EVERY",
   },
 };
