@@ -3,16 +3,18 @@ import { useStore } from "@/lib/store";
 import { PageHeader } from "@/components/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, AlertCircle, Check, Users } from "lucide-react";
+import { Calendar, AlertCircle, Check, Users, FlaskConical, GitMerge } from "lucide-react";
 import { cn, compareDayAndTime, fmtRange12 } from "@/lib/utils";
 import type { Course, Section } from "@/lib/types";
 import { COURSE_TYPE_INFO } from "@/lib/types";
 import { TeacherPicker } from "./TeacherPicker";
 import { RoomPicker } from "./RoomPicker";
 import { ClassAssignDialog } from "./ClassAssignDialog";
+import { LabGroupsPanel } from "./LabGroupsPanel";
 import { checkConflicts } from "@/lib/conflicts";
 import { RoutineDialog } from "@/components/RoutineDialog";
 import { CourseDetailsDialog } from "@/components/CourseDetailsDialog";
+import { CombineSectionsDialog } from "./CombineSectionsDialog";
 
 const TERM_ORDER = ["I", "II"];
 
@@ -208,34 +210,68 @@ function CourseRow({ course, sections, onAssign, alt, onCourseDetails }: {
 }) {
   const data = useStore();
   const info = COURSE_TYPE_INFO[course.course_type];
+  const isSessional = info.roomKind === "sessional";
+  const [labGroupsOpen, setLabGroupsOpen] = useState(false);
+
+  const labGroupCount = data.course_lab_groups.filter(
+    (g) => g.course_id === course.id && g.semester_id === data.active_semester_id,
+  ).length;
+
   return (
-    <tr className={cn("border-b", alt && "bg-muted/20")}>
-      <td className="px-3 py-2 align-top">
-        <button onClick={() => onCourseDetails(course)} className="font-mono text-xs font-medium hover:text-primary hover:underline" title="View course details">
-          {course.code}
-        </button>
-      </td>
-      <td className="px-3 py-2 align-top">
-        <button onClick={() => onCourseDetails(course)} className="text-left hover:text-primary hover:underline" title="View course details">
-          {course.name}
-        </button>
-      </td>
-      <td className="px-3 py-2 text-center align-top font-medium">{course.credit}</td>
-      <td className="px-3 py-2 text-center align-top">
-        <Badge variant={course.sessional > 0 ? "default" : "secondary"} className="text-[10px] whitespace-nowrap">
-          {info.classCount}×{info.classDuration % 60 === 0 ? `${info.classDuration / 60}h` : `${info.classDuration}m`}
-        </Badge>
-      </td>
-      {sections.map(s => (
-        <SectionCell key={s.id} course={course} section={s} onAssign={onAssign} />
-      ))}
-    </tr>
+    <>
+      <tr className={cn("border-b", alt && "bg-muted/20")}>
+        <td className="px-3 py-2 align-top">
+          <div className="space-y-1">
+            <button onClick={() => onCourseDetails(course)} className="font-mono text-xs font-medium hover:text-primary hover:underline" title="View course details">
+              {course.code}
+            </button>
+            {isSessional && (
+              <button
+                onClick={() => setLabGroupsOpen(true)}
+                className={cn(
+                  "flex items-center gap-1 text-[10px] rounded px-1.5 py-0.5 border transition-colors",
+                  labGroupCount > 0
+                    ? "border-purple-400 bg-purple-50 text-purple-700 hover:bg-purple-100"
+                    : "border-dashed border-muted-foreground/40 text-muted-foreground hover:border-purple-400 hover:text-purple-600",
+                )}
+              >
+                <FlaskConical className="h-2.5 w-2.5" />
+                {labGroupCount > 0 ? `${labGroupCount} lab groups` : "Lab groups"}
+              </button>
+            )}
+          </div>
+        </td>
+        <td className="px-3 py-2 align-top">
+          <button onClick={() => onCourseDetails(course)} className="text-left hover:text-primary hover:underline" title="View course details">
+            {course.name}
+          </button>
+        </td>
+        <td className="px-3 py-2 text-center align-top font-medium">{course.credit}</td>
+        <td className="px-3 py-2 text-center align-top">
+          <Badge variant={course.sessional > 0 ? "default" : "secondary"} className="text-[10px] whitespace-nowrap">
+            {info.classCount}×{info.classDuration % 60 === 0 ? `${info.classDuration / 60}h` : `${info.classDuration}m`}
+          </Badge>
+        </td>
+        {sections.map(s => (
+          <SectionCell key={s.id} course={course} section={s} sections={sections} onAssign={onAssign} />
+        ))}
+      </tr>
+      {isSessional && labGroupsOpen && (
+        <LabGroupsPanel
+          course={course}
+          sections={sections}
+          open={labGroupsOpen}
+          onClose={() => setLabGroupsOpen(false)}
+        />
+      )}
+    </>
   );
 }
 
-function SectionCell({ course, section, onAssign }: {
-  course: Course; section: Section; onAssign: (c: Course, s: Section) => void;
+function SectionCell({ course, section, sections, onAssign }: {
+  course: Course; section: Section; sections: Section[]; onAssign: (c: Course, s: Section) => void;
 }) {
+  const [combineOpen, setCombineOpen] = useState(false);
   const data = useStore();
   const info = COURSE_TYPE_INFO[course.course_type];
   const cst = data.course_section_teachers.find(
@@ -312,6 +348,34 @@ function SectionCell({ course, section, onAssign }: {
             </div>
           )}
         </button>
+        {/* Combine sections — only show if there are multiple sections in the level-term */}
+        {sections.length > 1 && (
+          <>
+            <button
+              onClick={() => setCombineOpen(true)}
+              className={cn(
+                "flex items-center gap-1 text-[10px] rounded px-1.5 py-0.5 border transition-colors w-full",
+                cst?.combined_section_ids?.length
+                  ? "border-indigo-400 bg-indigo-50 text-indigo-700 hover:bg-indigo-100"
+                  : "border-dashed border-muted-foreground/40 text-muted-foreground hover:border-indigo-400 hover:text-indigo-600",
+              )}
+            >
+              <GitMerge className="h-2.5 w-2.5" />
+              {cst?.combined_section_ids?.length
+                ? `Combined +${cst.combined_section_ids.map(id => sections.find(s => s.id === id)?.name ?? "?").join("+")}`
+                : "Combine sections"}
+            </button>
+            {combineOpen && (
+              <CombineSectionsDialog
+                course={course}
+                primarySection={section}
+                allSections={sections}
+                open={combineOpen}
+                onClose={() => setCombineOpen(false)}
+              />
+            )}
+          </>
+        )}
       </div>
     </td>
   );

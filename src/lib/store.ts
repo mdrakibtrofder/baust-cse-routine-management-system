@@ -11,6 +11,7 @@ import type {
   Day,
   ClassSlot,
   CourseSectionTeacher,
+  CourseLabGroup,
   Semester,
   Year,
   SemesterType,
@@ -84,7 +85,12 @@ interface StoreState extends AppData {
   deleteDay: (id: string) => Promise<void>;
   
   // assignments
-  setCourseSectionTeachers: (course_id: string, section_id: string, teacher_ids: string[], primary_room_id?: string | null, slot_teacher_ids?: string[][] | null) => Promise<void>;
+  setCourseSectionTeachers: (course_id: string, section_id: string, teacher_ids: string[], primary_room_id?: string | null, slot_teacher_ids?: string[][] | null, combined_section_ids?: string[] | null) => Promise<void>;
+
+  // lab groups
+  saveLabGroups: (course_id: string, groups: Array<{ label: string; section_id: string; teacher_ids: string[]; primary_room_id?: string | null }>) => Promise<CourseLabGroup[]>;
+  deleteLabGroup: (id: string) => Promise<void>;
+  batchReplaceLabGroupSlots: (lab_group_id: string, slots: Array<{ day: string; start: string; end: string; room_id: string; week?: string }>) => Promise<void>;
   
   // class slots
   upsertClassSlot: (slot: Omit<ClassSlot, "id" | "semester_id"> & { id?: string; semester_id?: string }) => Promise<string>;
@@ -126,6 +132,7 @@ export const useStore = create<StoreState>((set, get) => ({
   days: [],
   class_slots: [],
   course_section_teachers: [],
+  course_lab_groups: [],
   semesters: [],
   active_semester_id: "",
   years: [],
@@ -165,10 +172,12 @@ export const useStore = create<StoreState>((set, get) => ({
       let class_slots: ClassSlot[] = [];
       let course_section_teachers: CourseSectionTeacher[] = [];
       
+      let course_lab_groups: CourseLabGroup[] = [];
       if (active_semester) {
-        [class_slots, course_section_teachers] = await Promise.all([
+        [class_slots, course_section_teachers, course_lab_groups] = await Promise.all([
           api.get<ClassSlot[]>(`/class-slots?semester_id=${active_semester}`),
           api.get<CourseSectionTeacher[]>(`/assignments?semester_id=${active_semester}`),
+          api.get<CourseLabGroup[]>(`/lab-groups?semester_id=${active_semester}`).catch(() => []),
         ]);
       }
 
@@ -185,6 +194,7 @@ export const useStore = create<StoreState>((set, get) => ({
         semester_types: types,
         class_slots,
         course_section_teachers,
+        course_lab_groups,
         teacher_unavailability: unavailTeachers,
         room_unavailability: unavailRooms,
         active_semester_id: active_semester,
@@ -293,13 +303,15 @@ export const useStore = create<StoreState>((set, get) => ({
   setActiveSemester: async (id) => {
     set({ active_semester_id: id, isLoading: true });
     try {
-      const [class_slots, course_section_teachers] = await Promise.all([
+      const [class_slots, course_section_teachers, course_lab_groups] = await Promise.all([
         api.get<ClassSlot[]>(`/class-slots?semester_id=${id}`),
         api.get<CourseSectionTeacher[]>(`/assignments?semester_id=${id}`),
+        api.get<CourseLabGroup[]>(`/lab-groups?semester_id=${id}`).catch(() => []),
       ]);
       set((s) => ({
         class_slots,
         course_section_teachers,
+        course_lab_groups,
         semesters: s.semesters.map(sem => ({ ...sem, is_active: sem.id === id })),
         isLoading: false
       }));
@@ -595,7 +607,7 @@ export const useStore = create<StoreState>((set, get) => ({
     } catch (err: any) { set({ error: err.message }); }
   },
 
-  setCourseSectionTeachers: async (course_id, section_id, teacher_ids, primary_room_id, slot_teacher_ids) => {
+  setCourseSectionTeachers: async (course_id, section_id, teacher_ids, primary_room_id, slot_teacher_ids, combined_section_ids) => {
     try {
       const res = await api.post<CourseSectionTeacher>('/assignments', {
         semester_id: get().active_semester_id,
@@ -604,6 +616,7 @@ export const useStore = create<StoreState>((set, get) => ({
         teacher_ids,
         primary_room_id,
         slot_teacher_ids: slot_teacher_ids ?? null,
+        combined_section_ids: combined_section_ids ?? null,
       });
       set((s) => {
         const idx = s.course_section_teachers.findIndex(x => x.id === res.id);
@@ -664,7 +677,42 @@ export const useStore = create<StoreState>((set, get) => ({
     });
     set((s) => ({
       class_slots: [
-        ...s.class_slots.filter((x) => !(x.course_id === course_id && x.section_id === section_id)),
+        // Keep lab group slots; only replace non-lab-group slots for this course+section
+        ...s.class_slots.filter((x) => !(x.course_id === course_id && x.section_id === section_id && !x.lab_group_id)),
+        ...res,
+      ],
+    }));
+  },
+
+  saveLabGroups: async (course_id, groups) => {
+    const semester_id = get().active_semester_id;
+    const res = await api.post<CourseLabGroup[]>('/lab-groups/batch', {
+      semester_id,
+      course_id,
+      lab_groups: groups,
+    });
+    set((s) => ({
+      course_lab_groups: [
+        ...s.course_lab_groups.filter((g) => !(g.course_id === course_id && g.semester_id === semester_id)),
+        ...res,
+      ],
+    }));
+    return res;
+  },
+
+  deleteLabGroup: async (id) => {
+    await api.delete(`/lab-groups/${id}`);
+    set((s) => ({
+      course_lab_groups: s.course_lab_groups.filter((g) => g.id !== id),
+      class_slots: s.class_slots.filter((x) => x.lab_group_id !== id),
+    }));
+  },
+
+  batchReplaceLabGroupSlots: async (lab_group_id, slots) => {
+    const res = await api.post<ClassSlot[]>(`/lab-groups/${lab_group_id}/slots/batch-replace`, { slots });
+    set((s) => ({
+      class_slots: [
+        ...s.class_slots.filter((x) => x.lab_group_id !== lab_group_id),
         ...res,
       ],
     }));

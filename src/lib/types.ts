@@ -84,6 +84,8 @@ export interface ClassSlot {
   end: string; // HH:MM
   room_id: string | null;
   week: WeekPattern;
+  /** Set when this slot belongs to a lab group, not the regular section schedule */
+  lab_group_id?: string | null;
 }
 
 /** Mapping: which teachers teach which course-section (scoped per semester) */
@@ -97,7 +99,22 @@ export interface CourseSectionTeacher {
    *  Index matches slot order sorted by day+time.
    *  null = shared mode (all slots use teacher_ids). */
   slot_teacher_ids?: string[][] | null;
+  /** Other section IDs taught combined in the same class. Only set on the "primary" section's assignment. */
+  combined_section_ids?: string[] | null;
   primary_room_id?: string | null;
+}
+
+/** A virtual sub-section of a sessional course for lab scheduling */
+export interface CourseLabGroup {
+  id: string;
+  semester_id: string;
+  course_id: string;
+  /** Display label: "Lab A", "Lab B", etc. */
+  label: string;
+  /** The actual section this lab group belongs to */
+  section_id: string;
+  teacher_ids: string[];
+  primary_room_id: string | null;
 }
 
 export interface Year {
@@ -151,6 +168,7 @@ export interface AppData {
   days: Day[];
   class_slots: ClassSlot[];
   course_section_teachers: CourseSectionTeacher[];
+  course_lab_groups: CourseLabGroup[];
   semesters: Semester[];
   active_semester_id: string;
   years: Year[];
