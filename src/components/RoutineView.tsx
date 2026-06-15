@@ -40,25 +40,38 @@ export function RoutineView({
   const [showPreview, setShowPreview] = useState(false);
 
   const theoryPeriods = useMemo(() => {
+    // 14:30 = 2:30 PM is the boundary; default view only shows periods before this
+    const EXTENDED_CUTOFF = "14:30";
+
     const configured = [...data.periods]
       .filter(p => p.kind === "theory")
       .sort((a, b) => compareTimeValues(a.start, b.start));
 
-    // Find slot times that don't overlap any configured period — synthesize virtual columns
-    const allSlots = data.class_slots.filter(s => s.semester_id === data.active_semester_id);
-    const synthetic: typeof configured = [];
+    const defaultPeriods = configured.filter(p => compareTimeValues(p.start, EXTENDED_CUTOFF) < 0);
+
+    // Check whether any slot in the active semester falls at or after 2:30 PM
+    const semesterSlots = data.class_slots.filter(s => s.semester_id === data.active_semester_id);
+    const hasExtendedSlots = semesterSlots.some(s => compareTimeValues(s.start, EXTENDED_CUTOFF) >= 0);
+
+    if (!hasExtendedSlots) return defaultPeriods;
+
+    // Include configured periods >= 14:30, plus synthesize columns for any unconfigured slot times
+    const extendedConfigured = configured.filter(p => compareTimeValues(p.start, EXTENDED_CUTOFF) >= 0);
+    const allPeriods = [...defaultPeriods, ...extendedConfigured];
+
     const seen = new Set<string>();
-    for (const s of allSlots) {
+    const synthetic: typeof configured = [];
+    for (const s of semesterSlots) {
+      if (compareTimeValues(s.start, EXTENDED_CUTOFF) < 0) continue;
       const key = `${s.start}|${s.end}`;
       if (seen.has(key)) continue;
       seen.add(key);
-      const covered = configured.some(p => timesOverlap(p.start, p.end, s.start, s.end));
-      if (!covered) {
+      if (!allPeriods.some(p => timesOverlap(p.start, p.end, s.start, s.end))) {
         synthetic.push({ id: `__syn__${key}`, name: `${s.start}–${s.end}`, kind: "theory", start: s.start, end: s.end } as any);
       }
     }
 
-    return [...configured, ...synthetic].sort((a, b) => compareTimeValues(a.start, b.start));
+    return [...allPeriods, ...synthetic].sort((a, b) => compareTimeValues(a.start, b.start));
   }, [data.periods, data.class_slots, data.active_semester_id]);
 
   const days = useMemo(() => sortDays(data.days), [data.days]);
@@ -85,13 +98,10 @@ export function RoutineView({
     return !!p && /break/i.test(p.name);
   };
 
-  // Scale down cell width and font when extra columns are needed
-  const BASE_PERIOD_COUNT = 6;
-  const totalCount = theoryPeriods.length;
-  const needsScale = totalCount > BASE_PERIOD_COUNT;
-  const scale = needsScale ? BASE_PERIOD_COUNT / totalCount : 1;
-  const colMinWidth = Math.max(72, Math.round(110 * scale));
-  const cellFontSize = needsScale ? `${Math.max(9, Math.round(11 * scale))}px` : undefined;
+  // When > 6 columns, table scrolls horizontally — no font reduction
+  const isExtended = theoryPeriods.length > 6;
+  // Default 6-col view gets wider cells; extended view keeps standard width and scrolls
+  const colMinWidth = isExtended ? 120 : 150;
 
   return (
     <div className="space-y-3">
@@ -144,11 +154,12 @@ export function RoutineView({
                     className={cn(
                       "px-2 py-3 text-center font-semibold whitespace-nowrap border-l border-primary-foreground/20",
                       isBreak(p.id) && "bg-amber-400/90 text-amber-950",
+                      isExtended ? "text-xs" : "text-sm",
                     )}
-                    style={{ minWidth: colMinWidth, fontSize: cellFontSize }}
+                    style={{ minWidth: colMinWidth }}
                   >
                     <div>{fmtTime12(p.start)}</div>
-                    <div className="opacity-70">to</div>
+                    <div className="opacity-70 text-[10px]">to</div>
                     <div>{fmtTime12(p.end)}</div>
                   </th>
                 ))}
@@ -205,10 +216,10 @@ export function RoutineView({
                       skipCount = maxColSpan - 1;
 
                       return (
-                        <td key={p.id} colSpan={maxColSpan} className="p-1 align-top" style={{ fontSize: cellFontSize }}>
-                          <div className="space-y-1">
+                        <td key={p.id} colSpan={maxColSpan} className="p-1.5 align-top">
+                          <div className="space-y-1.5">
                             {starting.map((s) => (
-                              <RoutineCell key={s.id} slot={s} compact={needsScale} />
+                              <RoutineCell key={s.id} slot={s} large={!isExtended} />
                             ))}
                           </div>
                         </td>
@@ -333,7 +344,7 @@ export function RoutineView({
   );
 }
 
-function RoutineCell({ slot, compact }: { slot: ClassSlot; compact?: boolean }) {
+function RoutineCell({ slot, large }: { slot: ClassSlot; large?: boolean }) {
   const data = useStore();
   const course = data.courses.find((c) => c.id === slot.course_id);
   const section = data.sections.find((s) => s.id === slot.section_id);
@@ -353,50 +364,69 @@ function RoutineCell({ slot, compact }: { slot: ClassSlot; compact?: boolean }) 
   const isSessional = info.roomKind === "sessional";
 
   return (
-    <div className={cn("rounded-lg border bg-background hover:shadow-md transition-all border-border/60", compact ? "px-1 py-1 text-[9px] space-y-1" : "px-2 py-2 text-[11px] space-y-2")}>
-      <div className="flex items-start justify-between gap-1">
-        <div className={cn("flex items-center gap-1 font-bold", compact ? "text-xs" : "text-sm")}>
+    <div className={cn(
+      "rounded-lg border bg-background transition-all border-border/60",
+      "shadow-[0_2px_6px_-1px_rgba(0,0,0,0.1),0_1px_3px_-1px_rgba(0,0,0,0.06)]",
+      "hover:shadow-[0_4px_14px_-2px_rgba(0,0,0,0.15)] hover:-translate-y-px relative z-[1] hover:z-[2]",
+      large ? "px-3 py-3 space-y-2.5" : "px-2 py-2 space-y-2",
+    )}>
+      {/* Course code + teacher badges */}
+      <div className="flex items-start justify-between gap-1.5">
+        <div className={cn("flex items-center gap-1.5 font-bold font-mono", large ? "text-base" : "text-sm")}>
           {isSessional ? (
-            <FlaskConical className={compact ? "h-2.5 w-2.5 text-purple-600" : "h-3.5 w-3.5 text-purple-600"} />
+            <FlaskConical className={large ? "h-4 w-4 text-purple-600" : "h-3.5 w-3.5 text-purple-600"} />
           ) : (
-            <BookOpen className={compact ? "h-2.5 w-2.5 text-blue-600" : "h-3.5 w-3.5 text-blue-600"} />
+            <BookOpen className={large ? "h-4 w-4 text-blue-600" : "h-3.5 w-3.5 text-blue-600"} />
           )}
-          <span className="font-mono">{course.code}</span>
+          {course.code}
         </div>
-        <div className="flex flex-col gap-0.5 items-end">
+        <div className="flex flex-col gap-1 items-end">
           {teachers.map((t) => (
-            <span key={t.short_name} className={cn("rounded bg-blue-100 text-blue-800 font-bold uppercase", compact ? "px-1 py-0 text-[7px]" : "px-1.5 py-0.5 text-[9px]")}>
+            <span key={t.short_name} className={cn(
+              "rounded bg-blue-100 text-blue-800 font-bold uppercase",
+              large ? "px-2 py-0.5 text-[11px]" : "px-1.5 py-0.5 text-[9px]",
+            )}>
               {t.short_name}
             </span>
           ))}
           {slot.week !== "EVERY" && (
-            <span className={cn("rounded bg-fuchsia-100 text-fuchsia-800 font-bold uppercase", compact ? "px-1 py-0 text-[7px]" : "px-1.5 py-0.5 text-[9px]")}>
+            <span className={cn(
+              "rounded bg-fuchsia-100 text-fuchsia-800 font-bold uppercase",
+              large ? "px-2 py-0.5 text-[11px]" : "px-1.5 py-0.5 text-[9px]",
+            )}>
               #{slot.week}
             </span>
           )}
         </div>
       </div>
 
-      <div className="flex items-center gap-1 flex-wrap pt-0.5">
+      {/* Room + section badges */}
+      <div className="flex items-center gap-1.5 flex-wrap">
         {room && (
-          <span className={cn("inline-flex items-center gap-0.5 font-bold rounded bg-orange-500 text-white shadow-sm", compact ? "px-1 py-0 text-[7px]" : "px-1.5 py-0.5 text-[10px]")}>
-            <MapPin className={compact ? "h-1.5 w-1.5" : "h-2.5 w-2.5"} />
+          <span className={cn(
+            "inline-flex items-center gap-1 font-bold rounded bg-orange-500 text-white shadow-sm",
+            large ? "px-2 py-1 text-[11px]" : "px-1.5 py-0.5 text-[10px]",
+          )}>
+            <MapPin className={large ? "h-3 w-3" : "h-2.5 w-2.5"} />
             {room.name}
           </span>
         )}
         {section && course && (
-          <span
-            className={cn(
-              "inline-flex items-center gap-0.5 font-bold rounded shadow-sm",
-              compact ? "px-1 py-0 text-[7px]" : "px-1.5 py-0.5 text-[10px]",
-              isSessional ? "bg-emerald-500 text-white" : "bg-sky-500 text-white",
-            )}
-          >
+          <span className={cn(
+            "inline-flex items-center gap-1 font-bold rounded shadow-sm",
+            large ? "px-2 py-1 text-[11px]" : "px-1.5 py-0.5 text-[10px]",
+            isSessional ? "bg-emerald-500 text-white" : "bg-sky-500 text-white",
+          )}>
             {DEFAULT_DEPT} {course.level}-{course.term} {section.name}
           </span>
         )}
       </div>
-      <div className={cn("font-mono text-muted-foreground border-t border-dashed", compact ? "text-[7px] pt-0.5" : "text-[9px] pt-1")}>
+
+      {/* Time range */}
+      <div className={cn(
+        "font-mono text-muted-foreground border-t border-dashed",
+        large ? "text-[11px] pt-1.5" : "text-[9px] pt-1",
+      )}>
         {fmtRange12(slot.start, slot.end)}
       </div>
     </div>
