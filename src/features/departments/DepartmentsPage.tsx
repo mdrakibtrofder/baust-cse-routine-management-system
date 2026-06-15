@@ -93,8 +93,8 @@ export function DepartmentsPage() {
         }}
         exportRows={() => departments.map(d => ({ 
           "Short Name": d.short_name, 
+          "Faculty Name": d.faculty_name, 
           "Full Name": d.full_name, 
-          "Faculty Name": d.faculty_name 
         }))}
         exportName="departments.xlsx"
       />
@@ -159,12 +159,12 @@ export function DepartmentsPage() {
               )}
             </div>
             <div>
-              <Label>Full Name</Label>
-              <Input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
-            </div>
-            <div>
               <Label>Faculty Name</Label>
               <Input value={form.faculty_name} onChange={(e) => setForm({ ...form, faculty_name: e.target.value })} />
+            </div>
+            <div>
+              <Label>Full Name</Label>
+              <Input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
             </div>
           </div>
           <DialogFooter className="gap-2 sm:gap-0">
