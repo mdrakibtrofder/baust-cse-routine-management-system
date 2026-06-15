@@ -98,11 +98,13 @@ export function RoomsPage() {
               name,
               room_type: (String(r["Room Type"] ?? r.room_type ?? "Theory") as any),
               capacity: Number(r["Capacity"] ?? r.capacity ?? 0) || 0,
+              departmental_type: (String(r["Dept. Type"] ?? r.departmental_type ?? "Departmental") as any),
+              department_id: null,
             });
           }
           replaceRooms(list);
         }}
-        exportRows={() => rooms.map(r => ({ "Room Name": r.name, "Room Type": r.room_type, Capacity: r.capacity }))}
+        exportRows={() => rooms.map(r => ({ "Room Name": r.name, "Room Type": r.room_type, Capacity: r.capacity, "Dept. Type": r.departmental_type ?? "Departmental" }))}
         exportName="rooms.xlsx"
       />
       <div className="p-4 sm:p-6 space-y-4">
