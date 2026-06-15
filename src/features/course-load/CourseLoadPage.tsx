@@ -255,7 +255,7 @@ function SectionCell({ course, section, onAssign }: {
     })
   );
 
-  const teachersOk = teacherIds.length >= info.teachersRequired;
+  const teachersOk = teacherIds.length > 0;
   const slotsOk = slots.length === info.classCount;
   const allOk = teachersOk && slotsOk && allConflicts.length === 0;
 
