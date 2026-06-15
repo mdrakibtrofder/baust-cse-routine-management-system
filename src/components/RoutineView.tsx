@@ -169,9 +169,9 @@ export function RoutineView({
               {days.map((d) => {
                 let skipCount = 0;
                 return (
-                  <tr key={d.id} className="border-t">
+                  <tr key={d.id} className="border-t" style={{ height: isExtended ? 120 : 150 }}>
                     <td
-                      className="px-3 py-3 font-bold text-primary-foreground align-top sticky left-0 z-10"
+                      className="px-3 font-bold text-primary-foreground align-middle sticky left-0 z-10"
                       style={{ background: "var(--primary)", minWidth: 90 }}
                     >
                       <div className="text-sm uppercase">{fmtDayTitle(d.name)}</div>
@@ -198,26 +198,22 @@ export function RoutineView({
                       const cellSlots = slots.filter(
                         (s) => s.day === d.name && timesOverlap(s.start, s.end, p.start, p.end)
                       );
-
-                      // Only render when slot starts at this period (avoid duplicate rendering across spanning periods)
                       const starting = cellSlots.filter((s) => s.start === p.start);
-                      
+
                       if (starting.length === 0) {
-                        // Check if any class spans this period but started earlier
                         const spanning = cellSlots.find((s) => s.start < p.start);
-                        if (spanning) return null; // Should be handled by skipCount or return null
-                        return <td key={p.id} className="p-1 align-top" />;
+                        if (spanning) return null;
+                        return <td key={p.id} className="p-1.5" />;
                       }
 
-                      // Calculate colspan
-                      const maxColSpan = Math.max(1, ...starting.map(s => {
-                        return theoryPeriods.filter(tp => timesOverlap(s.start, s.end, tp.start, tp.end)).length;
-                      }));
+                      const maxColSpan = Math.max(1, ...starting.map(s =>
+                        theoryPeriods.filter(tp => timesOverlap(s.start, s.end, tp.start, tp.end)).length
+                      ));
                       skipCount = maxColSpan - 1;
 
                       return (
                         <td key={p.id} colSpan={maxColSpan} className="p-1.5 align-top">
-                          <div className="space-y-1.5">
+                          <div className="h-full space-y-1.5">
                             {starting.map((s) => (
                               <RoutineCell key={s.id} slot={s} large={!isExtended} />
                             ))}
@@ -365,10 +361,10 @@ function RoutineCell({ slot, large }: { slot: ClassSlot; large?: boolean }) {
 
   return (
     <div className={cn(
-      "rounded-lg border bg-background transition-all border-border/60",
+      "rounded-lg border bg-background transition-all border-border/60 h-full flex flex-col",
       "shadow-[0_2px_6px_-1px_rgba(0,0,0,0.1),0_1px_3px_-1px_rgba(0,0,0,0.06)]",
       "hover:shadow-[0_4px_14px_-2px_rgba(0,0,0,0.15)] hover:-translate-y-px relative z-[1] hover:z-[2]",
-      large ? "px-3 py-3 space-y-2.5" : "px-2 py-2 space-y-2",
+      large ? "px-3 py-3 gap-2.5" : "px-2 py-2 gap-2",
     )}>
       {/* Course code + teacher badges */}
       <div className="flex items-start justify-between gap-1.5">
@@ -422,9 +418,9 @@ function RoutineCell({ slot, large }: { slot: ClassSlot; large?: boolean }) {
         )}
       </div>
 
-      {/* Time range */}
+      {/* Time range — pinned to bottom */}
       <div className={cn(
-        "font-mono text-muted-foreground border-t border-dashed",
+        "font-mono text-muted-foreground border-t border-dashed mt-auto",
         large ? "text-[11px] pt-1.5" : "text-[9px] pt-1",
       )}>
         {fmtRange12(slot.start, slot.end)}
