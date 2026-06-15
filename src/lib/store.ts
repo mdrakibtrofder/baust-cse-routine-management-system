@@ -4,6 +4,7 @@ import type {
   AppData,
   Teacher,
   Room,
+  Department,
   Section,
   Course,
   Period,
@@ -59,6 +60,11 @@ interface StoreState extends AppData {
   deleteRoom: (id: string) => Promise<void>;
   replaceRooms: (rooms: Room[]) => Promise<void>;
   
+  // departments
+  addDepartment: (d: Omit<Department, "id">) => Promise<void>;
+  updateDepartment: (id: string, d: Partial<Department>) => Promise<Department>;
+  deleteDepartment: (id: string) => Promise<void>;
+  
   // sections
   addSection: (s: Omit<Section, "id">) => Promise<void>;
   updateSection: (id: string, s: Partial<Section>) => Promise<Section>;
@@ -113,6 +119,7 @@ const safeNum = (v: any) => {
 export const useStore = create<StoreState>((set, get) => ({
   teachers: [],
   rooms: [],
+  departments: [],
   sections: [],
   courses: [],
   periods: [],
@@ -135,9 +142,10 @@ export const useStore = create<StoreState>((set, get) => ({
   init: async () => {
     set({ isLoading: true, error: null });
     try {
-      const [teacherRes, rooms, sections, courses, periods, days, semesters, years, types, unavailTeachers, unavailRooms] = await Promise.all([
+      const [teacherRes, rooms, departments, sections, courses, periods, days, semesters, years, types, unavailTeachers, unavailRooms] = await Promise.all([
         api.get<Teacher[]>('/teachers'),
         api.get<Room[]>('/rooms'),
+        api.get<Department[]>('/departments'),
         api.get<Section[]>('/sections'),
         api.get<Course[]>('/courses'),
         api.get<Period[]>('/periods'),
@@ -167,6 +175,7 @@ export const useStore = create<StoreState>((set, get) => ({
       set({
         teachers,
         rooms,
+        departments,
         sections,
         courses,
         periods,
@@ -404,6 +413,44 @@ export const useStore = create<StoreState>((set, get) => ({
     try {
       await api.post('/rooms', rooms);
       await get().init();
+    } catch (err: any) { set({ error: err.message }); }
+  },
+
+  addDepartment: async (d) => {
+    try {
+      const res = await api.post<Department>('/departments', d);
+      set((s) => ({ departments: [...s.departments, res].sort((a, b) => a.short_name.localeCompare(b.short_name)) }));
+    } catch (err: any) {
+      set({ error: err.message });
+      throw err;
+    }
+  },
+  updateDepartment: async (id, d) => {
+    try {
+      // Clean payload for backend
+      const payload = {
+        short_name: d.short_name,
+        full_name: d.full_name,
+        faculty_name: d.faculty_name,
+      };
+
+      // Remove undefined fields
+      Object.keys(payload).forEach(key => 
+        (payload as any)[key] === undefined && delete (payload as any)[key]
+      );
+
+      const res = await api.patch<Department>(`/departments/${id}`, payload);
+      set((s) => ({ departments: s.departments.map((x) => (x.id === id ? res : x)).sort((a, b) => a.short_name.localeCompare(b.short_name)) }));
+      return res;
+    } catch (err: any) { 
+      set({ error: err.message });
+      throw err;
+    }
+  },
+  deleteDepartment: async (id) => {
+    try {
+      await api.delete(`/departments/${id}`);
+      set((s) => ({ departments: s.departments.filter((x) => x.id !== id) }));
     } catch (err: any) { set({ error: err.message }); }
   },
 

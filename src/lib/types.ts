@@ -46,6 +46,13 @@ export interface Room {
   capacity: number;
 }
 
+export interface Department {
+  id: string;
+  short_name: string;
+  full_name: string;
+  faculty_name: string;
+}
+
 export interface Period {
   id: string;
   name: string;
@@ -127,6 +134,7 @@ export interface RoomUnavailability {
 export interface AppData {
   teachers: Teacher[];
   rooms: Room[];
+  departments: Department[];
   sections: Section[];
   courses: Course[];
   periods: Period[];

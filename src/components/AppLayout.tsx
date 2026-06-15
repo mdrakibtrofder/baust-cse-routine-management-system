@@ -16,6 +16,7 @@ import {
   ChevronRight,
   PanelLeftClose,
   PanelLeftOpen,
+  Building2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ConfirmProvider } from "@/components/ConfirmDialog";
@@ -41,6 +42,7 @@ const nav = [
   { to: "/courses", label: "Courses", icon: BookOpen },
   { to: "/sections", label: "Sections", icon: Boxes },
   { to: "/rooms", label: "Rooms", icon: DoorOpen },
+  { to: "/departments", label: "Departments", icon: Building2 },
   { to: "/settings", label: "Periods & Days", icon: Settings },
   { to: "/semester-settings", label: "Semester Settings", icon: CalendarDays },
 ] as const;
@@ -68,45 +70,49 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         collapsed ? "w-16" : "w-64",
       )}>
         {/* Header with collapse toggle */}
-        <div className={cn(
-          "py-4 border-b flex items-center gap-2.5",
-          collapsed ? "px-3 justify-center flex-col" : "px-4 justify-between",
-        )}>
-          {/* Collapse toggle — top left */}
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            className="h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors shrink-0"
-          >
-            {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
-          </button>
-
-          {/* Logo + title — hidden when collapsed */}
-          {!collapsed && (
-            <Link to="/" className="flex items-center gap-2.5 min-w-0">
-              <div
-                className="h-9 w-9 shrink-0 rounded-lg flex items-center justify-center text-primary-foreground shadow-md"
-                style={{ background: "var(--gradient-primary)" }}
+        <div className="py-4 px-4 border-b flex items-center justify-between">
+          {/* Logo + title (or just icon when collapsed) */}
+          {collapsed ? (
+            <div className="flex flex-col items-center gap-2 mx-auto">
+              <Link to="/" title="Routine Manager">
+                <div
+                  className="h-9 w-9 rounded-lg flex items-center justify-center text-primary-foreground shadow-md"
+                  style={{ background: "var(--gradient-primary)" }}
+                >
+                  <GraduationCap className="h-5 w-5" />
+                </div>
+              </Link>
+              <button
+                onClick={() => setCollapsed(false)}
+                title="Expand sidebar"
+                className="h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
               >
-                <GraduationCap className="h-5 w-5" />
-              </div>
-              <div className="min-w-0">
-                <div className="font-semibold text-sm leading-tight truncate">Routine Manager</div>
-                <div className="text-[11px] text-muted-foreground truncate">Dept. of CSE</div>
-              </div>
-            </Link>
-          )}
-
-          {/* Collapsed: show only icon */}
-          {collapsed && (
-            <Link to="/" title="Routine Manager">
-              <div
-                className="h-9 w-9 rounded-lg flex items-center justify-center text-primary-foreground shadow-md"
-                style={{ background: "var(--gradient-primary)" }}
+                <PanelLeftOpen className="h-4 w-4" />
+              </button>
+            </div>
+          ) : (
+            <>
+              <Link to="/" className="flex items-center gap-2.5 min-w-0">
+                <div
+                  className="h-9 w-9 shrink-0 rounded-lg flex items-center justify-center text-primary-foreground shadow-md"
+                  style={{ background: "var(--gradient-primary)" }}
+                >
+                  <GraduationCap className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <div className="font-semibold text-sm leading-tight truncate">Routine Manager</div>
+                  <div className="text-[11px] text-muted-foreground truncate">Dept. of CSE</div>
+                </div>
+              </Link>
+              {/* Collapse toggle — right side of title */}
+              <button
+                onClick={() => setCollapsed(true)}
+                title="Collapse sidebar"
+                className="h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors shrink-0"
               >
-                <GraduationCap className="h-5 w-5" />
-              </div>
-            </Link>
+                <PanelLeftClose className="h-4 w-4" />
+              </button>
+            </>
           )}
         </div>
 
