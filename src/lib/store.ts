@@ -388,6 +388,8 @@ export const useStore = create<StoreState>((set, get) => ({
         name: r.name,
         room_type: r.room_type,
         capacity: r.capacity !== undefined ? safeNum(r.capacity) : undefined,
+        departmental_type: r.departmental_type,
+        department_id: r.department_id,
       };
 
       // Remove undefined fields
@@ -468,6 +470,8 @@ export const useStore = create<StoreState>((set, get) => ({
         term: sec.term,
         name: sec.name,
         total_students: sec.total_students !== undefined ? safeNum(sec.total_students) : undefined,
+        departmental_type: sec.departmental_type,
+        department_id: sec.department_id,
       };
 
       // Remove undefined fields
@@ -522,6 +526,7 @@ export const useStore = create<StoreState>((set, get) => ({
         credit: c.credit !== undefined ? safeNum(c.credit) : undefined,
         course_type: c.course_type,
         departmental_type: c.departmental_type,
+        department_id: c.department_id,
         level: c.level !== undefined ? safeNum(c.level) : undefined,
         term: c.term,
         theory: c.theory !== undefined ? safeNum(c.theory) : undefined,

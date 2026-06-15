@@ -24,6 +24,7 @@ import { BlockedDeleteDialog } from "@/components/BlockedDeleteDialog";
 const empty: Omit<Course, "id"> = {
   code: "", name: "", credit: 3, course_type: "theory_3.0",
   departmental_type: "Departmental",
+  department_id: null,
   level: 1, term: "I", theory: 3, sessional: 0,
 };
 
@@ -127,6 +128,7 @@ export function CoursesPage() {
                 <TableHead className="text-right">Credit</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Dept. Type</TableHead>
+                <TableHead>Department</TableHead>
                 <TableHead className="text-right w-24">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -151,8 +153,11 @@ export function CoursesPage() {
                       {c.departmental_type}
                     </Badge>
                   </TableCell>
+                  <TableCell className="text-xs text-muted-foreground">
+                    {c.department_id ? (data.departments.find(d => d.id === c.department_id)?.short_name ?? "—") : "—"}
+                  </TableCell>
                   <TableCell className="text-right">
-                    <Button size="icon" variant="ghost" onClick={() => { 
+                    <Button size="icon" variant="ghost" onClick={() => {
                       setEditing(c); 
                       setForm({
                         code: c.code,
@@ -160,6 +165,7 @@ export function CoursesPage() {
                         credit: c.credit,
                         course_type: c.course_type,
                         departmental_type: c.departmental_type,
+                        department_id: c.department_id ?? null,
                         level: c.level,
                         term: c.term,
                         theory: c.theory,
@@ -214,6 +220,15 @@ export function CoursesPage() {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {DEPT_TYPES.map(dt => <SelectItem key={dt} value={dt}>{dt}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Department</Label>
+              <Select value={form.department_id ?? ""} onValueChange={(v) => setForm({ ...form, department_id: v || null })}>
+                <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
+                <SelectContent>
+                  {data.departments.map(d => <SelectItem key={d.id} value={d.id}>{d.short_name} – {d.full_name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>

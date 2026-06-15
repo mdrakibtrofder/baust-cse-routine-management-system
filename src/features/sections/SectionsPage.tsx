@@ -13,13 +13,13 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Pencil, Trash2, Plus, CalendarDays } from "lucide-react";
 import { toast } from "sonner";
-import type { Section } from "@/lib/types";
+import type { Section, DepartmentalType } from "@/lib/types";
 import { useConfirm } from "@/components/ConfirmDialog";
 import { sectionDependencies } from "@/lib/conflicts";
 import { BlockedDeleteDialog } from "@/components/BlockedDeleteDialog";
 import { RoutineDialog } from "@/components/RoutineDialog";
 
-const empty: Omit<Section, "id"> = { level: 1, term: "I", name: "A", total_students: 50 };
+const empty: Omit<Section, "id"> = { level: 1, term: "I", name: "A", total_students: 50, departmental_type: "Departmental", department_id: null };
 
 export function SectionsPage() {
   const data = useStore();
@@ -123,6 +123,8 @@ export function SectionsPage() {
                 <TableRow>
                   <TableHead>Section</TableHead>
                   <TableHead className="text-right">Students</TableHead>
+                  <TableHead>Dept. Type</TableHead>
+                  <TableHead>Department</TableHead>
                   <TableHead className="text-right w-20"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -131,6 +133,10 @@ export function SectionsPage() {
                   <TableRow key={s.id}>
                     <TableCell className="font-medium">Section {s.name}</TableCell>
                     <TableCell className="text-right">{s.total_students}</TableCell>
+                    <TableCell className="text-xs">{s.departmental_type ?? "Departmental"}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {s.department_id ? (data.departments.find(d => d.id === s.department_id)?.short_name ?? "—") : "—"}
+                    </TableCell>
                     <TableCell className="text-right">
                       <Button size="icon" variant="ghost" title="View routine"
                         onClick={() => setRoutineFor(s)}>
@@ -178,11 +184,30 @@ export function SectionsPage() {
             </div>
             <div>
               <Label>Total students</Label>
-              <Input 
-                type="number" 
+              <Input
+                type="number"
                 value={form.total_students}
-                onChange={(e) => setForm({ ...form, total_students: e.target.value })} 
+                onChange={(e) => setForm({ ...form, total_students: e.target.value })}
               />
+            </div>
+            <div>
+              <Label>Dept. Type</Label>
+              <Select value={form.departmental_type ?? "Departmental"} onValueChange={(v: DepartmentalType) => setForm({ ...form, departmental_type: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Departmental">Departmental</SelectItem>
+                  <SelectItem value="Non-Departmental">Non-Departmental</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Department</Label>
+              <Select value={form.department_id ?? ""} onValueChange={(v) => setForm({ ...form, department_id: v || null })}>
+                <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
+                <SelectContent>
+                  {data.departments.map(d => <SelectItem key={d.id} value={d.id}>{d.short_name} – {d.full_name}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter>

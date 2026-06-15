@@ -25,6 +25,7 @@ export interface Course {
   credit: number;
   course_type: CourseType;
   departmental_type: DepartmentalType;
+  department_id: string | null;
   level: number;
   term: string; // I | II
   theory: number;
@@ -37,6 +38,8 @@ export interface Section {
   term: string;
   name: string; // A, B, C
   total_students: number;
+  departmental_type: DepartmentalType;
+  department_id: string | null;
 }
 
 export interface Room {
@@ -44,6 +47,8 @@ export interface Room {
   name: string;
   room_type: "Theory" | "Sessional";
   capacity: number;
+  departmental_type: DepartmentalType;
+  department_id: string | null;
 }
 
 export interface Department {

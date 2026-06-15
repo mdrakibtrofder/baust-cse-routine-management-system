@@ -14,14 +14,14 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Pencil, Trash2, Plus, Search, CalendarDays, Clock, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import type { Room } from "@/lib/types";
+import type { Room, DepartmentalType } from "@/lib/types";
 import { useConfirm } from "@/components/ConfirmDialog";
 import { roomDependencies } from "@/lib/conflicts";
 import { BlockedDeleteDialog } from "@/components/BlockedDeleteDialog";
 import { RoutineDialog } from "@/components/RoutineDialog";
 import { UnavailabilityDialog } from "@/components/UnavailabilityDialog";
 
-const empty: Omit<Room, "id"> = { name: "", room_type: "Theory", capacity: 50 };
+const empty: Omit<Room, "id"> = { name: "", room_type: "Theory", capacity: 50, departmental_type: "Departmental", department_id: null };
 
 export function RoomsPage() {
   const data = useStore();
@@ -124,6 +124,8 @@ export function RoomsPage() {
                 <TableHead>Room</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead className="text-right">Capacity</TableHead>
+                <TableHead>Dept. Type</TableHead>
+                <TableHead>Department</TableHead>
                 <TableHead className="text-right">Assigned</TableHead>
                 <TableHead className="text-right w-24">Actions</TableHead>
               </TableRow>
@@ -138,6 +140,10 @@ export function RoomsPage() {
                       <Badge variant={r.room_type === "Sessional" ? "default" : "secondary"}>{r.room_type}</Badge>
                     </TableCell>
                     <TableCell className="text-right">{r.capacity}</TableCell>
+                    <TableCell className="text-xs">{r.departmental_type ?? "Departmental"}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {r.department_id ? (data.departments.find(d => d.id === r.department_id)?.short_name ?? "—") : "—"}
+                    </TableCell>
                     <TableCell className="text-right text-xs text-muted-foreground">{deps.length}</TableCell>
                     <TableCell className="text-right">
                       <Button size="icon" variant="ghost" title="View routine"
@@ -150,7 +156,7 @@ export function RoomsPage() {
                       </Button>
                       <Button size="icon" variant="ghost" onClick={() => {
                         setEditing(r);
-                        setForm({ name: r.name, room_type: r.room_type, capacity: r.capacity });
+                        setForm({ name: r.name, room_type: r.room_type, capacity: r.capacity, departmental_type: r.departmental_type ?? "Departmental", department_id: r.department_id ?? null });
                         setOpen(true);
                       }}>
                         <Pencil className="h-3.5 w-3.5" />
@@ -197,6 +203,25 @@ export function RoomsPage() {
                 value={form.capacity}
                 onChange={(e) => setForm({ ...form, capacity: Math.max(1, Math.trunc(Number(e.target.value))) || 1 })}
               />
+            </div>
+            <div>
+              <Label>Dept. Type</Label>
+              <Select value={form.departmental_type ?? "Departmental"} onValueChange={(v: DepartmentalType) => setForm({ ...form, departmental_type: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Departmental">Departmental</SelectItem>
+                  <SelectItem value="Non-Departmental">Non-Departmental</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Department</Label>
+              <Select value={form.department_id ?? ""} onValueChange={(v) => setForm({ ...form, department_id: v || null })}>
+                <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
+                <SelectContent>
+                  {data.departments.map(d => <SelectItem key={d.id} value={d.id}>{d.short_name} – {d.full_name}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter>
