@@ -84,7 +84,7 @@ interface StoreState extends AppData {
   deleteDay: (id: string) => Promise<void>;
   
   // assignments
-  setCourseSectionTeachers: (course_id: string, section_id: string, teacher_ids: string[], primary_room_id?: string | null) => Promise<void>;
+  setCourseSectionTeachers: (course_id: string, section_id: string, teacher_ids: string[], primary_room_id?: string | null, slot_teacher_ids?: string[][] | null) => Promise<void>;
   
   // class slots
   upsertClassSlot: (slot: Omit<ClassSlot, "id" | "semester_id"> & { id?: string; semester_id?: string }) => Promise<string>;
@@ -595,14 +595,15 @@ export const useStore = create<StoreState>((set, get) => ({
     } catch (err: any) { set({ error: err.message }); }
   },
 
-  setCourseSectionTeachers: async (course_id, section_id, teacher_ids, primary_room_id) => {
+  setCourseSectionTeachers: async (course_id, section_id, teacher_ids, primary_room_id, slot_teacher_ids) => {
     try {
       const res = await api.post<CourseSectionTeacher>('/assignments', {
         semester_id: get().active_semester_id,
         course_id,
         section_id,
         teacher_ids,
-        primary_room_id
+        primary_room_id,
+        slot_teacher_ids: slot_teacher_ids ?? null,
       });
       set((s) => {
         const idx = s.course_section_teachers.findIndex(x => x.id === res.id);

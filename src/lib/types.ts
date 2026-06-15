@@ -92,7 +92,11 @@ export interface CourseSectionTeacher {
   semester_id: string;
   course_id: string;
   section_id: string;
-  teacher_ids: string[]; // 1 for theory, 2 for sessional
+  teacher_ids: string[]; // 1 for theory, 2 for sessional (union of all slot teachers)
+  /** Per-slot teacher override for sessional_3.0 split mode.
+   *  Index matches slot order sorted by day+time.
+   *  null = shared mode (all slots use teacher_ids). */
+  slot_teacher_ids?: string[][] | null;
   primary_room_id?: string | null;
 }
 

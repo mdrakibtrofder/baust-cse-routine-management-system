@@ -351,7 +351,29 @@ function RoutineCell({ slot, large }: { slot: ClassSlot; large?: boolean }) {
       x.course_id === slot.course_id &&
       x.section_id === slot.section_id,
   );
-  const teachers = (cst?.teacher_ids ?? [])
+
+  // For sessional_3.0 split mode, resolve which teacher(s) teach this specific slot
+  const effectiveTeacherIds = useMemo(() => {
+    if (cst?.slot_teacher_ids?.length) {
+      const siblings = data.class_slots
+        .filter(s =>
+          s.semester_id === data.active_semester_id &&
+          s.course_id === slot.course_id &&
+          s.section_id === slot.section_id
+        )
+        .sort((a, b) => {
+          const days = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
+          const da = days.indexOf(a.day), db = days.indexOf(b.day);
+          if (da !== db) return da - db;
+          return a.start.localeCompare(b.start);
+        });
+      const idx = siblings.findIndex(s => s.id === slot.id);
+      if (idx >= 0 && cst.slot_teacher_ids[idx]?.length) return cst.slot_teacher_ids[idx];
+    }
+    return cst?.teacher_ids ?? [];
+  }, [cst, slot, data.class_slots, data.active_semester_id]);
+
+  const teachers = effectiveTeacherIds
     .map((tid) => data.teachers.find((t) => t.id === tid))
     .filter(Boolean) as { short_name: string }[];
 

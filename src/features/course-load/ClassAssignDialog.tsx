@@ -31,6 +31,9 @@ import {
   CalendarDays,
   MapPin,
   Loader2,
+  Split,
+  UserPlus,
+  X,
 } from "lucide-react";
 import { COURSE_TYPE_INFO, type Course, type Section, type WeekPattern } from "@/lib/types";
 import {
@@ -54,7 +57,6 @@ import { CourseDetailsDialog } from "@/components/CourseDetailsDialog";
 import { useConfirm } from "@/components/ConfirmDialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { UserPlus, X } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface DraftClass {
@@ -101,6 +103,7 @@ export function ClassAssignDialog({
     ReturnType<typeof data.teachers.find>
   >[];
   const info = courseInfo(course);
+  const isSessional3 = course.course_type === 'sessional_3.0';
 
   const existing = useMemo(
     () =>
@@ -127,6 +130,10 @@ export function ClassAssignDialog({
   const [submitting, setSubmitting] = useState(false);
   const confirmDialog = useConfirm();
 
+  // Split-teacher mode (only for sessional_3.0): each class has its own teacher
+  const [splitMode, setSplitMode] = useState(false);
+  const [slotTeacherIds, setSlotTeacherIds] = useState<string[][]>([[], []]);
+
   const maxTeachers = info.roomKind === "sessional" ? 2 : 1;
   const canAddTeacher = teacherIds.length < maxTeachers;
 
@@ -143,9 +150,16 @@ export function ClassAssignDialog({
     }
     setDrafts(initial);
     setStep(0);
+    // Initialize split-teacher state from saved config
+    const hasSplit = !!(cst?.slot_teacher_ids?.length);
+    setSplitMode(hasSplit);
+    setSlotTeacherIds(hasSplit ? (cst!.slot_teacher_ids as string[][]) : [[], []]);
   }, [open, course.id, section.id, info.classCount, info.classDuration, info.weekPattern]);
 
   const safeStep = Math.min(step, Math.max(drafts.length - 1, 0));
+
+  // In split mode, effective teachers for the current step (used for conflict checking)
+  const effectiveTeacherIds = isSessional3 && splitMode ? (slotTeacherIds[safeStep] ?? []) : teacherIds;
   const current: DraftClass = drafts[safeStep] ?? EMPTY_CLASS(info);
 
   const applicablePeriods = useMemo(
@@ -165,28 +179,28 @@ export function ClassAssignDialog({
       data,
       course,
       section,
-      teacherIds,
+      teacherIds: effectiveTeacherIds,
       candidate: current,
       ignoreSlotId: current.id,
       siblingDrafts: siblings,
     });
-  }, [data, course, section, teacherIds, current, drafts, safeStep]);
+  }, [data, course, section, effectiveTeacherIds, current, drafts, safeStep]);
 
   const availableRooms = useMemo(() => {
     if (drafts.length === 0) return [];
     const siblings = drafts.filter((_, i) => i !== safeStep).map((d) => ({
       day: d.day, start: d.start, end: d.end, week: d.week,
     }));
-    return findAvailableRooms(data, course, section, current, current.id, teacherIds, siblings);
-  }, [data, course, section, current, drafts, teacherIds, safeStep]);
+    return findAvailableRooms(data, course, section, current, current.id, effectiveTeacherIds, siblings);
+  }, [data, course, section, current, drafts, effectiveTeacherIds, safeStep]);
 
   const globalSuggestions = useMemo(() => {
     if (!open || conflicts.length === 0) return [];
     const siblings = drafts.filter((_, i) => i !== safeStep).map((d) => ({
       day: d.day, start: d.start, end: d.end, week: d.week,
     }));
-    return findAllConflictFreeSlots(data, course, section, teacherIds, current.id, siblings, current.week);
-  }, [data, course, section, teacherIds, current.id, current.week, drafts, safeStep, conflicts.length, open]);
+    return findAllConflictFreeSlots(data, course, section, effectiveTeacherIds, current.id, siblings, current.week);
+  }, [data, course, section, effectiveTeacherIds, current.id, current.week, drafts, safeStep, conflicts.length, open]);
 
   /** Per-class status used for the stepper indicator */
   const draftStatuses = useMemo(
@@ -195,8 +209,9 @@ export function ClassAssignDialog({
         const siblings = drafts.filter((_, i) => i !== idx).map((x) => ({
           day: x.day, start: x.start, end: x.end, week: x.week,
         }));
+        const stepTeacherIds = isSessional3 && splitMode ? (slotTeacherIds[idx] ?? []) : teacherIds;
         const cs = checkConflicts({
-          data, course, section, teacherIds, candidate: d, ignoreSlotId: d.id, siblingDrafts: siblings,
+          data, course, section, teacherIds: stepTeacherIds, candidate: d, ignoreSlotId: d.id, siblingDrafts: siblings,
         });
         const incomplete = !d.room_id;
         return { conflicts: cs, incomplete };
@@ -224,6 +239,18 @@ export function ClassAssignDialog({
         .filter((d) => d.room_id && d.day && d.start && d.end)
         .map((d) => ({ day: d.day, start: d.start, end: d.end, room_id: d.room_id!, week: d.week }));
       await data.batchReplaceClassSlots(course.id, section.id, readySlots, force);
+
+      // Persist split-teacher config for sessional_3.0
+      if (isSessional3) {
+        if (splitMode) {
+          const union = [...new Set(slotTeacherIds.flat())];
+          await data.setCourseSectionTeachers(course.id, section.id, union, cst?.primary_room_id, slotTeacherIds);
+        } else if (cst?.slot_teacher_ids?.length) {
+          // Clear split config when switching back to shared mode
+          await data.setCourseSectionTeachers(course.id, section.id, teacherIds, cst?.primary_room_id, null);
+        }
+      }
+
       toast.success("Schedule saved");
       onOpenChange(false);
     } catch (err: any) {
@@ -332,10 +359,31 @@ export function ClassAssignDialog({
                 <CalendarDays className="h-3.5 w-3.5 mr-1" /> Full section routine
               </Button>
             </div>
-            <div className="text-xs text-muted-foreground mt-1">
-              {info.classCount} class{info.classCount > 1 ? "es" : ""} per week ·{" "}
-              {info.classDuration % 60 === 0 ? `${info.classDuration / 60}h` : `${info.classDuration}m`} ·{" "}
-              {info.teachersRequired} teacher(s)
+            <div className="text-xs text-muted-foreground mt-1 flex items-center gap-3 flex-wrap">
+              <span>
+                {info.classCount} class{info.classCount > 1 ? "es" : ""} per week ·{" "}
+                {info.classDuration % 60 === 0 ? `${info.classDuration / 60}h` : `${info.classDuration}m`} ·{" "}
+                {info.teachersRequired} teacher(s)
+              </span>
+              {isSessional3 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = !splitMode;
+                    setSplitMode(next);
+                    if (!next) setSlotTeacherIds([[], []]);
+                  }}
+                  className={cn(
+                    "inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded border transition",
+                    splitMode
+                      ? "bg-purple-100 text-purple-700 border-purple-300"
+                      : "bg-muted text-muted-foreground border-border hover:border-primary"
+                  )}
+                >
+                  <Split className="h-3 w-3" />
+                  {splitMode ? "Split teachers (per class)" : "Split teachers"}
+                </button>
+              )}
             </div>
           </DialogHeader>
 
@@ -379,6 +427,15 @@ export function ClassAssignDialog({
                         {fmtDayTitle(d.day)} {fmtRange12(d.start, d.end)}
                       </div>
                       <div className="text-[10px] text-muted-foreground whitespace-normal leading-relaxed mt-1">
+                        {isSessional3 && splitMode && (() => {
+                          const tid = slotTeacherIds[i]?.[0];
+                          const t = tid ? data.teachers.find(x => x.id === tid) : null;
+                          return t ? (
+                            <span className="text-purple-700 font-bold">{t.short_name}</span>
+                          ) : (
+                            <span className="text-amber-600 italic">No teacher</span>
+                          );
+                        })()}
                         {room ? (
                           <span className="text-emerald-600 flex items-center gap-1 font-bold">
                             <MapPin className="h-3 w-3" /> {room.name}
@@ -408,120 +465,147 @@ export function ClassAssignDialog({
                 </div>
               )}
 
-              {/* Teachers + section info */}
+              {/* Teachers panel — split mode shows per-step picker, shared mode shows global pool */}
               <div className="rounded-lg border bg-muted/30 p-3 space-y-3">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex flex-col gap-1">
-                    <Label className="text-[11px] font-bold uppercase tracking-widest text-slate-500">
-                      Teachers ({teachers.length}/{maxTeachers})
+                {isSessional3 && splitMode ? (
+                  /* ── SPLIT MODE: 1 teacher per class slot ── */
+                  <div className="space-y-2">
+                    <Label className="text-[11px] font-bold uppercase tracking-widest text-slate-500 flex items-center gap-1.5">
+                      <Split className="h-3 w-3 text-purple-600" />
+                      Teacher for Class {safeStep + 1}
                     </Label>
-                    {!canAddTeacher && (
-                      <div className="text-[9px] text-success font-bold flex items-center gap-1 uppercase">
-                        <Check className="h-3 w-3" /> Assigned
-                      </div>
-                    )}
+                    <TeacherPickerInline
+                      selectedId={slotTeacherIds[safeStep]?.[0] ?? null}
+                      disabledIds={slotTeacherIds.filter((_, i) => i !== safeStep).flatMap(a => a)}
+                      onSelect={(tid) => {
+                        setSlotTeacherIds(prev => {
+                          const next = [...prev];
+                          next[safeStep] = tid ? [tid] : [];
+                          return next;
+                        });
+                      }}
+                      course={course}
+                      section={section}
+                      onViewDetails={(tid) => setTeacherDetailsId(tid)}
+                    />
                   </div>
+                ) : (
+                  /* ── SHARED MODE: global teacher pool ── */
+                  <>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex flex-col gap-1">
+                        <Label className="text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                          Teachers ({teachers.length}/{maxTeachers})
+                        </Label>
+                        {!canAddTeacher && (
+                          <div className="text-[9px] text-success font-bold flex items-center gap-1 uppercase">
+                            <Check className="h-3 w-3" /> Assigned
+                          </div>
+                        )}
+                      </div>
 
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="h-8 text-[10px] gap-2 font-bold bg-white hover:bg-primary hover:text-white transition-all border-slate-200"
-                        disabled={!canAddTeacher}
-                      >
-                        <UserPlus className="h-3.5 w-3.5" /> Add Teacher
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="p-0 w-80 shadow-2xl border-slate-200" align="end">
-                      <Command className="rounded-xl">
-                        <CommandInput placeholder="Search teachers..." className="h-10 text-xs" />
-                        <CommandList className="max-h-72">
-                          <CommandEmpty className="py-4 text-xs text-slate-400">No teacher found.</CommandEmpty>
-                          <CommandGroup className="p-2">
-                            {data.teachers
-                              .sort((a, b) => a.short_name.localeCompare(b.short_name))
-                              .map((t) => {
-                                const isSelected = teacherIds.includes(t.id);
-                                const exceed = teacherWouldExceed(data, t.id, course, section, info.teachersRequired - 1);
-                                return (
-                                  <CommandItem
-                                    key={t.id}
-                                    onSelect={() => {
-                                      if (isSelected) {
-                                        const next = teacherIds.filter(id => id !== t.id);
-                                        data.setCourseSectionTeachers(course.id, section.id, next);
-                                      } else if (canAddTeacher) {
-                                        const next = [...teacherIds, t.id];
-                                        data.setCourseSectionTeachers(course.id, section.id, next);
-                                      }
-                                    }}
-                                    className="flex items-center justify-between rounded-lg px-3 py-2 cursor-pointer"
-                                  >
-                                    <div className="flex-1 min-w-0">
-                                      <div className="flex items-center gap-2">
-                                        <RankPill designation={t.designation} />
-                                        <span className="font-mono font-bold text-xs">{t.short_name}</span>
-                                        <span className="text-muted-foreground text-[11px] truncate">{t.name}</span>
-                                      </div>
-                                      <div className="text-[10px] text-muted-foreground flex items-center gap-2 mt-0.5 ml-[26px]">
-                                        <span className="truncate">{t.designation}</span>
-                                        {t.status && <Badge variant="outline" className="text-[9px] py-0 h-3.5 px-1">{t.status}</Badge>}
-                                        <span className={cn("font-medium", exceed.exceeds && "text-destructive font-bold")} title="Assigned / Total">
-                                          {Number(exceed.current).toFixed(2)}/{Number(exceed.assigned).toFixed(2)} cr
-                                        </span>
-                                        {exceed.exceeds && <AlertCircle className="h-3 w-3 text-destructive" />}
-                                      </div>
-                                    </div>
-                                    {isSelected && <Check className="h-4 w-4 text-primary stroke-[3px] ml-2 shrink-0" />}
-                                  </CommandItem>
-                                );
-                              })}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-
-                <div className="flex flex-wrap gap-2.5">
-                  {teachers.length === 0 ? (
-                    <div className="text-[11px] text-slate-400 font-bold italic py-2 w-full text-center border-2 border-dashed border-slate-200 rounded-lg">
-                      No teachers assigned yet.
-                    </div>
-                  ) : (
-                    <TooltipProvider>
-                      {teachers.map((t) => (
-                        <div key={t.id} className="flex items-center gap-1 group animate-in fade-in zoom-in duration-200">
-                          <button
-                            type="button"
-                            onClick={() => setTeacherDetailsId(t.id)}
-                            className="hover:scale-105 transition-transform"
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-[10px] gap-2 font-bold bg-white hover:bg-primary hover:text-white transition-all border-slate-200"
+                            disabled={!canAddTeacher}
                           >
-                            <TeacherChip teacher={t} />
-                          </button>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
+                            <UserPlus className="h-3.5 w-3.5" /> Add Teacher
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="p-0 w-80 shadow-2xl border-slate-200" align="end">
+                          <Command className="rounded-xl">
+                            <CommandInput placeholder="Search teachers..." className="h-10 text-xs" />
+                            <CommandList className="max-h-72">
+                              <CommandEmpty className="py-4 text-xs text-slate-400">No teacher found.</CommandEmpty>
+                              <CommandGroup className="p-2">
+                                {data.teachers
+                                  .sort((a, b) => a.short_name.localeCompare(b.short_name))
+                                  .map((t) => {
+                                    const isSelected = teacherIds.includes(t.id);
+                                    const exceed = teacherWouldExceed(data, t.id, course, section, info.teachersRequired - 1);
+                                    return (
+                                      <CommandItem
+                                        key={t.id}
+                                        onSelect={() => {
+                                          if (isSelected) {
+                                            const next = teacherIds.filter(id => id !== t.id);
+                                            data.setCourseSectionTeachers(course.id, section.id, next);
+                                          } else if (canAddTeacher) {
+                                            const next = [...teacherIds, t.id];
+                                            data.setCourseSectionTeachers(course.id, section.id, next);
+                                          }
+                                        }}
+                                        className="flex items-center justify-between rounded-lg px-3 py-2 cursor-pointer"
+                                      >
+                                        <div className="flex-1 min-w-0">
+                                          <div className="flex items-center gap-2">
+                                            <RankPill designation={t.designation} />
+                                            <span className="font-mono font-bold text-xs">{t.short_name}</span>
+                                            <span className="text-muted-foreground text-[11px] truncate">{t.name}</span>
+                                          </div>
+                                          <div className="text-[10px] text-muted-foreground flex items-center gap-2 mt-0.5 ml-[26px]">
+                                            <span className="truncate">{t.designation}</span>
+                                            {t.status && <Badge variant="outline" className="text-[9px] py-0 h-3.5 px-1">{t.status}</Badge>}
+                                            <span className={cn("font-medium", exceed.exceeds && "text-destructive font-bold")} title="Assigned / Total">
+                                              {Number(exceed.current).toFixed(2)}/{Number(exceed.assigned).toFixed(2)} cr
+                                            </span>
+                                            {exceed.exceeds && <AlertCircle className="h-3 w-3 text-destructive" />}
+                                          </div>
+                                        </div>
+                                        {isSelected && <Check className="h-4 w-4 text-primary stroke-[3px] ml-2 shrink-0" />}
+                                      </CommandItem>
+                                    );
+                                  })}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2.5">
+                      {teachers.length === 0 ? (
+                        <div className="text-[11px] text-slate-400 font-bold italic py-2 w-full text-center border-2 border-dashed border-slate-200 rounded-lg">
+                          No teachers assigned yet.
+                        </div>
+                      ) : (
+                        <TooltipProvider>
+                          {teachers.map((t) => (
+                            <div key={t.id} className="flex items-center gap-1 group animate-in fade-in zoom-in duration-200">
                               <button
                                 type="button"
-                                onClick={() => {
-                                  const next = teacherIds.filter(id => id !== t.id);
-                                  data.setCourseSectionTeachers(course.id, section.id, next);
-                                }}
-                                className="p-1 rounded-full hover:bg-rose-100 text-slate-400 hover:text-rose-600 transition-all"
+                                onClick={() => setTeacherDetailsId(t.id)}
+                                className="hover:scale-105 transition-transform"
                               >
-                                <X className="h-3.5 w-3.5 stroke-[3px]" />
+                                <TeacherChip teacher={t} />
                               </button>
-                            </TooltipTrigger>
-                            <TooltipContent className="bg-slate-800 text-white text-[10px] font-bold">
-                              <p>Remove Teacher</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </div>
-                      ))}
-                    </TooltipProvider>
-                  )}
-                </div>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const next = teacherIds.filter(id => id !== t.id);
+                                      data.setCourseSectionTeachers(course.id, section.id, next);
+                                    }}
+                                    className="p-1 rounded-full hover:bg-rose-100 text-slate-400 hover:text-rose-600 transition-all"
+                                  >
+                                    <X className="h-3.5 w-3.5 stroke-[3px]" />
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent className="bg-slate-800 text-white text-[10px] font-bold">
+                                  <p>Remove Teacher</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </div>
+                          ))}
+                        </TooltipProvider>
+                      )}
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -649,7 +733,7 @@ export function ClassAssignDialog({
                     <RoomDayGrid
                       course={course}
                       section={section}
-                      teacherIds={teacherIds}
+                      teacherIds={effectiveTeacherIds}
                       day={current.day || "SUN"}
                       currentSlotId={current.id}
                       currentRoomId={current.room_id}
@@ -834,6 +918,111 @@ export function ClassAssignDialog({
         onOpenChange={setShowCourseDetails}
       />
     </>
+  );
+}
+
+/** Single-teacher picker used in split mode (1 teacher per class). */
+function TeacherPickerInline({
+  selectedId,
+  disabledIds,
+  onSelect,
+  course,
+  section,
+  onViewDetails,
+}: {
+  selectedId: string | null;
+  disabledIds: string[];
+  onSelect: (tid: string | null) => void;
+  course: Course;
+  section: Section;
+  onViewDetails: (tid: string) => void;
+}) {
+  const data = useStore();
+  const selected = selectedId ? data.teachers.find(t => t.id === selectedId) : null;
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className={cn(
+            "h-9 text-[11px] gap-2 font-bold w-full justify-start border-slate-200",
+            selected ? "bg-purple-50 border-purple-300 text-purple-800" : "border-dashed text-muted-foreground"
+          )}
+        >
+          {selected ? (
+            <>
+              <RankPill designation={selected.designation} />
+              <span className="font-mono">{selected.short_name}</span>
+              <span className="text-muted-foreground truncate font-normal">{selected.name}</span>
+            </>
+          ) : (
+            <><UserPlus className="h-3.5 w-3.5" /> Assign teacher</>
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="p-0 w-80 shadow-2xl border-slate-200" align="start">
+        <Command className="rounded-xl">
+          <CommandInput placeholder="Search teachers..." className="h-10 text-xs" />
+          <CommandList className="max-h-72">
+            <CommandEmpty className="py-4 text-xs text-slate-400">No teacher found.</CommandEmpty>
+            <CommandGroup className="p-2">
+              {selected && (
+                <CommandItem
+                  onSelect={() => onSelect(null)}
+                  className="text-destructive text-xs font-bold mb-1"
+                >
+                  <X className="h-3.5 w-3.5 mr-1.5" /> Clear selection
+                </CommandItem>
+              )}
+              {data.teachers
+                .sort((a, b) => a.short_name.localeCompare(b.short_name))
+                .map((t) => {
+                  const isSelected = t.id === selectedId;
+                  const isDisabled = disabledIds.includes(t.id);
+                  const exceed = teacherWouldExceed(data, t.id, course, section, 0);
+                  return (
+                    <CommandItem
+                      key={t.id}
+                      disabled={isDisabled}
+                      onSelect={() => { if (!isDisabled) onSelect(t.id); }}
+                      className={cn(
+                        "flex items-center justify-between rounded-lg px-3 py-2 cursor-pointer",
+                        isDisabled && "opacity-40 cursor-not-allowed"
+                      )}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <RankPill designation={t.designation} />
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); onViewDetails(t.id); }}
+                            className="font-mono font-bold text-xs hover:underline"
+                          >
+                            {t.short_name}
+                          </button>
+                          <span className="text-muted-foreground text-[11px] truncate">{t.name}</span>
+                          {isDisabled && <Badge variant="secondary" className="text-[9px] py-0 h-3.5 px-1">other class</Badge>}
+                        </div>
+                        <div className="text-[10px] text-muted-foreground flex items-center gap-2 mt-0.5 ml-[26px]">
+                          <span className="truncate">{t.designation}</span>
+                          {t.status && <Badge variant="outline" className="text-[9px] py-0 h-3.5 px-1">{t.status}</Badge>}
+                          <span className={cn("font-medium", exceed.exceeds && "text-destructive font-bold")} title="Assigned / Total">
+                            {Number(exceed.current).toFixed(2)}/{Number(exceed.assigned).toFixed(2)} cr
+                          </span>
+                          {exceed.exceeds && <AlertCircle className="h-3 w-3 text-destructive" />}
+                        </div>
+                      </div>
+                      {isSelected && <Check className="h-4 w-4 text-purple-600 stroke-[3px] ml-2 shrink-0" />}
+                    </CommandItem>
+                  );
+                })}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }
 
