@@ -46,13 +46,31 @@ export function CoursesPage() {
     [courses, q]
   );
 
-  /** Course code must be unique (case-insensitive, global) */
-  const dup = (code: string, ignoreId?: string) =>
-    courses.some(c => c.id !== ignoreId && c.code.trim().toLowerCase() === code.trim().toLowerCase());
+  /** Course code must be unique (case-insensitive) within the same level, term,
+   *  departmental_type, and department. Different departments may reuse the same code. */
+  const dup = (
+    code: string,
+    level: number,
+    term: string,
+    departmental_type: string,
+    department_id: string | null | undefined,
+    ignoreId?: string,
+  ) =>
+    courses.some(
+      c =>
+        c.id !== ignoreId &&
+        c.code.trim().toLowerCase() === code.trim().toLowerCase() &&
+        c.level === level &&
+        c.term === term &&
+        c.departmental_type === departmental_type &&
+        (c.department_id ?? null) === (department_id ?? null),
+    );
 
   const submit = async () => {
     if (!form.code.trim() || !form.name.trim()) return toast.error("Code and name required");
-    if (dup(form.code, editing?.id)) return toast.error(`Course code "${form.code}" already exists`);
+    if (dup(form.code, form.level, form.term, form.departmental_type, form.department_id, editing?.id)) {
+      return toast.error(`Course code "${form.code}" already exists in this department for Level ${form.level} Term ${form.term}`);
+    }
     try {
       if (editing) { 
         await updateCourse(editing.id, form); 
@@ -193,8 +211,8 @@ export function CoursesPage() {
             <div>
               <Label>Code</Label>
               <Input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} />
-              {form.code && dup(form.code, editing?.id) && (
-                <p className="text-[11px] text-destructive mt-1">Code already in use</p>
+              {form.code && dup(form.code, form.level, form.term, form.departmental_type, form.department_id, editing?.id) && (
+                <p className="text-[11px] text-destructive mt-1">Code already in use in this department for this level/term</p>
               )}
             </div>
             <div>

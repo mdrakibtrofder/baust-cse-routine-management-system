@@ -37,11 +37,14 @@ export function buildRoutineCourseSummary(
   for (const [cid, meetings] of counts.entries()) {
     const c = data.courses.find((x) => x.id === cid);
     if (!c) continue;
+    const theory = Number(c.theory || 0);
+    const sessional = Number(c.sessional || 0);
     rows.push({
       course: c,
-      theory: Number(c.theory || 0),
-      sessional: Number(c.sessional || 0),
-      credit: Number(c.credit || 0),
+      theory,
+      sessional,
+      // Credit hours = theory hours + 2 * sessional hours
+      credit: theory + 2 * sessional,
       meetings,
     });
   }
