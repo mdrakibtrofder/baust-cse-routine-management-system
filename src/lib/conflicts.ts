@@ -232,10 +232,9 @@ export function teacherAssignedCreditUsed(data: AppData, teacherId: string): num
     if (!cst.teacher_ids.includes(teacherId)) continue;
     const c = data.courses.find((x) => x.id === cst.course_id);
     if (!c) continue;
-    
-    const info = COURSE_TYPE_INFO[c.course_type];
-    const weight = info.roomKind === "sessional" ? 3 : 1;
-    total += weight;
+
+    // Credit hours = theory hours + 2 * sessional hours
+    total += Number(c.theory || 0) + 2 * Number(c.sessional || 0);
   }
   return total;
 }
@@ -255,10 +254,10 @@ export function teacherWouldExceed(
     (x) => x.course_id === course.id && x.section_id === section.id,
   );
   const alreadyOnIt = existing?.teacher_ids.includes(teacherId);
-  
-  const info = COURSE_TYPE_INFO[course.course_type];
-  const weight = info.roomKind === "sessional" ? 3 : 1;
-  
+
+  // Credit hours = theory hours + 2 * sessional hours
+  const weight = Number(course.theory || 0) + 2 * Number(course.sessional || 0);
+
   if (alreadyOnIt) return { exceeds: false, current, assigned, addition: 0 };
   return {
     exceeds: assigned > 0 && current + weight > assigned + 0.001,

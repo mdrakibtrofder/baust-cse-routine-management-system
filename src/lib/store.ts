@@ -386,7 +386,21 @@ export const useStore = create<StoreState>((set, get) => ({
 
   addRoom: async (r) => {
     try {
-      const res = await api.post<Room>('/rooms', r);
+      // Clean payload for backend
+      const payload = {
+        name: r.name,
+        room_type: r.room_type,
+        capacity: r.capacity !== undefined ? safeNum(r.capacity) : undefined,
+        departmental_type: r.departmental_type,
+        department_id: r.department_id,
+      };
+
+      // Remove undefined fields
+      Object.keys(payload).forEach(key => 
+        (payload as any)[key] === undefined && delete (payload as any)[key]
+      );
+      
+      const res = await api.post<Room>('/rooms', payload);
       set((s) => ({ rooms: [...s.rooms, res] }));
     } catch (err: any) {
       set({ error: err.message });
