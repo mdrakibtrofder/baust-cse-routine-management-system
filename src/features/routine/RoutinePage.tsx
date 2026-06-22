@@ -3,7 +3,7 @@ import { useStore } from "@/lib/store";
 import { PageHeader } from "@/components/PageHeader";
 import { RoutineView, type RoutineScope } from "@/components/RoutineView";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { Filter, Users, DoorOpen, Boxes } from "lucide-react";
 
 type Mode = "teacher" | "room" | "section";
@@ -26,17 +26,59 @@ export function RoutinePage() {
     }
   }, [data]);
 
-  const sectionsByLT = useMemo(() => {
-    const m = new Map<string, typeof data.sections>();
-    for (const s of [...data.sections].sort(
-      (a, b) => a.level - b.level || a.term.localeCompare(b.term) || a.name.localeCompare(b.name),
-    )) {
-      const k = `Level ${s.level}, Term ${s.term}`;
-      if (!m.has(k)) m.set(k, []);
-      m.get(k)!.push(s);
-    }
-    return m;
-  }, [data.sections]);
+  const teacherOptions: ComboboxOption[] = useMemo(
+    () =>
+      data.teachers.map((t) => ({
+        value: t.id,
+        label: `${t.short_name} ${t.name}`,
+        display: (
+          <span className="flex items-center gap-2 truncate">
+            <span className="font-mono">{t.short_name}</span>
+            <span className="truncate text-muted-foreground">{t.name}</span>
+          </span>
+        ),
+      })),
+    [data.teachers],
+  );
+
+  const roomOptions: ComboboxOption[] = useMemo(
+    () =>
+      data.rooms.map((r) => ({
+        value: r.id,
+        label: `${r.name} ${r.room_type}`,
+        display: (
+          <span className="flex items-center gap-2 truncate">
+            <span className="font-mono">{r.name}</span>
+            <span className="text-xs text-muted-foreground">
+              {r.room_type} · capacity {r.capacity}
+            </span>
+          </span>
+        ),
+      })),
+    [data.rooms],
+  );
+
+  const sectionOptions: ComboboxOption[] = useMemo(
+    () =>
+      [...data.sections]
+        .sort((a, b) => a.level - b.level || a.term.localeCompare(b.term) || a.name.localeCompare(b.name))
+        .map((s) => ({
+          value: s.id,
+          label: `Level ${s.level} Term ${s.term} Section ${s.name}`,
+          group: `Level ${s.level}, Term ${s.term}`,
+          display: (
+            <div className="flex flex-col gap-0.5 py-0.5">
+              <div className="font-semibold text-sm">
+                Level {s.level}, Term {s.term} · Section {s.name}
+              </div>
+              <div className="text-[10px] text-muted-foreground font-medium">
+                {s.total_students} Students · CSE Dept
+              </div>
+            </div>
+          ),
+        })),
+    [data.sections],
+  );
 
   const scope: RoutineScope =
     mode === "teacher"
@@ -80,64 +122,40 @@ export function RoutinePage() {
             </TabsList>
 
             <TabsContent value="teacher" className="mt-3">
-              <Select value={teacherId} onValueChange={setTeacherId}>
-                <SelectTrigger className="max-w-sm">
-                  <SelectValue placeholder="Choose a teacher" />
-                </SelectTrigger>
-                <SelectContent>
-                  {data.teachers.map((t) => (
-                    <SelectItem key={t.id} value={t.id}>
-                      <span className="font-mono mr-2">{t.short_name}</span>
-                      {t.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Combobox
+                options={teacherOptions}
+                value={teacherId}
+                onValueChange={setTeacherId}
+                placeholder="Choose a teacher"
+                searchPlaceholder="Search teachers…"
+                emptyText="No teacher found."
+                className="max-w-sm"
+              />
             </TabsContent>
 
             <TabsContent value="room" className="mt-3">
-              <Select value={roomId} onValueChange={setRoomId}>
-                <SelectTrigger className="max-w-sm">
-                  <SelectValue placeholder="Choose a room" />
-                </SelectTrigger>
-                <SelectContent>
-                  {data.rooms.map((r) => (
-                    <SelectItem key={r.id} value={r.id}>
-                      <span className="font-mono mr-2">{r.name}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {r.room_type} · capacity {r.capacity}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Combobox
+                options={roomOptions}
+                value={roomId}
+                onValueChange={setRoomId}
+                placeholder="Choose a room"
+                searchPlaceholder="Search rooms…"
+                emptyText="No room found."
+                className="max-w-sm"
+              />
             </TabsContent>
 
             <TabsContent value="section" className="mt-3">
-              <Select value={sectionId} onValueChange={setSectionId}>
-                <SelectTrigger className="w-[380px] max-w-full">
-                  <SelectValue placeholder="Choose a section" />
-                </SelectTrigger>
-                <SelectContent className="max-h-[60vh] w-[380px]">
-                  {[...sectionsByLT.entries()].map(([label, list]) => (
-                    <SelectGroup key={label}>
-                      <SelectLabel className="text-[10px] uppercase font-bold text-primary px-3 py-2 bg-muted/50">{label}</SelectLabel>
-                      {list.map((s) => (
-                        <SelectItem key={s.id} value={s.id}>
-                          <div className="flex flex-col gap-0.5 py-1">
-                            <div className="font-semibold text-sm">
-                              Level {s.level}, Term {s.term} · Section {s.name}
-                            </div>
-                            <div className="text-[10px] text-muted-foreground font-medium">
-                              {s.total_students} Students · CSE Dept
-                            </div>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Combobox
+                options={sectionOptions}
+                value={sectionId}
+                onValueChange={setSectionId}
+                placeholder="Choose a section"
+                searchPlaceholder="Search level, term, or section…"
+                emptyText="No section found."
+                className="w-[380px] max-w-full"
+                contentClassName="max-h-[60vh] w-[380px]"
+              />
             </TabsContent>
           </Tabs>
         </div>
