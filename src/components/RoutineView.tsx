@@ -12,6 +12,7 @@ import {
 import { toast } from "sonner";
 import { RoutineCourseSummary } from "@/components/RoutineCourseSummary";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ClassAssignDialog } from "@/features/course-load/ClassAssignDialog";
 
 const DEFAULT_DEPT = "CSE";
 
@@ -38,6 +39,10 @@ export function RoutineView({
   const data = useStore();
 
   const [showPreview, setShowPreview] = useState(false);
+  const [editTarget, setEditTarget] = useState<{ course_id: string; section_id: string } | null>(null);
+
+  const editCourse = editTarget ? data.courses.find((c) => c.id === editTarget.course_id) ?? null : null;
+  const editSection = editTarget ? data.sections.find((s) => s.id === editTarget.section_id) ?? null : null;
 
   const theoryPeriods = useMemo(() => {
     // 14:30 = 2:30 PM is the boundary; default view only shows periods before this
@@ -236,7 +241,16 @@ export function RoutineView({
                         <td key={p.id} colSpan={maxColSpan} className="p-1.5 align-top">
                           <div className="h-full space-y-1.5">
                             {starting.map((s) => (
-                              <RoutineCell key={s.id} slot={s} large={!isExtended} />
+                              <RoutineCell
+                                key={s.id}
+                                slot={s}
+                                large={!isExtended}
+                                onEdit={
+                                  s.lab_group_id
+                                    ? undefined
+                                    : () => setEditTarget({ course_id: s.course_id, section_id: s.section_id })
+                                }
+                              />
                             ))}
                           </div>
                         </td>
@@ -357,11 +371,20 @@ export function RoutineView({
           </div>
         </DialogContent>
       </Dialog>
+
+      {editCourse && editSection && (
+        <ClassAssignDialog
+          open={!!editTarget}
+          onOpenChange={(v) => !v && setEditTarget(null)}
+          course={editCourse}
+          section={editSection}
+        />
+      )}
     </div>
   );
 }
 
-function RoutineCell({ slot, large }: { slot: ClassSlot; large?: boolean }) {
+function RoutineCell({ slot, large, onEdit }: { slot: ClassSlot; large?: boolean; onEdit?: () => void }) {
   const data = useStore();
   const course = data.courses.find((c) => c.id === slot.course_id);
   const section = data.sections.find((s) => s.id === slot.section_id);
@@ -421,12 +444,16 @@ function RoutineCell({ slot, large }: { slot: ClassSlot; large?: boolean }) {
   const isSessional = info.roomKind === "sessional";
 
   return (
-    <div className={cn(
-      "rounded-lg border bg-background transition-all border-border/60 h-full flex flex-col",
-      "shadow-[0_2px_6px_-1px_rgba(0,0,0,0.1),0_1px_3px_-1px_rgba(0,0,0,0.06)]",
-      "hover:shadow-[0_4px_14px_-2px_rgba(0,0,0,0.15)] hover:-translate-y-px relative z-[1] hover:z-[2]",
-      large ? "px-3 py-3 gap-2.5" : "px-2 py-2 gap-2",
-    )}>
+    <div
+      onClick={onEdit}
+      title={onEdit ? "Click to edit this class schedule" : undefined}
+      className={cn(
+        "rounded-lg border bg-background transition-all border-border/60 h-full flex flex-col",
+        "shadow-[0_2px_6px_-1px_rgba(0,0,0,0.1),0_1px_3px_-1px_rgba(0,0,0,0.06)]",
+        "hover:shadow-[0_4px_14px_-2px_rgba(0,0,0,0.15)] hover:-translate-y-px relative z-[1] hover:z-[2]",
+        onEdit && "cursor-pointer hover:border-primary/50",
+        large ? "px-3 py-3 gap-2.5" : "px-2 py-2 gap-2",
+      )}>
       {/* Course code + teacher badges */}
       <div className="flex items-start justify-between gap-1.5">
         <div className={cn("flex items-center gap-1.5 font-bold font-mono", large ? "text-base" : "text-sm")}>
