@@ -20,6 +20,7 @@ import { roomDependencies } from "@/lib/conflicts";
 import { BlockedDeleteDialog } from "@/components/BlockedDeleteDialog";
 import { RoutineDialog } from "@/components/RoutineDialog";
 import { UnavailabilityDialog } from "@/components/UnavailabilityDialog";
+import { HOME_DEPT_SHORT_NAME } from "@/lib/constants";
 
 const empty: Omit<Room, "id"> = { name: "", room_type: "Theory", capacity: 50, departmental_type: "Departmental", department_id: null };
 
@@ -31,6 +32,10 @@ export function RoomsPage() {
   const [editing, setEditing] = useState<Room | null>(null);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<any>(empty);
+  const homeDept = useMemo(
+    () => data.departments.find((d) => d.short_name.trim().toUpperCase() === HOME_DEPT_SHORT_NAME),
+    [data.departments],
+  );
   const [blocked, setBlocked] = useState<{ room: Room; deps: ReturnType<typeof roomDependencies> } | null>(null);
   const [routineFor, setRoutineFor] = useState<Room | null>(null);
   const [unavailFor, setUnavailFor] = useState<Room | null>(null);
@@ -208,7 +213,21 @@ export function RoomsPage() {
             </div>
             <div>
               <Label>Dept. Type</Label>
-              <Select value={form.departmental_type ?? "Departmental"} onValueChange={(v: DepartmentalType) => setForm({ ...form, departmental_type: v })}>
+              <Select
+                value={form.departmental_type ?? "Departmental"}
+                onValueChange={(v: DepartmentalType) =>
+                  setForm({
+                    ...form,
+                    departmental_type: v,
+                    department_id:
+                      v === "Departmental"
+                        ? (homeDept?.id ?? form.department_id ?? null)
+                        : form.department_id === homeDept?.id
+                          ? null
+                          : form.department_id,
+                  })
+                }
+              >
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Departmental">Departmental</SelectItem>
@@ -221,7 +240,9 @@ export function RoomsPage() {
               <Select value={form.department_id ?? ""} onValueChange={(v) => setForm({ ...form, department_id: v || null })}>
                 <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
                 <SelectContent>
-                  {data.departments.map(d => <SelectItem key={d.id} value={d.id}>{d.short_name} – {d.full_name}</SelectItem>)}
+                  {data.departments
+                    .filter((d) => form.departmental_type !== "Non-Departmental" || d.id !== homeDept?.id)
+                    .map(d => <SelectItem key={d.id} value={d.id}>{d.short_name} – {d.full_name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>

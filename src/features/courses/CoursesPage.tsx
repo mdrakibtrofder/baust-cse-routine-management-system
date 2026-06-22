@@ -20,6 +20,7 @@ import { COURSE_TYPE_INFO } from "@/lib/types";
 import { useConfirm } from "@/components/ConfirmDialog";
 import { courseDependencies } from "@/lib/conflicts";
 import { BlockedDeleteDialog } from "@/components/BlockedDeleteDialog";
+import { HOME_DEPT_SHORT_NAME } from "@/lib/constants";
 
 const empty: Omit<Course, "id"> = {
   code: "", name: "", credit: 3, course_type: "theory_3.0",
@@ -40,6 +41,10 @@ export function CoursesPage() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<any>(empty);
   const [blocked, setBlocked] = useState<{ course: Course; deps: ReturnType<typeof courseDependencies> } | null>(null);
+  const homeDept = useMemo(
+    () => data.departments.find((d) => d.short_name.trim().toUpperCase() === HOME_DEPT_SHORT_NAME),
+    [data.departments],
+  );
 
   const filtered = useMemo(
     () => courses.filter(c => `${c.code} ${c.name}`.toLowerCase().includes(q.toLowerCase())),
@@ -245,7 +250,21 @@ export function CoursesPage() {
             </div>
             <div>
               <Label>Dept. Type</Label>
-              <Select value={form.departmental_type} onValueChange={(v: DepartmentalType) => setForm({ ...form, departmental_type: v })}>
+              <Select
+                value={form.departmental_type}
+                onValueChange={(v: DepartmentalType) =>
+                  setForm({
+                    ...form,
+                    departmental_type: v,
+                    department_id:
+                      v === "Departmental"
+                        ? (homeDept?.id ?? form.department_id ?? null)
+                        : form.department_id === homeDept?.id
+                          ? null
+                          : form.department_id,
+                  })
+                }
+              >
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {DEPT_TYPES.map(dt => <SelectItem key={dt} value={dt}>{dt}</SelectItem>)}
@@ -257,7 +276,9 @@ export function CoursesPage() {
               <Select value={form.department_id ?? ""} onValueChange={(v) => setForm({ ...form, department_id: v || null })}>
                 <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
                 <SelectContent>
-                  {data.departments.map(d => <SelectItem key={d.id} value={d.id}>{d.short_name} – {d.full_name}</SelectItem>)}
+                  {data.departments
+                    .filter((d) => form.departmental_type !== "Non-Departmental" || d.id !== homeDept?.id)
+                    .map(d => <SelectItem key={d.id} value={d.id}>{d.short_name} – {d.full_name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
