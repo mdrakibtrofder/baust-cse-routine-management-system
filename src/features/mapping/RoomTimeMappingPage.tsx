@@ -108,10 +108,11 @@ function SectionRoomMapping() {
     });
 
     if (nonDeptSectionsSet.size > 0) {
+      // Show every section that actually has a non-departmental assignment — a level-term
+      // may now have multiple sections defined per department, not just one shared section.
       const nonDeptSections = data.sections
         .filter(s => nonDeptSectionsSet.has(s.id))
-        .sort((a, b) => a.level - b.level || TERM_ORDER.indexOf(a.term) - TERM_ORDER.indexOf(b.term) || a.name.localeCompare(b.name))
-        .slice(0, 1); // Initially only show one section for Non-Departmental
+        .sort((a, b) => a.level - b.level || TERM_ORDER.indexOf(a.term) - TERM_ORDER.indexOf(b.term) || a.name.localeCompare(b.name));
 
       result.push({
         level: 0,

@@ -63,19 +63,19 @@ export function CourseLoadPage() {
 
     if (nonDeptCourses.length > 0) {
       nonDeptCourses.sort((a, b) => a.level - b.level || TERM_ORDER.indexOf(a.term) - TERM_ORDER.indexOf(b.term) || a.code.localeCompare(b.code));
-      
-      // For Non-Departmental, we initially only show one representative section per course or just one section overall
-      // to avoid redundant columns. Let's pick the first section available for these courses.
-      const representativeSections = Array.from(nonDeptSections)
-        .sort((a, b) => a.level - b.level || TERM_ORDER.indexOf(a.term) - TERM_ORDER.indexOf(b.term) || a.name.localeCompare(b.name))
-        .slice(0, 1);
+
+      // Show every section relevant to these courses' level-terms — including sections
+      // from any department, since a level-term may now have multiple sections defined
+      // per department (not just CSE).
+      const allSections = Array.from(nonDeptSections)
+        .sort((a, b) => a.level - b.level || TERM_ORDER.indexOf(a.term) - TERM_ORDER.indexOf(b.term) || a.name.localeCompare(b.name));
 
       result.push({
         level: 0, // Not used for title
         term: "Non-Departmental", // Used for title
         departmental_type: "Non-Departmental",
         courses: nonDeptCourses,
-        sections: representativeSections,
+        sections: allSections,
       });
     }
 
