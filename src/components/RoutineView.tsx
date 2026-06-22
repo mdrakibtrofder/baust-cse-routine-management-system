@@ -304,8 +304,16 @@ export function RoutineView({
                       ));
                       skipCount = maxColSpan - 1;
 
+                      // Overlapping unavailability is shown alongside the class (opacity overlay), never hidden.
+                      const overlapUnavail =
+                        showUnavailability && unavailabilityEntries.length > 0
+                          ? unavailabilityEntries.filter(
+                              (u) => u.day === d.name && starting.some((s) => timesOverlap(u.start, u.end, s.start, s.end)),
+                            )
+                          : [];
+
                       return (
-                        <td key={p.id} colSpan={maxColSpan} className="p-1.5 align-top">
+                        <td key={p.id} colSpan={maxColSpan} className="p-1.5 align-top relative">
                           <div className="h-full space-y-1.5">
                             {starting.map((s) => (
                               <RoutineCell
@@ -320,6 +328,17 @@ export function RoutineView({
                               />
                             ))}
                           </div>
+                          {overlapUnavail.length > 0 && (
+                            <div className="absolute inset-1 rounded-lg bg-rose-500/15 border-2 border-rose-400/60 pointer-events-none flex flex-col items-center justify-center backdrop-blur-[0.5px]">
+                              <Ban className="h-4 w-4 text-rose-700/80" />
+                              <div className="text-[9px] font-bold text-rose-800/90 uppercase">Unavailable</div>
+                              {overlapUnavail.map((u, i) => (
+                                <div key={i} className="text-[8px] text-rose-700/80 leading-tight px-1 text-center">
+                                  {u.reason}
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </td>
                       );
                     })}
@@ -417,8 +436,16 @@ export function RoutineView({
                           }
                           const colSpan = Math.max(1, ...starting.map(s => theoryPeriods.filter(tp => timesOverlap(s.start, s.end, tp.start, tp.end)).length));
                           skipCount = colSpan - 1;
+
+                          const overlapUnavail =
+                            showUnavailability && unavailabilityEntries.length > 0
+                              ? unavailabilityEntries.filter(
+                                  (u) => u.day === d.name && starting.some((s) => timesOverlap(u.start, u.end, s.start, s.end)),
+                                )
+                              : [];
+
                           return (
-                            <td key={p.id} colSpan={colSpan} className="p-2 align-top">
+                            <td key={p.id} colSpan={colSpan} className="p-2 align-top relative">
                               <div className="space-y-2">
                                 {starting.map(s => {
                                   const course = data.courses.find(c => c.id === s.course_id);
@@ -447,6 +474,17 @@ export function RoutineView({
                                   );
                                 })}
                               </div>
+                              {overlapUnavail.length > 0 && (
+                                <div className="absolute inset-1 rounded bg-rose-500/15 border-2 border-rose-400/60 pointer-events-none flex flex-col items-center justify-center">
+                                  <Ban className="h-3.5 w-3.5 text-rose-700/80" />
+                                  <div className="text-[8px] font-bold text-rose-800/90 uppercase">Unavailable</div>
+                                  {overlapUnavail.map((u, i) => (
+                                    <div key={i} className="text-[7px] text-rose-700/80 leading-tight px-1 text-center">
+                                      {u.reason}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                             </td>
                           );
                         })}
