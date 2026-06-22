@@ -74,30 +74,37 @@ export function RoutineView({
 
     const defaultPeriods = configured.filter(p => compareTimeValues(p.start, EXTENDED_CUTOFF) < 0);
 
-    // Check whether any slot in the active semester falls at or after 2:30 PM
+    // Check whether any slot falls at or after 2:30 PM — determines whether the afternoon
+    // columns are shown at all by default.
     const semesterSlots = data.class_slots.filter(s => s.semester_id === data.active_semester_id);
     const hasExtendedSlots = semesterSlots.some(s => compareTimeValues(s.start, EXTENDED_CUTOFF) >= 0);
 
-    if (!hasExtendedSlots) return defaultPeriods;
-
-    // Include configured periods >= 14:30, plus synthesize columns for any unconfigured slot times
-    const extendedConfigured = configured.filter(p => compareTimeValues(p.start, EXTENDED_CUTOFF) >= 0);
+    const extendedConfigured = hasExtendedSlots
+      ? configured.filter(p => compareTimeValues(p.start, EXTENDED_CUTOFF) >= 0)
+      : [];
     const allPeriods = [...defaultPeriods, ...extendedConfigured];
 
     const seen = new Set<string>();
     const synthetic: typeof configured = [];
-    for (const s of semesterSlots) {
-      if (compareTimeValues(s.start, EXTENDED_CUTOFF) < 0) continue;
-      const key = `${s.start}|${s.end}`;
-      if (seen.has(key)) continue;
+    const synthesizeFor = (start: string, end: string, requireExtendedCutoff: boolean) => {
+      if (requireExtendedCutoff && compareTimeValues(start, EXTENDED_CUTOFF) < 0) return;
+      const key = `${start}|${end}`;
+      if (seen.has(key)) return;
       seen.add(key);
-      if (!allPeriods.some(p => timesOverlap(p.start, p.end, s.start, s.end))) {
-        synthetic.push({ id: `__syn__${key}`, name: `${s.start}–${s.end}`, kind: "theory", start: s.start, end: s.end } as any);
+      if (!allPeriods.some(p => timesOverlap(p.start, p.end, start, end)) &&
+          !synthetic.some(p => timesOverlap(p.start, p.end, start, end))) {
+        synthetic.push({ id: `__syn__${key}`, name: `${start}–${end}`, kind: "theory", start, end } as any);
       }
-    }
+    };
+    // Class slots only ever synthesize a column for the afternoon extension (matches prior behavior).
+    for (const s of semesterSlots) synthesizeFor(s.start, s.end, true);
+    // Unavailability windows are freeform (not constrained to any period), so always give them
+    // a column if nothing already covers their time range, morning or afternoon.
+    for (const u of unavailabilityEntries) synthesizeFor(u.start, u.end, false);
 
+    if (synthetic.length === 0 && !hasExtendedSlots) return defaultPeriods;
     return [...allPeriods, ...synthetic].sort((a, b) => compareTimeValues(a.start, b.start));
-  }, [data.periods, data.class_slots, data.active_semester_id]);
+  }, [data.periods, data.class_slots, data.active_semester_id, unavailabilityEntries]);
 
   const days = useMemo(() => sortDays(data.days), [data.days]);
 
@@ -273,7 +280,14 @@ export function RoutineView({
                           const cellUnavail = unavailabilityEntries.filter(
                             (u) => u.day === d.name && timesOverlap(u.start, u.end, p.start, p.end),
                           );
-                          const startingUnavail = cellUnavail.filter((u) => u.start === p.start);
+                          // Unavailability times are freeform and don't have to align to a period
+                          // boundary, so "starting" means no earlier period already overlaps this
+                          // same entry — not a literal string match on start time.
+                          const startingUnavail = cellUnavail.filter(
+                            (u) => !theoryPeriods.some(
+                              (tp) => compareTimeValues(tp.start, p.start) < 0 && timesOverlap(u.start, u.end, tp.start, tp.end),
+                            ),
+                          );
                           if (startingUnavail.length > 0) {
                             const maxSpan = Math.max(
                               1,
@@ -411,7 +425,11 @@ export function RoutineView({
                               const cellUnavail = unavailabilityEntries.filter(
                                 (u) => u.day === d.name && timesOverlap(u.start, u.end, p.start, p.end),
                               );
-                              const startingUnavail = cellUnavail.filter((u) => u.start === p.start);
+                              const startingUnavail = cellUnavail.filter(
+                                (u) => !theoryPeriods.some(
+                                  (tp) => compareTimeValues(tp.start, p.start) < 0 && timesOverlap(u.start, u.end, tp.start, tp.end),
+                                ),
+                              );
                               if (startingUnavail.length > 0) {
                                 const maxSpan = Math.max(
                                   1,

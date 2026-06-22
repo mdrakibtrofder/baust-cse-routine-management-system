@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useStore } from "@/lib/store";
 import { cn, compareDayNames, compareTimeValues, sortDays, fmtDayTitle, fmtRange12 } from "@/lib/utils";
+import { timesOverlap } from "@/lib/conflicts";
 import {
   Dialog,
   DialogContent,
@@ -58,14 +59,18 @@ export function UnavailabilityDialog({
     setReason("");
   };
 
-  const isDuplicate = () => {
-    return list.some(u => {
+  /** Detects an existing window on the same day(s) whose time range overlaps the
+   *  one being entered — not just an exact duplicate. Prevents silently stacking
+   *  conflicting/redundant unavailability rules for the same teacher/room. */
+  const findOverlap = () => {
+    return list.find((u) => {
       if (editingId && u.id === editingId) return false;
-      if (mode === "teacher") {
-        return (u as any).day === day && u.start === start && u.end === end;
-      } else {
-        return JSON.stringify((u as any).days) === JSON.stringify(days) && u.start === start && u.end === end;
-      }
+      const sameDay =
+        mode === "teacher"
+          ? (u as any).day === day
+          : ((u as any).days as string[]).some((dd) => days.includes(dd));
+      if (!sameDay) return false;
+      return timesOverlap(u.start, u.end, start, end);
     });
   };
 
@@ -79,8 +84,15 @@ export function UnavailabilityDialog({
       toast.error("Reason is required");
       return;
     }
-    if (isDuplicate()) {
-      toast.error("Unavailability for this time already exists");
+    if (mode === "room" && days.length === 0) {
+      toast.error("Pick at least one day");
+      return;
+    }
+    const overlap = findOverlap();
+    if (overlap) {
+      toast.error(
+        `Overlaps with an existing window (${fmtRange12(overlap.start, overlap.end)}${overlap.reason ? ` — ${overlap.reason}` : ""}). Edit or remove it first.`,
+      );
       return;
     }
 
@@ -91,10 +103,6 @@ export function UnavailabilityDialog({
         await data.addTeacherUnavailability({ teacher_id: entityId, day, start, end, reason: reason.trim() });
       }
     } else {
-      if (days.length === 0) {
-        toast.error("Pick at least one day");
-        return;
-      }
       if (editingId) {
         await data.updateRoomUnavailability(editingId, { days, start, end, reason: reason.trim() });
       } else {
