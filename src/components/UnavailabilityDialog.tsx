@@ -75,16 +75,20 @@ export function UnavailabilityDialog({
       toast.error("Start time must be before end time");
       return;
     }
+    if (!reason.trim()) {
+      toast.error("Reason is required");
+      return;
+    }
     if (isDuplicate()) {
       toast.error("Unavailability for this time already exists");
       return;
     }
-    
+
     if (mode === "teacher") {
       if (editingId) {
-        await data.updateTeacherUnavailability(editingId, { day, start, end, reason: reason.trim() || undefined });
+        await data.updateTeacherUnavailability(editingId, { day, start, end, reason: reason.trim() });
       } else {
-        await data.addTeacherUnavailability({ teacher_id: entityId, day, start, end, reason: reason.trim() || undefined });
+        await data.addTeacherUnavailability({ teacher_id: entityId, day, start, end, reason: reason.trim() });
       }
     } else {
       if (days.length === 0) {
@@ -92,9 +96,9 @@ export function UnavailabilityDialog({
         return;
       }
       if (editingId) {
-        await data.updateRoomUnavailability(editingId, { days, start, end, reason: reason.trim() || undefined });
+        await data.updateRoomUnavailability(editingId, { days, start, end, reason: reason.trim() });
       } else {
-        await data.addRoomUnavailability({ room_id: entityId, days, start, end, reason: reason.trim() || undefined });
+        await data.addRoomUnavailability({ room_id: entityId, days, start, end, reason: reason.trim() });
       }
     }
     toast.success(editingId ? "Unavailability updated" : "Unavailability added");
@@ -229,11 +233,14 @@ export function UnavailabilityDialog({
               </div>
             </div>
             <div>
-              <Label className="text-xs">Reason (optional)</Label>
+              <Label className="text-xs">
+                Reason <span className="text-destructive">*</span>
+              </Label>
               <Input
                 placeholder="e.g. Office hours, Maintenance"
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
+                required
               />
             </div>
             <div className="flex gap-2">

@@ -144,7 +144,7 @@ export interface TeacherUnavailability {
   day: string; // SUN..THU
   start: string; // HH:MM
   end: string; // HH:MM
-  reason?: string;
+  reason: string;
 }
 
 /** A recurring weekly window when a room is unavailable.
@@ -155,7 +155,7 @@ export interface RoomUnavailability {
   days: string[]; // ["SUN","WED"]
   start: string;
   end: string;
-  reason?: string;
+  reason: string;
 }
 
 export interface AppData {

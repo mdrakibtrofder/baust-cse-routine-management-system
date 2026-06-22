@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useStore } from "@/lib/store";
 import { cn, compareTimeValues, fmtTime12, fmtRange12, sortDays, fmtDayTitle } from "@/lib/utils";
-import { BookOpen, MapPin, Coffee, FlaskConical, FileSpreadsheet, FileText, FileType, FileJson, Image as ImageIcon, Eye, Users } from "lucide-react";
+import { BookOpen, MapPin, Coffee, FlaskConical, FileSpreadsheet, FileText, FileType, FileJson, Image as ImageIcon, Eye, Users, Ban } from "lucide-react";
 import { COURSE_TYPE_INFO, type ClassSlot } from "@/lib/types";
 import { timesOverlap } from "@/lib/conflicts";
 import { Button } from "@/components/ui/button";
@@ -40,7 +40,26 @@ export function RoutineView({
   const data = useStore();
 
   const [showPreview, setShowPreview] = useState(false);
+  const [showUnavailability, setShowUnavailability] = useState(false);
   const [editTarget, setEditTarget] = useState<{ course_id: string; section_id: string } | null>(null);
+
+  /** Unavailable windows relevant to this scope, normalized to {day, start, end, reason}.
+   *  Only populated for teacher/room scopes — sections/rooms-as-a-whole don't have a single owner. */
+  const unavailabilityEntries = useMemo(() => {
+    if (scope.kind === "teacher") {
+      return data.teacher_unavailability
+        .filter((u) => u.teacher_id === scope.teacher_id)
+        .map((u) => ({ day: u.day, start: u.start, end: u.end, reason: u.reason }));
+    }
+    if (scope.kind === "room") {
+      return data.room_unavailability
+        .filter((u) => u.room_id === scope.room_id)
+        .flatMap((u) => u.days.map((day) => ({ day, start: u.start, end: u.end, reason: u.reason })));
+    }
+    return [];
+  }, [data.teacher_unavailability, data.room_unavailability, scope]);
+
+  const canShowUnavailability = scope.kind === "teacher" || scope.kind === "room";
 
   const editCourse = editTarget ? data.courses.find((c) => c.id === editTarget.course_id) ?? null : null;
   const editSection = editTarget ? data.sections.find((s) => s.id === editTarget.section_id) ?? null : null;
@@ -140,6 +159,20 @@ export function RoutineView({
           </div>
         )}
         <div className="flex gap-1.5 ml-auto flex-wrap">
+          {canShowUnavailability && (
+            <Button
+              size="sm"
+              variant="outline"
+              className={cn(
+                "h-7 text-xs",
+                showUnavailability && "bg-rose-100 border-rose-300 text-rose-700 hover:bg-rose-200",
+              )}
+              onClick={() => setShowUnavailability((v) => !v)}
+            >
+              <Ban className="h-3.5 w-3.5 mr-1" />
+              {showUnavailability ? "Hide" : "Show"} Unavailability
+            </Button>
+          )}
           <Button size="sm" variant="outline" className="h-7 text-xs bg-primary/5 border-primary/20 text-primary hover:bg-primary/10"
             onClick={() => setShowPreview(true)}>
             <Eye className="h-3.5 w-3.5 mr-1" /> Preview
@@ -195,6 +228,7 @@ export function RoutineView({
             <tbody>
               {days.map((d) => {
                 let skipCount = 0;
+                let skipUnavail = 0;
                 return (
                   <tr key={d.id} className="border-t" style={{ height: isExtended ? 120 : 150 }}>
                     <td
@@ -207,6 +241,10 @@ export function RoutineView({
                     {theoryPeriods.map((p) => {
                       if (skipCount > 0) {
                         skipCount--;
+                        return null;
+                      }
+                      if (skipUnavail > 0) {
+                        skipUnavail--;
                         return null;
                       }
 
@@ -230,6 +268,34 @@ export function RoutineView({
                       if (starting.length === 0) {
                         const spanning = cellSlots.find((s) => s.start < p.start);
                         if (spanning) return null;
+
+                        if (showUnavailability && unavailabilityEntries.length > 0) {
+                          const cellUnavail = unavailabilityEntries.filter(
+                            (u) => u.day === d.name && timesOverlap(u.start, u.end, p.start, p.end),
+                          );
+                          const startingUnavail = cellUnavail.filter((u) => u.start === p.start);
+                          if (startingUnavail.length > 0) {
+                            const maxSpan = Math.max(
+                              1,
+                              ...startingUnavail.map(
+                                (u) => theoryPeriods.filter((tp) => timesOverlap(u.start, u.end, tp.start, tp.end)).length,
+                              ),
+                            );
+                            skipUnavail = maxSpan - 1;
+                            return (
+                              <td key={p.id} colSpan={maxSpan} className="bg-rose-50 align-middle text-center p-2 border-rose-200">
+                                <Ban className="h-4 w-4 mx-auto text-rose-600" />
+                                <div className="text-[10px] font-bold text-rose-800 mt-1 uppercase">Unavailable</div>
+                                {startingUnavail.map((u, i) => (
+                                  <div key={i} className="text-[9px] text-rose-700 leading-tight">
+                                    {u.reason}
+                                  </div>
+                                ))}
+                              </td>
+                            );
+                          }
+                        }
+
                         return <td key={p.id} className="p-1.5" />;
                       }
 
@@ -299,6 +365,7 @@ export function RoutineView({
                 <tbody>
                   {days.map((d) => {
                     let skipCount = 0;
+                    let skipUnavail = 0;
                     return (
                       <tr key={d.id}>
                         <td className="bg-slate-100 px-3 py-4 font-bold text-center border-r-2 border-slate-300">
@@ -307,6 +374,7 @@ export function RoutineView({
                         </td>
                         {theoryPeriods.map((p) => {
                           if (skipCount > 0) { skipCount--; return null; }
+                          if (skipUnavail > 0) { skipUnavail--; return null; }
                           if (isBreak(p.id)) {
                             return (
                               <td key={p.id} className="bg-amber-50 text-center p-2 align-middle opacity-80">
@@ -319,6 +387,32 @@ export function RoutineView({
                           const starting = cellSlots.filter(s => s.start === p.start);
                           if (starting.length === 0) {
                             if (cellSlots.find(s => s.start < p.start)) return null;
+
+                            if (showUnavailability && unavailabilityEntries.length > 0) {
+                              const cellUnavail = unavailabilityEntries.filter(
+                                (u) => u.day === d.name && timesOverlap(u.start, u.end, p.start, p.end),
+                              );
+                              const startingUnavail = cellUnavail.filter((u) => u.start === p.start);
+                              if (startingUnavail.length > 0) {
+                                const maxSpan = Math.max(
+                                  1,
+                                  ...startingUnavail.map(
+                                    (u) => theoryPeriods.filter((tp) => timesOverlap(u.start, u.end, tp.start, tp.end)).length,
+                                  ),
+                                );
+                                skipUnavail = maxSpan - 1;
+                                return (
+                                  <td key={p.id} colSpan={maxSpan} className="bg-rose-50 text-center p-2 align-middle opacity-90">
+                                    <Ban className="h-4 w-4 mx-auto text-rose-600 mb-1" />
+                                    <div className="font-bold text-rose-800 tracking-widest text-[9px]">UNAVAILABLE</div>
+                                    {startingUnavail.map((u, i) => (
+                                      <div key={i} className="text-[8px] text-rose-700">{u.reason}</div>
+                                    ))}
+                                  </td>
+                                );
+                              }
+                            }
+
                             return <td key={p.id} className="p-1" />;
                           }
                           const colSpan = Math.max(1, ...starting.map(s => theoryPeriods.filter(tp => timesOverlap(s.start, s.end, tp.start, tp.end)).length));
