@@ -4,14 +4,15 @@ import { PageHeader } from "@/components/PageHeader";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { cn, compareTimeValues, fmtRange12, fmtTime12, sortDays } from "@/lib/utils";
+import { cn, compareTimeValues, fmtRange12, fmtTime12, sortDays, tagColorClasses } from "@/lib/utils";
 import { timesOverlap, teacherUnavailableAt, roomUnavailableAt } from "@/lib/conflicts";
 import {
   Users, MapPin, Clock, BookOpen, UserX, DoorClosed, Check, Search, CalendarDays, Boxes, DoorOpen
 } from "lucide-react";
-import type { Course, Section, Teacher, Room, Period, ClassSlot } from "@/lib/types";
+import type { Course, Section, Teacher, Room, Period, ClassSlot, Department } from "@/lib/types";
 import { RoomPicker } from "@/features/course-load/RoomPicker";
 import { Input } from "@/components/ui/input";
+import { HOME_DEPT_SHORT_NAME } from "@/lib/constants";
 
 const TERM_ORDER = ["I", "II"];
 
@@ -57,74 +58,77 @@ function SectionRoomMapping() {
   const data = useStore();
   const [q, setQ] = useState("");
 
+  const homeDept = useMemo(
+    () => data.departments.find((d) => d.short_name.trim().toUpperCase() === HOME_DEPT_SHORT_NAME),
+    [data.departments],
+  );
+
+  /** Mirrors Course Load's grouping exactly: courses are grouped by level+term+department
+   *  (Departmental and Non-Departmental together, in one block per department), and each
+   *  block's sections are scoped to that same department — never another department's
+   *  sections, even when they share the same level-term. Blocks are sorted CSE-first
+   *  across every level-term, then by level, term, and department name. */
   const grouped = useMemo(() => {
-    const deptMap = new Map<string, { level: number; term: string; departmental_type: string; coursesBySid: Record<string, Course[]>; sections: Section[] }>();
-    const nonDeptCoursesBySid: Record<string, Course[]> = {};
-    const nonDeptSectionsSet = new Set<string>();
+    const deptKey = (id: string | null | undefined) => id || homeDept?.id || "__none__";
+
+    const blockMap = new Map<string, {
+      level: number; term: string; department: Department | null;
+      courses: Course[]; sections: Section[];
+    }>();
+
+    for (const c of data.courses) {
+      const dk = deptKey(c.department_id);
+      const k = `${c.level}|${c.term}|${dk}`;
+      if (!blockMap.has(k)) {
+        const department = c.department_id
+          ? data.departments.find((d) => d.id === c.department_id) ?? null
+          : homeDept ?? null;
+        blockMap.set(k, {
+          level: c.level, term: c.term, department,
+          courses: [],
+          sections: data.sections
+            .filter((s) => s.level === c.level && s.term === c.term && deptKey(s.department_id) === dk)
+            .sort((a, b) => a.name.localeCompare(b.name)),
+        });
+      }
+      blockMap.get(k)!.courses.push(c);
+    }
 
     const filterByQ = (text: string) => text.toLowerCase().includes(q.toLowerCase());
 
-    for (const s of data.sections) {
-      if (q && !filterByQ(s.name) && !filterByQ(`Level ${s.level} Term ${s.term}`)) continue;
-
-      const courses = data.courses.filter(c => {
-        return data.course_section_teachers.some(
-          cst => cst.semester_id === data.active_semester_id && cst.course_id === c.id && cst.section_id === s.id
+    const result = Array.from(blockMap.values())
+      .filter((g) => {
+        if (!q) return true;
+        if (filterByQ(`Level ${g.level} Term ${g.term}`) || filterByQ(g.department?.short_name ?? "")) return true;
+        return g.sections.some((s) => filterByQ(s.name));
+      })
+      .filter((g) => g.sections.length > 0)
+      .filter((g) =>
+        g.sections.some((s) =>
+          g.courses.some((c) =>
+            data.course_section_teachers.some(
+              (x) => x.semester_id === data.active_semester_id && x.course_id === c.id && x.section_id === s.id,
+            ),
+          ),
+        ),
+      )
+      .sort((a, b) => {
+        const aHome = !homeDept || a.department?.id === homeDept.id;
+        const bHome = !homeDept || b.department?.id === homeDept.id;
+        return (
+          (aHome === bHome ? 0 : aHome ? -1 : 1) ||
+          a.level - b.level ||
+          TERM_ORDER.indexOf(a.term) - TERM_ORDER.indexOf(b.term) ||
+          (a.department?.short_name ?? "").localeCompare(b.department?.short_name ?? "")
         );
       });
 
-      if (courses.length === 0) continue;
-
-      const deptCourses = courses.filter(c => c.departmental_type === "Departmental");
-      const nonDeptCourses = courses.filter(c => c.departmental_type === "Non-Departmental");
-
-      if (deptCourses.length > 0) {
-        const k = `${s.level}|${s.term}`;
-        if (!deptMap.has(k)) {
-          deptMap.set(k, {
-            level: s.level, term: s.term, departmental_type: "Departmental",
-            coursesBySid: {},
-            sections: [],
-          });
-        }
-        const g = deptMap.get(k)!;
-        if (!g.sections.find(x => x.id === s.id)) {
-          g.sections.push(s);
-          g.coursesBySid[s.id] = deptCourses.sort((a, b) => a.code.localeCompare(b.code));
-        }
-      }
-
-      if (nonDeptCourses.length > 0) {
-        nonDeptCoursesBySid[s.id] = nonDeptCourses.sort((a, b) => a.code.localeCompare(b.code));
-        nonDeptSectionsSet.add(s.id);
-      }
-    }
-
-    const result = Array.from(deptMap.values())
-      .sort((a, b) => a.level - b.level || TERM_ORDER.indexOf(a.term) - TERM_ORDER.indexOf(b.term));
-    
-    result.forEach(g => {
-      g.sections.sort((a, b) => a.name.localeCompare(b.name));
-    });
-
-    if (nonDeptSectionsSet.size > 0) {
-      // Show every section that actually has a non-departmental assignment — a level-term
-      // may now have multiple sections defined per department, not just one shared section.
-      const nonDeptSections = data.sections
-        .filter(s => nonDeptSectionsSet.has(s.id))
-        .sort((a, b) => a.level - b.level || TERM_ORDER.indexOf(a.term) - TERM_ORDER.indexOf(b.term) || a.name.localeCompare(b.name));
-
-      result.push({
-        level: 0,
-        term: "Non-Departmental",
-        departmental_type: "Non-Departmental",
-        coursesBySid: nonDeptCoursesBySid,
-        sections: nonDeptSections,
-      });
+    for (const g of result) {
+      g.courses.sort((a, b) => a.code.localeCompare(b.code));
     }
 
     return result;
-  }, [data.sections, data.courses, data.course_section_teachers, data.active_semester_id, q]);
+  }, [data.courses, data.sections, data.departments, data.course_section_teachers, data.active_semester_id, homeDept, q]);
 
   return (
     <div className="space-y-6">
@@ -140,9 +144,9 @@ function SectionRoomMapping() {
 
       <div className="space-y-8">
         {grouped.map((g) => (
-          <SectionRoomBlock 
-            key={g.departmental_type === "Departmental" ? `${g.level}-${g.term}` : "non-dept"}
-            group={g} 
+          <SectionRoomBlock
+            key={`${g.level}-${g.term}-${g.department?.id ?? "none"}`}
+            group={g}
           />
         ))}
       </div>
@@ -152,10 +156,10 @@ function SectionRoomMapping() {
 
 function SectionRoomBlock({ group }: { group: any }) {
   const data = useStore();
-  
+
   const getSectionRoomSummary = (sid: string, courses: Course[]) => {
     const roomCounts: Record<string, number> = {};
-    
+
     courses.forEach(c => {
       const cst = data.course_section_teachers.find(
         x => x.semester_id === data.active_semester_id && x.course_id === c.id && x.section_id === sid
@@ -179,19 +183,28 @@ function SectionRoomBlock({ group }: { group: any }) {
     <div className="space-y-4">
       <div className="flex items-center gap-3">
         <h3 className="font-bold text-lg text-primary">
-          {group.departmental_type === "Departmental" 
-            ? `Level ${group.level}, Term ${group.term}` 
-            : "Non-Departmental Courses"}
+          Level {group.level}, Term {group.term}
         </h3>
-        <Badge variant="secondary" className="text-[10px] uppercase tracking-wider">
-          {group.departmental_type}
-        </Badge>
+        {group.department && (
+          <span className={cn(
+            "inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-bold",
+            tagColorClasses(group.department.id),
+          )}>
+            {group.department.short_name}
+          </span>
+        )}
         <div className="h-px flex-1 bg-border" />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {group.sections.map((s: Section) => {
-          const courses = group.coursesBySid[s.id];
+          // Only courses actually scheduled for this section (assignment exists).
+          const courses = group.courses.filter((c: Course) =>
+            data.course_section_teachers.some(
+              (x) => x.semester_id === data.active_semester_id && x.course_id === c.id && x.section_id === s.id,
+            ),
+          );
+          if (courses.length === 0) return null;
           const summary = getSectionRoomSummary(s.id, courses);
 
           return (
