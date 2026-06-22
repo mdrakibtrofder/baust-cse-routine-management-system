@@ -10,7 +10,7 @@ import type { AppData, ClassSlot } from "@/lib/types";
 import { timesOverlap } from "@/lib/conflicts";
 import { compareTimeValues, fmtRange12, sortDays, fmtDayTitle } from "@/lib/utils";
 import type { RoutineScope } from "@/components/RoutineView";
-import { buildRoutineCourseSummary } from "./routine-summary";
+import { buildRoutineCourseSummary, buildRoutineTeacherSummary } from "./routine-summary";
 
 const DEFAULT_DEPT = "CSE";
 
@@ -207,6 +207,19 @@ export function exportRoutineExcel(data: AppData, scope: RoutineScope) {
     summary.totals.meetings
   ]);
 
+  // Add teacher details
+  aoa.push([]);
+  aoa.push(["Teacher Details"]);
+  aoa.push(["Short Form", "Teachers Name", "Designation"]);
+  const teacherSummary = buildRoutineTeacherSummary(data, scope);
+  for (const row of teacherSummary) {
+    aoa.push([
+      row.teacher.short_name,
+      row.teacher.name,
+      row.teacher.department ? `${row.teacher.designation}, ${row.teacher.department}` : row.teacher.designation,
+    ]);
+  }
+
   const ws = XLSX.utils.aoa_to_sheet(aoa);
   ws["!cols"] = header.map(() => ({ wch: 24 }));
   const wb = XLSX.utils.book_new();
@@ -294,6 +307,28 @@ export function exportRoutinePdf(data: AppData, scope: RoutineScope) {
     headStyles: { fillColor: [30, 58, 138], textColor: 255, fontStyle: "bold" },
     theme: "grid",
   });
+
+  // Add Teacher Details table
+  const teacherSummary = buildRoutineTeacherSummary(data, scope);
+  if (teacherSummary.length > 0) {
+    doc.addPage();
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Teacher Details", 40, 40);
+
+    autoTable(doc, {
+      startY: 60,
+      head: [["Short Form", "Teachers Name", "Designation"]],
+      body: teacherSummary.map((r) => [
+        r.teacher.short_name,
+        r.teacher.name,
+        r.teacher.department ? `${r.teacher.designation}, ${r.teacher.department}` : r.teacher.designation,
+      ]),
+      styles: { fontSize: 8, cellPadding: 4 },
+      headStyles: { fillColor: [30, 58, 138], textColor: 255, fontStyle: "bold" },
+      theme: "grid",
+    });
+  }
 
   doc.save(`${info.slug}.pdf`);
 }
@@ -383,6 +418,31 @@ export async function exportRoutineDocx(data: AppData, scope: RoutineScope) {
     ]
   });
 
+  const teacherSummary = buildRoutineTeacherSummary(data, scope);
+  const teacherHeaderRow = new TableRow({
+    children: ["Short Form", "Teachers Name", "Designation"].map((h, i) =>
+      new TableCell({
+        width: { size: [1500, 4000, 3500][i], type: WidthType.DXA },
+        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: h, bold: true })] })]
+      })
+    )
+  });
+
+  const teacherBodyRows = teacherSummary.map((r) =>
+    new TableRow({
+      children: [
+        r.teacher.short_name,
+        r.teacher.name,
+        r.teacher.department ? `${r.teacher.designation}, ${r.teacher.department}` : r.teacher.designation,
+      ].map((v, i) =>
+        new TableCell({
+          width: { size: [1500, 4000, 3500][i], type: WidthType.DXA },
+          children: [new Paragraph({ children: [new TextRun(v)] })]
+        })
+      )
+    })
+  );
+
   const doc = new Document({
     sections: [
       {
@@ -403,6 +463,17 @@ export async function exportRoutineDocx(data: AppData, scope: RoutineScope) {
             columnWidths: [1200, 3800, 1000, 1000, 1000, 1000],
             rows: [summaryHeaderRow, ...summaryBodyRows, summaryTotalRow],
           }),
+          ...(teacherSummary.length > 0
+            ? [
+                new Paragraph({ children: [new TextRun(" ")] }),
+                new Paragraph({ heading: HeadingLevel.HEADING_2, children: [new TextRun("Teacher Details")] }),
+                new Table({
+                  width: { size: 9000, type: WidthType.DXA },
+                  columnWidths: [1500, 4000, 3500],
+                  rows: [teacherHeaderRow, ...teacherBodyRows],
+                }),
+              ]
+            : []),
         ],
       },
     ],
@@ -442,12 +513,20 @@ export function exportRoutineJson(data: AppData, scope: RoutineScope) {
     };
   });
 
+  const teacherSummary = buildRoutineTeacherSummary(data, scope).map((r) => ({
+    short_name: r.teacher.short_name,
+    name: r.teacher.name,
+    designation: r.teacher.designation,
+    department: r.teacher.department,
+  }));
+
   const payload = {
     title: info.title,
     metadata: Object.fromEntries(info.meta.map((m) => [m.label, m.value])),
     periods: periods.map((p) => ({ name: p.name, start: p.start, end: p.end, kind: p.kind })),
     days: days.map((d) => d.name),
     classes: detailedSlots,
+    teacher_details: teacherSummary,
   };
 
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
@@ -458,6 +537,7 @@ export function exportRoutineJson(data: AppData, scope: RoutineScope) {
 export function exportRoutineImage(data: AppData, scope: RoutineScope) {
   const info = getScopeInfo(data, scope);
   const { header, rows } = buildRoutineMatrix(data, scope);
+  const teacherSummary = buildRoutineTeacherSummary(data, scope);
 
   const cols = header.length;
   const rowsCount = rows.length;
@@ -469,8 +549,15 @@ export function exportRoutineImage(data: AppData, scope: RoutineScope) {
   const cellH = 90;
   const headerH = 44;
 
-  const W = padding * 2 + cols * cellW;
-  const H = padding * 2 + titleH + metaH + headerH + rowsCount * cellH;
+  // Teacher Details table dimensions (rendered below the routine grid)
+  const tCols = [120, 260, 320];
+  const tHeaderH = 30;
+  const tRowH = 26;
+  const tSectionH = teacherSummary.length > 0 ? 36 + tHeaderH + teacherSummary.length * tRowH : 0;
+  const tTableW = tCols.reduce((a, b) => a + b, 0);
+
+  const W = padding * 2 + Math.max(cols * cellW, tTableW);
+  const H = padding * 2 + titleH + metaH + headerH + rowsCount * cellH + tSectionH;
 
   const canvas = document.createElement("canvas");
   const dpr = window.devicePixelRatio || 1;
@@ -552,6 +639,51 @@ export function exportRoutineImage(data: AppData, scope: RoutineScope) {
         ctx.fillText(line, x + 6, ty, currentCellW - 12);
         ty += 14;
       }
+    }
+  }
+
+  // Teacher Details table
+  if (teacherSummary.length > 0) {
+    let ty = tableY + rowsCount * cellH + 36;
+    ctx.fillStyle = "#0f172a";
+    ctx.font = "bold 16px Arial, sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText("Teacher Details", tableX, ty);
+    ty += 24;
+
+    // Header row
+    ctx.fillStyle = "#2563eb";
+    ctx.fillRect(tableX, ty, tTableW, tHeaderH);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 12px Arial, sans-serif";
+    ctx.textAlign = "left";
+    const tHeaders = ["Short Form", "Teachers Name", "Designation"];
+    let tx = tableX;
+    for (let i = 0; i < tHeaders.length; i++) {
+      ctx.fillText(tHeaders[i], tx + 8, ty + tHeaderH / 2 - 5);
+      tx += tCols[i];
+    }
+    ty += tHeaderH;
+
+    ctx.font = "11px Arial, sans-serif";
+    for (const row of teacherSummary) {
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(tableX, ty, tTableW, tRowH);
+      ctx.strokeStyle = "#cbd5e1";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(tableX + 0.5, ty + 0.5, tTableW - 1, tRowH - 1);
+
+      ctx.fillStyle = "#0f172a";
+      const designation = row.teacher.department
+        ? `${row.teacher.designation}, ${row.teacher.department}`
+        : row.teacher.designation;
+      const values = [row.teacher.short_name, row.teacher.name, designation];
+      tx = tableX;
+      for (let i = 0; i < values.length; i++) {
+        ctx.fillText(values[i], tx + 8, ty + tRowH / 2 - 4, tCols[i] - 16);
+        tx += tCols[i];
+      }
+      ty += tRowH;
     }
   }
 

@@ -129,7 +129,8 @@ export function RoutinePage() {
                 placeholder="Choose a teacher"
                 searchPlaceholder="Search teachers…"
                 emptyText="No teacher found."
-                className="max-w-sm"
+                className="w-[420px] max-w-full"
+                contentClassName="w-[420px]"
               />
             </TabsContent>
 
@@ -141,7 +142,8 @@ export function RoutinePage() {
                 placeholder="Choose a room"
                 searchPlaceholder="Search rooms…"
                 emptyText="No room found."
-                className="max-w-sm"
+                className="w-[420px] max-w-full"
+                contentClassName="w-[420px]"
               />
             </TabsContent>
 

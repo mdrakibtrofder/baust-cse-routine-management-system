@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useStore } from "@/lib/store";
 import { cn, compareTimeValues, fmtTime12, fmtRange12, sortDays, fmtDayTitle } from "@/lib/utils";
-import { BookOpen, MapPin, Coffee, FlaskConical, FileSpreadsheet, FileText, FileType, FileJson, Image as ImageIcon, Eye } from "lucide-react";
+import { BookOpen, MapPin, Coffee, FlaskConical, FileSpreadsheet, FileText, FileType, FileJson, Image as ImageIcon, Eye, Users } from "lucide-react";
 import { COURSE_TYPE_INFO, type ClassSlot } from "@/lib/types";
 import { timesOverlap } from "@/lib/conflicts";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import {
 } from "@/lib/routine-export";
 import { toast } from "sonner";
 import { RoutineCourseSummary } from "@/components/RoutineCourseSummary";
+import { RoutineTeacherSummary } from "@/components/RoutineTeacherSummary";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ClassAssignDialog } from "@/features/course-load/ClassAssignDialog";
 
@@ -272,6 +273,7 @@ export function RoutineView({
       </div>
 
       <RoutineCourseSummary scope={scope} />
+      <RoutineTeacherSummary scope={scope} />
 
       <Dialog open={showPreview} onOpenChange={setShowPreview}>
         <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-y-auto p-0">
@@ -367,6 +369,14 @@ export function RoutineView({
                 Course Load Summary
               </div>
               <RoutineCourseSummary scope={scope} />
+            </div>
+
+            <div className="pt-6 border-t">
+              <div className="text-lg font-bold text-slate-800 mb-4 uppercase tracking-tight flex items-center gap-2">
+                <Users className="h-5 w-5 text-primary" />
+                Teacher Details
+              </div>
+              <RoutineTeacherSummary scope={scope} />
             </div>
           </div>
         </DialogContent>
