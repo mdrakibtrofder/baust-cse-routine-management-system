@@ -34,11 +34,13 @@ export function CourseLoadPage() {
     [data.departments],
   );
 
-  /** Sections are department-scoped, so a course's columns must be limited to its own
-   *  department's sections for that level-term — never another department's sections,
-   *  even though they share the same level-term. Non-departmental courses get the same
-   *  treatment per department, so they show as separate blocks instead of one combined
-   *  block mixing every department's sections together. */
+  /** Departmental courses' sections are limited to their own department's sections for
+   *  that level-term — never another department's, even though they share the level-term.
+   *  Non-Departmental courses are owned/offered by another department (e.g. ENG, CE, DBA)
+   *  but are taken by the home department's (CSE) students, so they use CSE's sections —
+   *  while still being labeled and grouped separately per owning department, shown after
+   *  every CSE-departmental block instead of merged into it or dropped for lacking their
+   *  own sections. */
   const grouped = useMemo(() => {
     const deptKey = (id: string | null | undefined) => id || homeDept?.id || "__none__";
 
@@ -48,18 +50,20 @@ export function CourseLoadPage() {
     }>();
 
     for (const c of data.courses) {
-      const dk = deptKey(c.department_id);
-      const k = `${c.level}|${c.term}|${dk}|${c.departmental_type}`;
+      const isNonDept = c.departmental_type === "Non-Departmental";
+      // Which department's sections this course is actually taught in.
+      const sectionScopeKey = isNonDept ? (homeDept?.id || "__none__") : deptKey(c.department_id);
+      // Which department this block is labeled/grouped by (the course's own department).
+      const labelDeptId = c.department_id || homeDept?.id || null;
+      const k = `${c.level}|${c.term}|${c.departmental_type}|${labelDeptId ?? "__none__"}`;
       if (!deptMap.has(k)) {
-        const department = c.department_id
-          ? data.departments.find((d) => d.id === c.department_id) ?? null
-          : homeDept ?? null;
+        const department = labelDeptId ? data.departments.find((d) => d.id === labelDeptId) ?? null : null;
         deptMap.set(k, {
           level: c.level, term: c.term, departmental_type: c.departmental_type,
           department,
           courses: [],
           sections: data.sections
-            .filter((s) => s.level === c.level && s.term === c.term && deptKey(s.department_id) === dk)
+            .filter((s) => s.level === c.level && s.term === c.term && deptKey(s.department_id) === sectionScopeKey)
             .sort((a, b) => a.name.localeCompare(b.name)),
         });
       }
@@ -67,15 +71,16 @@ export function CourseLoadPage() {
     }
 
     const result = Array.from(deptMap.values())
+      .filter((g) => g.sections.length > 0)
       .sort((a, b) => {
-        const aHome = !homeDept || a.department?.id === homeDept.id;
-        const bHome = !homeDept || b.department?.id === homeDept.id;
+        const aCseDept = a.departmental_type === "Departmental" && (!homeDept || a.department?.id === homeDept.id);
+        const bCseDept = b.departmental_type === "Departmental" && (!homeDept || b.department?.id === homeDept.id);
         return (
-          (aHome === bHome ? 0 : aHome ? -1 : 1) ||
+          (aCseDept === bCseDept ? 0 : aCseDept ? -1 : 1) ||
           a.level - b.level ||
           TERM_ORDER.indexOf(a.term) - TERM_ORDER.indexOf(b.term) ||
-          (a.departmental_type === b.departmental_type ? 0 : a.departmental_type === "Departmental" ? -1 : 1) ||
-          (a.department?.short_name ?? "").localeCompare(b.department?.short_name ?? "")
+          (a.department?.short_name ?? "").localeCompare(b.department?.short_name ?? "") ||
+          (a.departmental_type === b.departmental_type ? 0 : a.departmental_type === "Departmental" ? -1 : 1)
         );
       });
 

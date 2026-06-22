@@ -63,31 +63,32 @@ function SectionRoomMapping() {
     [data.departments],
   );
 
-  /** Mirrors Course Load's grouping exactly: courses are grouped by level+term+department
-   *  (Departmental and Non-Departmental together, in one block per department), and each
-   *  block's sections are scoped to that same department — never another department's
-   *  sections, even when they share the same level-term. Blocks are sorted CSE-first
-   *  across every level-term, then by level, term, and department name. */
+  /** Departmental courses' sections are scoped to their own department, mirroring Course
+   *  Load. Non-Departmental courses are owned/offered by another department (e.g. ENG, CE,
+   *  DBA) but taken by the home department's (CSE) students, so they use CSE's sections —
+   *  while still being labeled and grouped separately per owning department, sorted after
+   *  every CSE-departmental block instead of being merged into it or dropped for lacking
+   *  their own sections. */
   const grouped = useMemo(() => {
     const deptKey = (id: string | null | undefined) => id || homeDept?.id || "__none__";
 
     const blockMap = new Map<string, {
-      level: number; term: string; department: Department | null;
+      level: number; term: string; departmental_type: string; department: Department | null;
       courses: Course[]; sections: Section[];
     }>();
 
     for (const c of data.courses) {
-      const dk = deptKey(c.department_id);
-      const k = `${c.level}|${c.term}|${dk}`;
+      const isNonDept = c.departmental_type === "Non-Departmental";
+      const sectionScopeKey = isNonDept ? (homeDept?.id || "__none__") : deptKey(c.department_id);
+      const labelDeptId = c.department_id || homeDept?.id || null;
+      const k = `${c.level}|${c.term}|${c.departmental_type}|${labelDeptId ?? "__none__"}`;
       if (!blockMap.has(k)) {
-        const department = c.department_id
-          ? data.departments.find((d) => d.id === c.department_id) ?? null
-          : homeDept ?? null;
+        const department = labelDeptId ? data.departments.find((d) => d.id === labelDeptId) ?? null : null;
         blockMap.set(k, {
-          level: c.level, term: c.term, department,
+          level: c.level, term: c.term, departmental_type: c.departmental_type, department,
           courses: [],
           sections: data.sections
-            .filter((s) => s.level === c.level && s.term === c.term && deptKey(s.department_id) === dk)
+            .filter((s) => s.level === c.level && s.term === c.term && deptKey(s.department_id) === sectionScopeKey)
             .sort((a, b) => a.name.localeCompare(b.name)),
         });
       }
@@ -113,13 +114,14 @@ function SectionRoomMapping() {
         ),
       )
       .sort((a, b) => {
-        const aHome = !homeDept || a.department?.id === homeDept.id;
-        const bHome = !homeDept || b.department?.id === homeDept.id;
+        const aCseDept = a.departmental_type === "Departmental" && (!homeDept || a.department?.id === homeDept.id);
+        const bCseDept = b.departmental_type === "Departmental" && (!homeDept || b.department?.id === homeDept.id);
         return (
-          (aHome === bHome ? 0 : aHome ? -1 : 1) ||
+          (aCseDept === bCseDept ? 0 : aCseDept ? -1 : 1) ||
           a.level - b.level ||
           TERM_ORDER.indexOf(a.term) - TERM_ORDER.indexOf(b.term) ||
-          (a.department?.short_name ?? "").localeCompare(b.department?.short_name ?? "")
+          (a.department?.short_name ?? "").localeCompare(b.department?.short_name ?? "") ||
+          (a.departmental_type === b.departmental_type ? 0 : a.departmental_type === "Departmental" ? -1 : 1)
         );
       });
 
@@ -145,7 +147,7 @@ function SectionRoomMapping() {
       <div className="space-y-8">
         {grouped.map((g) => (
           <SectionRoomBlock
-            key={`${g.level}-${g.term}-${g.department?.id ?? "none"}`}
+            key={`${g.level}-${g.term}-${g.department?.id ?? "none"}-${g.departmental_type}`}
             group={g}
           />
         ))}
@@ -192,6 +194,11 @@ function SectionRoomBlock({ group }: { group: any }) {
           )}>
             {group.department.short_name}
           </span>
+        )}
+        {group.departmental_type === "Non-Departmental" && (
+          <Badge variant="secondary" className="text-[10px] uppercase tracking-wider">
+            Non-Departmental
+          </Badge>
         )}
         <div className="h-px flex-1 bg-border" />
       </div>
