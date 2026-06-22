@@ -110,16 +110,29 @@ export function RoutinePage() {
           </div>
           <Tabs value={mode} onValueChange={(v) => setMode(v as Mode)}>
             <TabsList>
+              <TabsTrigger value="section" className="gap-1.5">
+                <Boxes className="h-3.5 w-3.5" /> Section
+              </TabsTrigger>
               <TabsTrigger value="teacher" className="gap-1.5">
                 <Users className="h-3.5 w-3.5" /> Teacher
               </TabsTrigger>
               <TabsTrigger value="room" className="gap-1.5">
                 <DoorOpen className="h-3.5 w-3.5" /> Room
               </TabsTrigger>
-              <TabsTrigger value="section" className="gap-1.5">
-                <Boxes className="h-3.5 w-3.5" /> Section
-              </TabsTrigger>
             </TabsList>
+
+            <TabsContent value="section" className="mt-3">
+              <Combobox
+                options={sectionOptions}
+                value={sectionId}
+                onValueChange={setSectionId}
+                placeholder="Choose a section"
+                searchPlaceholder="Search level, term, or section…"
+                emptyText="No section found."
+                className="w-[380px] max-w-full"
+                contentClassName="max-h-[60vh] w-[380px]"
+              />
+            </TabsContent>
 
             <TabsContent value="teacher" className="mt-3">
               <Combobox
@@ -144,19 +157,6 @@ export function RoutinePage() {
                 emptyText="No room found."
                 className="w-[420px] max-w-full"
                 contentClassName="w-[420px]"
-              />
-            </TabsContent>
-
-            <TabsContent value="section" className="mt-3">
-              <Combobox
-                options={sectionOptions}
-                value={sectionId}
-                onValueChange={setSectionId}
-                placeholder="Choose a section"
-                searchPlaceholder="Search level, term, or section…"
-                emptyText="No section found."
-                className="w-[380px] max-w-full"
-                contentClassName="max-h-[60vh] w-[380px]"
               />
             </TabsContent>
           </Tabs>
