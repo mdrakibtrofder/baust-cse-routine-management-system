@@ -13,7 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Pencil, Trash2, Plus, Search } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, tagColorClasses } from "@/lib/utils";
 import { toast } from "sonner";
 import type { Course, CourseType, DepartmentalType } from "@/lib/types";
 import { COURSE_TYPE_INFO } from "@/lib/types";
@@ -171,8 +171,19 @@ export function CoursesPage() {
                       {c.departmental_type}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {c.department_id ? (data.departments.find(d => d.id === c.department_id)?.short_name ?? "—") : "—"}
+                  <TableCell>
+                    {(() => {
+                      const dept = c.department_id ? data.departments.find(d => d.id === c.department_id) : null;
+                      if (!dept) return <span className="text-xs text-muted-foreground">—</span>;
+                      return (
+                        <span className={cn(
+                          "inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-semibold",
+                          tagColorClasses(dept.id),
+                        )}>
+                          {dept.short_name}
+                        </span>
+                      );
+                    })()}
                   </TableCell>
                   <TableCell className="text-right">
                     <Button size="icon" variant="ghost" onClick={() => {

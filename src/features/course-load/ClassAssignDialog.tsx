@@ -49,7 +49,7 @@ import {
   type Conflict,
 } from "@/lib/conflicts";
 import { toast } from "sonner";
-import { cn, compareDayAndTime, compareTimeValues, sortDays, fmtRange12, fmtDayTitle } from "@/lib/utils";
+import { cn, compareDayAndTime, compareTimeValues, sortDays, fmtRange12, fmtDayTitle, tagColorClasses } from "@/lib/utils";
 import { RankPill, TeacherChip } from "@/components/TeacherBadge";
 import { TeacherDetailsDialog } from "@/components/TeacherDetailsDialog";
 import { RoutineDialog } from "@/components/RoutineDialog";
@@ -350,6 +350,20 @@ export function ClassAssignDialog({
                 <Users className="h-3 w-3" />
                 {section.total_students} students
               </button>
+              {(() => {
+                const dept = data.departments.find((d) => d.id === course.department_id);
+                if (!dept) return null;
+                return (
+                  <span
+                    className={cn(
+                      "inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-semibold",
+                      tagColorClasses(dept.id),
+                    )}
+                  >
+                    {dept.short_name}
+                  </span>
+                );
+              })()}
               <Button
                 variant="outline"
                 size="sm"

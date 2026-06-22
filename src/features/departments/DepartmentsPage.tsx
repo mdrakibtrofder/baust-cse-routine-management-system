@@ -14,6 +14,7 @@ import { Pencil, Trash2, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 import type { Department } from "@/lib/types";
 import { useConfirm } from "@/components/ConfirmDialog";
+import { cn, tagColorClasses } from "@/lib/utils";
 
 const empty: Omit<Department, "id"> = { short_name: "", full_name: "", faculty_name: "" };
 
@@ -124,7 +125,14 @@ export function DepartmentsPage() {
               {filtered.map(d => {
                 return (
                   <TableRow key={d.id}>
-                    <TableCell className="font-mono font-medium">{d.short_name}</TableCell>
+                    <TableCell>
+                      <span className={cn(
+                        "inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-mono font-semibold",
+                        tagColorClasses(d.id),
+                      )}>
+                        {d.short_name}
+                      </span>
+                    </TableCell>
                     <TableCell>{d.full_name}</TableCell>
                     <TableCell>{d.faculty_name}</TableCell>
                     <TableCell className="text-right">
