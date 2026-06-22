@@ -486,7 +486,10 @@ export const useStore = create<StoreState>((set, get) => ({
     try {
       const res = await api.post<Section>('/sections', sec);
       set((s) => ({ sections: [...s.sections, res] }));
-    } catch (err: any) { set({ error: err.message }); }
+    } catch (err: any) {
+      set({ error: err.message });
+      throw err;
+    }
   },
   updateSection: async (id, sec) => {
     try {

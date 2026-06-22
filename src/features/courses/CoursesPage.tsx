@@ -135,7 +135,7 @@ export function CoursesPage() {
             <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input className="pl-9" placeholder="Search code or name..." value={q} onChange={(e) => setQ(e.target.value)} />
           </div>
-          <Button onClick={() => { setEditing(null); setForm(empty); setOpen(true); }}
+          <Button onClick={() => { setEditing(null); setForm({ ...empty, department_id: homeDept?.id ?? null }); setOpen(true); }}
             style={{ background: "var(--gradient-primary)", color: "var(--primary-foreground)" }}>
             <Plus className="h-4 w-4 mr-1.5" /> Add Course
           </Button>

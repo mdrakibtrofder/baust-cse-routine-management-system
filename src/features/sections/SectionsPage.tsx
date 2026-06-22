@@ -136,7 +136,7 @@ export function SectionsPage() {
         }))}
         exportName="sections.xlsx"
         rightSlot={
-          <Button onClick={() => { setEditing(null); setForm(empty); setOpen(true); }}
+          <Button onClick={() => { setEditing(null); setForm({ ...empty, department_id: homeDept?.id ?? null }); setOpen(true); }}
             style={{ background: "var(--gradient-primary)", color: "var(--primary-foreground)" }}>
             <Plus className="h-4 w-4 mr-1.5" /> Add Section
           </Button>
@@ -242,8 +242,10 @@ export function SectionsPage() {
               <Label>Total students</Label>
               <Input
                 type="number"
+                min={1}
+                step={1}
                 value={form.total_students}
-                onChange={(e) => setForm({ ...form, total_students: e.target.value })}
+                onChange={(e) => setForm({ ...form, total_students: Math.max(1, Math.trunc(Number(e.target.value))) || 1 })}
               />
             </div>
             <div>
