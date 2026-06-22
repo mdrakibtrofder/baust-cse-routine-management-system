@@ -622,11 +622,11 @@ export function ClassAssignDialog({
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="flex items-start gap-3">
                 <div>
                   <Label>{info.roomKind === "sessional" ? "Sessional Day" : "Theory Day"}</Label>
                   <Select value={current.day} onValueChange={(v) => setCurrent({ day: v })}>
-                    <SelectTrigger>
+                    <SelectTrigger className="w-[280px]">
                       <SelectValue placeholder="Select Day" />
                     </SelectTrigger>
                     <SelectContent>
@@ -641,7 +641,7 @@ export function ClassAssignDialog({
                 <div>
                   <Label>{info.roomKind === "sessional" ? "Sessional Timeslot" : "Theory Timeslot"}</Label>
                   <Select value={matchedPeriodId} onValueChange={setPeriod}>
-                    <SelectTrigger>
+                    <SelectTrigger className="w-[320px]">
                       <SelectValue placeholder="Pick a period" />
                     </SelectTrigger>
                     <SelectContent>
@@ -677,7 +677,7 @@ export function ClassAssignDialog({
                   <span className="text-xs text-muted-foreground">{availableRooms.length} available</span>
                 </div>
                 <Select value={current.room_id ?? ""} onValueChange={(v) => setCurrent({ room_id: v })}>
-                  <SelectTrigger>
+                  <SelectTrigger className="w-[320px]">
                     <SelectValue placeholder="Pick a room" />
                   </SelectTrigger>
                   <SelectContent>
