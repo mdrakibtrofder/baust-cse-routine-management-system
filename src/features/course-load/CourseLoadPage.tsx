@@ -67,11 +67,17 @@ export function CourseLoadPage() {
     }
 
     const result = Array.from(deptMap.values())
-      .sort((a, b) =>
-        a.level - b.level ||
-        TERM_ORDER.indexOf(a.term) - TERM_ORDER.indexOf(b.term) ||
-        (a.departmental_type === b.departmental_type ? 0 : a.departmental_type === "Departmental" ? -1 : 1) ||
-        (a.department?.short_name ?? "").localeCompare(b.department?.short_name ?? ""));
+      .sort((a, b) => {
+        const aHome = !homeDept || a.department?.id === homeDept.id;
+        const bHome = !homeDept || b.department?.id === homeDept.id;
+        return (
+          (aHome === bHome ? 0 : aHome ? -1 : 1) ||
+          a.level - b.level ||
+          TERM_ORDER.indexOf(a.term) - TERM_ORDER.indexOf(b.term) ||
+          (a.departmental_type === b.departmental_type ? 0 : a.departmental_type === "Departmental" ? -1 : 1) ||
+          (a.department?.short_name ?? "").localeCompare(b.department?.short_name ?? "")
+        );
+      });
 
     for (const g of result) {
       g.courses.sort((a, b) => a.code.localeCompare(b.code));
