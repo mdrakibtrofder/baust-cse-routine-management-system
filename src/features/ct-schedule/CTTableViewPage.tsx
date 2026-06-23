@@ -130,65 +130,118 @@ export function CTTableViewPage() {
 
   return (
     <div className="pb-10">
-      <PageHeader title="CT Schedule Table" subtitle="Room vs Date view of all class tests" />
-      
+      <PageHeader
+        title="CT Schedule Table"
+        subtitle="Room vs Date view of all class tests with Level, Term & Section details"
+      />
+
       <div className="p-4 sm:p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-primary flex items-center gap-2">
-             CT Schedule View
-          </h3>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={loadData}>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-gradient-to-r from-primary/10 to-primary/5 p-4 rounded-xl border border-primary/20">
+          <div>
+            <h3 className="text-xl font-black text-primary flex items-center gap-2">
+              📅 CT Schedule View
+            </h3>
+            <p className="text-sm text-muted-foreground mt-1">All class tests organized by date and room</p>
+          </div>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Button
+              variant="outline"
+              onClick={loadData}
+              className="flex-1 sm:flex-none"
+            >
               <RefreshCw className={cn("mr-2 h-4 w-4", loading && "animate-spin")} />
               Reload
             </Button>
-            <Button onClick={handleGenerate} disabled={generating}>
+            <Button
+              onClick={handleGenerate}
+              disabled={generating}
+              className="flex-1 sm:flex-none bg-gradient-to-r from-primary to-primary/80"
+            >
               {generating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
-              Generate Random Schedule
+              Generate
             </Button>
           </div>
         </div>
 
         {assignments.length > 0 ? (
-          <div className="rounded-xl border bg-card overflow-hidden shadow-sm">
+          <div className="rounded-2xl border-2 bg-card overflow-hidden shadow-lg hover:shadow-xl transition-all">
+            <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-4 border-b border-primary/10">
+              <div className="flex items-center justify-between">
+                <h4 className="font-bold text-sm text-primary">CT Schedule Grid</h4>
+                <span className="text-xs font-bold text-muted-foreground bg-muted px-3 py-1 rounded-full">
+                  {assignments.length} CTs across {scheduleTable.uniqueDates.length} dates
+                </span>
+              </div>
+            </div>
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-muted/50">
-                    <TableHead className="w-[100px] font-bold">Week</TableHead>
-                    <TableHead className="w-[120px] font-bold">Date</TableHead>
+                  <TableRow className="bg-gradient-to-r from-primary/5 to-primary/10 border-b-2 border-primary/20 hover:bg-gradient-to-r hover:from-primary/10 hover:to-primary/15">
+                    <TableHead className="w-[80px] font-black text-primary text-xs uppercase tracking-wider">Week</TableHead>
+                    <TableHead className="w-[140px] font-black text-primary text-xs uppercase tracking-wider">Date & Day</TableHead>
                     {scheduleTable.roomsInUse.map((r) => (
-                      <TableHead key={r.id} className="text-center min-w-[140px] font-bold">
-                        {r.name} <span className="text-[10px] text-muted-foreground">({r.capacity})</span>
+                      <TableHead key={r.id} className="text-center min-w-[160px] font-black text-primary text-xs uppercase tracking-wider py-3">
+                        <div className="flex flex-col items-center gap-1">
+                          <span>{r.name}</span>
+                          <span className="text-[9px] font-bold text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full">
+                            Cap: {r.capacity}
+                          </span>
+                        </div>
                       </TableHead>
                     ))}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {scheduleTable.uniqueDates.map((dateStr) => {
+                  {scheduleTable.uniqueDates.map((dateStr, idx) => {
                     const firstAssignment = Object.values(scheduleTable.grouped[dateStr])[0];
                     return (
-                      <TableRow key={dateStr} className="hover:bg-muted/30">
-                        <TableCell className="font-bold text-primary">Week {firstAssignment.week_number}</TableCell>
-                        <TableCell className="font-medium">{format(parseISO(dateStr), "dd-MMM (EEE)")}</TableCell>
+                      <TableRow
+                        key={dateStr}
+                        className={cn(
+                          "border-b transition-all hover:bg-primary/5",
+                          idx % 2 === 0 ? "bg-background" : "bg-muted/30"
+                        )}
+                      >
+                        <TableCell className="font-black text-primary text-sm py-3">
+                          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/20 text-primary font-bold">
+                            {firstAssignment.week_number}
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-bold text-sm py-3">
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-primary">{format(parseISO(dateStr), "dd MMM")}</span>
+                            <span className="text-[10px] font-semibold text-muted-foreground uppercase">
+                              {format(parseISO(dateStr), "EEE")}
+                            </span>
+                          </div>
+                        </TableCell>
                         {scheduleTable.roomsInUse.map((r) => {
                           const a = scheduleTable.grouped[dateStr][r.id];
                           return (
-                            <TableCell key={r.id} className="p-1">
+                            <TableCell key={r.id} className="p-2 align-middle">
                               {a ? (
                                 <button
                                   onClick={() => setEditingAssignment(a)}
-                                  className="w-full bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-lg py-2 px-1.5 transition-all flex flex-col items-center justify-center gap-0.5"
+                                  className={cn(
+                                    "w-full rounded-xl py-2.5 px-2 transition-all border-2 flex flex-col items-center justify-center gap-1",
+                                    "bg-gradient-to-br from-primary/15 to-primary/10 border-primary/30 hover:from-primary/25 hover:to-primary/15 hover:border-primary/50 hover:shadow-md"
+                                  )}
                                 >
-                                  <span className="text-[10px] font-bold uppercase tracking-tight">CT {a.ct_number}</span>
-                                  <span className="text-[10px] font-mono font-black">{a.course?.code}</span>
-                                  <span className="text-[9px] text-muted-foreground">L{a.course?.level} T{a.course?.term}</span>
-                                  <span className="text-[9px] text-muted-foreground font-medium">
+                                  <span className="text-[11px] font-black uppercase tracking-tight text-primary">CT {a.ct_number}</span>
+                                  <span className="text-[10px] font-mono font-black text-foreground">{a.course?.code}</span>
+                                  <div className="text-[9px] font-semibold text-muted-foreground flex items-center gap-1.5">
+                                    <span>L{a.course?.level}</span>
+                                    <span className="w-1 h-1 bg-muted-foreground rounded-full"></span>
+                                    <span>T{a.course?.term}</span>
+                                  </div>
+                                  <span className="text-[9px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
                                     {a.course?.departmental_type === 'Non-Departmental' ? 'Common' : `Sec ${a.section?.name}`}
                                   </span>
                                 </button>
                               ) : (
-                                <div className="h-10 flex items-center justify-center text-muted-foreground/20">—</div>
+                                <div className="h-24 flex items-center justify-center text-muted-foreground/30 rounded-lg bg-muted/20 border-2 border-dashed border-muted/40">
+                                  <span className="text-[11px] font-bold uppercase tracking-tight">—</span>
+                                </div>
                               )}
                             </TableCell>
                           );

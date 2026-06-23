@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Loader2, BookOpen, RefreshCw, CalendarIcon, MapPin, Clock, CalendarDays, Edit3 } from "lucide-react";
+import { Loader2, BookOpen, RefreshCw, CalendarIcon, MapPin, Clock, CalendarDays, Edit3, AlertCircle, Check } from "lucide-react";
 import { format, parseISO, isValid } from "date-fns";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
@@ -17,10 +17,10 @@ import { Course, Section, CTAssignment } from "@/lib/types";
 import { toast } from "sonner";
 
 export function CourseCTSchedulePage() {
-  const { active_semester_id, sections, rooms } = useStore();
+  const { active_semester_id, sections, rooms, departments } = useStore();
   const [assignments, setAssignments] = useState<CTAssignment[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedSectionId, setSelectedSectionId] = useState<string>("all");
+  const [selectedLevelTerm, setSelectedLevelTerm] = useState<string>("all");
   const [viewingCourseKey, setViewingCourseKey] = useState<string | null>(null);
   const [editingAssignment, setEditingAssignment] = useState<CTAssignment | null>(null);
 
@@ -52,52 +52,96 @@ export function CourseCTSchedulePage() {
     }
   };
 
-  const filteredAssignments = useMemo(() => {
-    if (selectedSectionId === "all") return assignments;
-    return assignments.filter(a => a.section_id === selectedSectionId);
-  }, [assignments, selectedSectionId]);
+  // Get unique level-term combinations from assignments
+  const uniqueLevelTerms = useMemo(() => {
+    const ltSet = new Set<string>();
+    assignments.forEach(a => {
+      if (a.course) {
+        const key = `${a.course.level}-${a.course.term}-${a.course.departmental_type}-${a.course.department_id || 'none'}`;
+        ltSet.add(key);
+      }
+    });
 
-  const groupedAssignments = useMemo(() => {
+    const ltArray = Array.from(ltSet).map(key => {
+      const [level, term, deptType, deptId] = key.split('-');
+      const assignment = assignments.find(a => a.course &&
+        a.course.level === Number(level) &&
+        a.course.term === term &&
+        a.course.departmental_type === deptType &&
+        (a.course.department_id || 'none') === deptId
+      );
+
+      const dept = deptId !== 'none' ? departments.find(d => d.id === deptId) : null;
+
+      return {
+        key,
+        level: Number(level),
+        term,
+        deptType,
+        deptId,
+        deptName: dept?.short_name || (deptType === 'Non-Departmental' ? 'Non-Dept' : 'CSE'),
+        assignment
+      };
+    });
+
+    // Sort: Departmental first, then by level, term
+    return ltArray.sort((a, b) => {
+      if (a.deptType !== b.deptType) {
+        return a.deptType === 'Departmental' ? -1 : 1;
+      }
+      if (a.level !== b.level) return a.level - b.level;
+      return a.term.localeCompare(b.term);
+    });
+  }, [assignments, departments]);
+
+  const filteredAssignments = useMemo(() => {
+    if (selectedLevelTerm === "all") return assignments;
+    return assignments.filter(a => {
+      if (!a.course) return false;
+      const key = `${a.course.level}-${a.course.term}-${a.course.departmental_type}-${a.course.department_id || 'none'}`;
+      return key === selectedLevelTerm;
+    });
+  }, [assignments, selectedLevelTerm]);
+
+  // Group by course (showing all sections in same row)
+  const groupedByCourse = useMemo(() => {
     const grouped: Record<string, CTAssignment[]> = {};
     filteredAssignments.forEach(a => {
-      const courseCode = a.course?.code || "Unknown";
-      const courseName = a.course?.name || "";
-      const isNonDept = a.course?.departmental_type === "Non-Departmental";
-      const sectionName = a.section?.name || "";
-      const key = isNonDept 
-        ? `${courseCode} - ${courseName} (Common)|${a.course_id}|common`
-        : `${courseCode} - ${courseName} (Sec ${sectionName})|${a.course_id}|${a.section_id}`;
-      
-      if (!grouped[key]) grouped[key] = [];
-      grouped[key].push(a);
+      const courseId = a.course_id;
+      if (!grouped[courseId]) grouped[courseId] = [];
+      grouped[courseId].push(a);
     });
 
-    // Sort courses by departmental_type, level and term
-    const sortedKeys = Object.keys(grouped).sort((a, b) => {
-      const firstA = grouped[a][0];
-      const firstB = grouped[b][0];
-      if (!firstA.course || !firstB.course) return 0;
-      
-      if (firstA.course.departmental_type !== firstB.course.departmental_type) {
-        return firstA.course.departmental_type === "Departmental" ? -1 : 1;
-      }
-      if (firstA.course.level !== firstB.course.level) return firstA.course.level - firstB.course.level;
-      if (firstA.course.term !== firstB.course.term) return firstA.course.term.localeCompare(firstB.course.term);
-      return firstA.course.code.localeCompare(firstB.course.code);
+    // Sort each course's CTs by number
+    Object.keys(grouped).forEach(courseId => {
+      grouped[courseId].sort((a, b) => a.ct_number - b.ct_number);
     });
 
-    const sortedGrouped: Record<string, CTAssignment[]> = {};
-    sortedKeys.forEach(key => {
-      // Ensure CTs within a course are sorted by number
-      sortedGrouped[key] = grouped[key].sort((a, b) => a.ct_number - b.ct_number);
-    });
-
-    return sortedGrouped;
+    return grouped;
   }, [filteredAssignments]);
 
-  const sortedSections = useMemo(() => {
-    return [...sections].sort((a, b) => a.level - b.level || a.term.localeCompare(b.term) || a.name.localeCompare(b.name));
-  }, [sections]);
+  // Check if a course's CTs are synced (all sections have same date for same CT number)
+  const checkCTSync = (courseId: string) => {
+    const courseCTs = groupedByCourse[courseId] || [];
+
+    for (let ctNum = 1; ctNum <= 3; ctNum++) {
+      const ctsForThisNum = courseCTs.filter(ct => ct.ct_number === ctNum);
+      if (ctsForThisNum.length > 1) {
+        const dates = new Set(ctsForThisNum.map(ct => {
+          const d = typeof ct.date === 'string' ? ct.date.split('T')[0] : format(new Date(ct.date), 'yyyy-MM-dd');
+          return d;
+        }));
+        if (dates.size > 1) return false; // Dates don't match
+      }
+    }
+    return true;
+  };
+
+  const selectedCourseCTs = useMemo(() => {
+    if (!viewingCourseKey) return [];
+    const courseId = viewingCourseKey.split('|')[1];
+    return groupedByCourse[courseId] || [];
+  }, [viewingCourseKey, groupedByCourse]);
 
   const formatDate = (dateStr: string) => {
     const d = parseISO(dateStr);
@@ -112,8 +156,6 @@ export function CourseCTSchedulePage() {
     );
   }
 
-  const selectedCourseCTs = viewingCourseKey ? groupedAssignments[viewingCourseKey] : [];
-
   return (
     <div className="pb-10">
       <PageHeader title="Course-wise CT Schedule" subtitle="View and manage class test dates for each course" />
@@ -122,15 +164,15 @@ export function CourseCTSchedulePage() {
         <div className="flex items-center gap-4 bg-card p-4 rounded-xl border shadow-sm">
           <BookOpen className="h-5 w-5 text-primary" />
           <div className="flex-1 max-w-sm">
-            <Select value={selectedSectionId} onValueChange={setSelectedSectionId}>
+            <Select value={selectedLevelTerm} onValueChange={setSelectedLevelTerm}>
               <SelectTrigger className="font-medium">
-                <SelectValue placeholder="Filter by Section" />
+                <SelectValue placeholder="Filter by Level & Term" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Sections</SelectItem>
-                {sortedSections.map(s => (
-                  <SelectItem key={s.id} value={s.id}>
-                    Level {s.level}, Term {s.term} · Section {s.name}
+                <SelectItem value="all">All Level & Terms</SelectItem>
+                {uniqueLevelTerms.map(lt => (
+                  <SelectItem key={lt.key} value={lt.key}>
+                    Level {lt.level} Term {lt.term} · {lt.deptName}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -141,41 +183,113 @@ export function CourseCTSchedulePage() {
           </Button>
         </div>
 
-        {Object.keys(groupedAssignments).length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Object.entries(groupedAssignments).map(([courseKey, cts]) => {
-              const label = courseKey.split('|')[0];
-              const course = cts[0].course;
-              const section = cts[0].section;
+        {Object.keys(groupedByCourse).length > 0 ? (
+          <div className="space-y-6">
+            {Object.entries(groupedByCourse).map(([courseId, allCTs]) => {
+              const course = allCTs[0]?.course;
+              const isSynced = checkCTSync(courseId);
+
+              // Group CTs by section
+              const ctsBySection: Record<string, CTAssignment[]> = {};
+              allCTs.forEach(ct => {
+                const sectionName = ct.section?.name || "Common";
+                if (!ctsBySection[sectionName]) ctsBySection[sectionName] = [];
+                ctsBySection[sectionName].push(ct);
+              });
+
+              const courseKey = `${course?.code} - ${course?.name}|${courseId}`;
+
               return (
-                <div 
-                  key={courseKey} 
+                <div
+                  key={courseId}
                   onClick={() => setViewingCourseKey(courseKey)}
-                  className="bg-card rounded-xl border overflow-hidden shadow-sm hover:shadow-md transition-all cursor-pointer group border-l-4 border-l-primary/30 hover:border-l-primary"
+                  className={cn(
+                    "rounded-2xl border-2 overflow-hidden shadow-md hover:shadow-lg transition-all cursor-pointer group",
+                    isSynced
+                      ? "bg-gradient-to-br from-success/5 to-success/10 border-success/30 hover:border-success/50"
+                      : "bg-gradient-to-br from-destructive/5 to-destructive/10 border-destructive/30 hover:border-destructive/50"
+                  )}
                 >
-                  <div className="bg-muted/50 p-4 border-b">
-                    <div className="flex items-center justify-between gap-2">
-                      <h4 className="font-black text-sm truncate text-primary group-hover:text-primary/80 transition-colors">{label}</h4>
-                      <Badge variant="outline" className="text-[10px] py-0 h-4 bg-background shadow-sm">
-                        {course?.departmental_type}
-                      </Badge>
-                    </div>
-                    <p className="text-[11px] font-bold text-muted-foreground mt-1 uppercase tracking-tight">
-                      L{course?.level} T-{course?.term} · Section {section?.name}
-                    </p>
-                  </div>
-                  <div className="p-4 space-y-3">
-                    {cts.map(ct => (
-                      <div key={ct.id} className="flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-black text-[10px]">
-                            {ct.ct_number}
-                          </div>
-                          <span className="font-bold text-xs">CT {ct.ct_number}</span>
+                  <div className={cn(
+                    "p-4 border-b backdrop-blur-sm",
+                    isSynced ? "bg-success/10 border-success/20" : "bg-destructive/10 border-destructive/20"
+                  )}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-black text-base truncate text-foreground group-hover:text-primary transition-colors">
+                            {course?.code}
+                          </h4>
+                          {isSynced && (
+                            <div className="flex items-center gap-1 px-2.5 py-1 bg-success/20 rounded-full shadow-sm" title="All sections synchronized">
+                              <Check className="h-3.5 w-3.5 text-success" />
+                              <span className="text-[9px] font-bold text-success uppercase">Synced</span>
+                            </div>
+                          )}
+                          {!isSynced && (
+                            <div className="flex items-center gap-1 px-2.5 py-1 bg-destructive/20 rounded-full shadow-sm" title="CT dates are not synchronized across sections">
+                              <AlertCircle className="h-3.5 w-3.5 text-destructive" />
+                              <span className="text-[9px] font-bold text-destructive uppercase">Unsync</span>
+                            </div>
+                          )}
                         </div>
-                        <div className="text-right">
-                          <div className="font-black text-xs">{format(parseISO(ct.date), "dd MMM")}</div>
-                          <div className="text-[9px] text-muted-foreground font-bold uppercase">Room {ct.room?.name}</div>
+                        <p className="text-[12px] font-semibold text-muted-foreground truncate">{course?.name}</p>
+                        <div className="flex items-center gap-3 mt-2">
+                          <Badge variant="outline" className="text-[9px] py-1 bg-background shadow-sm">
+                            L{course?.level} T{course?.term}
+                          </Badge>
+                          <Badge variant="outline" className="text-[9px] py-1 bg-background shadow-sm">
+                            {course?.departmental_type === 'Non-Departmental' ? 'Non-Dept' : 'Dept'}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 space-y-5">
+                    {Object.entries(ctsBySection).map(([sectionName, sectionCTs]) => (
+                      <div key={sectionName} className="space-y-2.5">
+                        <div className="flex items-center gap-2">
+                          <div className="h-1.5 w-1.5 rounded-full bg-primary/40"></div>
+                          <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
+                            {course?.departmental_type === 'Non-Departmental' ? 'Common Section' : `Section ${sectionName}`}
+                          </div>
+                          <div className="flex-1 h-px bg-border/50"></div>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5">
+                          {sectionCTs.map(ct => (
+                            <div
+                              key={ct.id}
+                              className={cn(
+                                "p-3.5 rounded-xl border-2 backdrop-blur-sm hover:scale-105 transition-all",
+                                isSynced
+                                  ? "bg-success/10 border-success/40 hover:bg-success/20 hover:border-success/60"
+                                  : "bg-muted/50 border-border hover:border-primary/50"
+                              )}
+                            >
+                              <div className="flex items-center gap-2 mb-2.5">
+                                <div className={cn(
+                                  "w-7 h-7 rounded-lg flex items-center justify-center font-black text-[10px] shadow-sm",
+                                  isSynced
+                                    ? "bg-success/40 text-success-foreground"
+                                    : "bg-primary/20 text-primary"
+                                )}>
+                                  {ct.ct_number}
+                                </div>
+                                <span className="font-bold text-xs tracking-tight">CT {ct.ct_number}</span>
+                              </div>
+                              <div className="space-y-1.5">
+                                <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-bold">
+                                  <CalendarIcon className="h-3 w-3 text-primary" />
+                                  <span className="font-semibold text-foreground">{format(parseISO(ct.date), "dd MMM")}</span>
+                                </div>
+                                <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-bold">
+                                  <MapPin className="h-3 w-3 text-primary" />
+                                  <span className="font-mono text-foreground">{ct.room?.name}</span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     ))}
