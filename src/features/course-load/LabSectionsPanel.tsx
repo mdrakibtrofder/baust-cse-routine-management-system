@@ -28,10 +28,13 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { FlaskConical, Plus, Trash2, Save, Users, MapPin, Calendar, Check, AlertCircle } from "lucide-react";
-import { cn, sortDays, fmtDayTitle, roomSupportsKind } from "@/lib/utils";
+import { FlaskConical, Plus, Trash2, Save, Users, MapPin, Calendar, Check, AlertCircle, X } from "lucide-react";
+import { cn, sortDays, fmtDayTitle, roomSupportsKind, fmtRange12 } from "@/lib/utils";
 import { roomUnavailableAt, teacherUnavailableAt, timesOverlap } from "@/lib/conflicts";
 import { toast } from "sonner";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { RankPill, TeacherChip } from "@/components/TeacherBadge";
 
 interface SlotDraft {
   day: string;
@@ -130,7 +133,17 @@ export function LabSectionsPanel({ course, sections, open, onClose }: Props) {
     );
   };
 
+  const maxSlotsPerSection = course.credit === 1.5 ? 1 : Math.ceil(course.credit / 3);
+
   const addSlot = (i: number) => {
+    if (drafts[i].slots.length >= maxSlotsPerSection) {
+      toast.error(
+        course.credit === 1.5
+          ? "1.5 credit courses can only have 1 class meeting"
+          : `Cannot add more than ${maxSlotsPerSection} class meetings for ${course.credit} credits`
+      );
+      return;
+    }
     const firstPeriod = applicablePeriods[0];
     setDrafts((d) =>
       d.map((g, idx) =>
@@ -339,27 +352,73 @@ export function LabSectionsPanel({ course, sections, open, onClose }: Props) {
 
               {/* Teacher picker */}
               <div className="space-y-1.5">
-                <Label className="text-xs flex items-center gap-1">
-                  <Users className="h-3 w-3" /> Teachers
-                </Label>
-                <div className="flex flex-wrap gap-1.5">
-                  {allTeachers.map((t) => {
-                    const selected = g.teacher_ids.includes(t.id);
-                    return (
-                      <button
-                        key={t.id}
-                        onClick={() => toggleTeacher(i, t.id)}
-                        className={cn(
-                          "px-2 py-0.5 rounded text-xs font-bold border transition-colors",
-                          selected
-                            ? "bg-blue-600 text-white border-blue-600"
-                            : "bg-background text-muted-foreground border-border hover:border-blue-400",
-                        )}
+                <div className="flex items-center justify-between gap-2">
+                  <Label className="text-xs flex items-center gap-1">
+                    <Users className="h-3 w-3" /> Teachers ({g.teacher_ids.length})
+                  </Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 text-[10px] gap-2 font-bold bg-white hover:bg-blue-50 transition-all border-slate-200"
                       >
-                        {t.short_name}
-                      </button>
-                    );
-                  })}
+                        <Users className="h-3.5 w-3.5" /> Add Teacher
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="p-0 w-80 shadow-2xl border-slate-200" align="end">
+                      <Command className="rounded-xl">
+                        <CommandInput placeholder="Search teachers..." className="h-10 text-xs" />
+                        <CommandList className="max-h-72">
+                          <CommandEmpty className="py-4 text-xs text-slate-400">No teacher found.</CommandEmpty>
+                          <CommandGroup className="p-2">
+                            {allTeachers.map((t) => {
+                              const selected = g.teacher_ids.includes(t.id);
+                              return (
+                                <CommandItem
+                                  key={t.id}
+                                  onSelect={() => toggleTeacher(i, t.id)}
+                                  className="flex items-center justify-between rounded-lg px-3 py-2 cursor-pointer"
+                                >
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <RankPill designation={t.designation} />
+                                      <span className="font-mono font-bold text-xs">{t.short_name}</span>
+                                      <span className="text-muted-foreground text-[11px] truncate">{t.name}</span>
+                                    </div>
+                                  </div>
+                                  {selected && <Check className="h-4 w-4 text-blue-600 stroke-[3px] ml-2 shrink-0" />}
+                                </CommandItem>
+                              );
+                            })}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {g.teacher_ids.length === 0 ? (
+                    <div className="text-[11px] text-slate-400 font-bold italic py-2 w-full text-center border-2 border-dashed border-slate-200 rounded-lg">
+                      No teachers assigned yet.
+                    </div>
+                  ) : (
+                    g.teacher_ids.map((tid) => {
+                      const t = data.teachers.find(x => x.id === tid);
+                      return t ? (
+                        <div key={tid} className="flex items-center gap-1">
+                          <TeacherChip teacher={t} />
+                          <button
+                            type="button"
+                            onClick={() => toggleTeacher(i, tid)}
+                            className="p-1 rounded-full hover:bg-rose-100 text-slate-400 hover:text-rose-600 transition-all"
+                          >
+                            <X className="h-3.5 w-3.5 stroke-[3px]" />
+                          </button>
+                        </div>
+                      ) : null;
+                    })
+                  )}
                 </div>
               </div>
 
@@ -388,91 +447,124 @@ export function LabSectionsPanel({ course, sections, open, onClose }: Props) {
               {/* Class schedule */}
               <div className="space-y-1.5">
                 <Label className="text-xs flex items-center gap-1">
-                  <Calendar className="h-3 w-3" /> Class Schedule
+                  <Calendar className="h-3 w-3" /> Class Schedule ({g.slots.length}/{maxSlotsPerSection})
                 </Label>
-                <div className="space-y-1.5">
-                  {g.slots.map((slot, si) => {
-                    const matchedPeriodId = applicablePeriods.find(
-                      (p) => p.start === slot.start && p.end === slot.end,
-                    )?.id ?? "";
-                    const issue = slotIssue(i, si);
-                    return (
-                    <div key={si} className="space-y-0.5">
-                    <div
-                      className={cn(
-                        "flex items-center gap-1.5 rounded-md border px-1.5 py-1",
-                        issue ? "border-destructive/40 bg-destructive/5" : "border-success/50 bg-success/5",
-                      )}
-                    >
-                      <Select value={slot.day} onValueChange={(v) => updateSlot(i, si, { day: v })}>
-                        <SelectTrigger className="h-8 text-xs w-[100px]">
-                          <SelectValue placeholder="Day" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {orderedDays.map((d) => (
-                            <SelectItem key={d.id} value={d.name}>
-                              {fmtDayTitle(d.name)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Select
-                        value={matchedPeriodId}
-                        onValueChange={(id) => {
-                          const p = data.periods.find((x) => x.id === id);
-                          if (p) updateSlot(i, si, { start: p.start, end: p.end });
-                        }}
-                      >
-                        <SelectTrigger className="h-8 text-xs w-[160px]">
-                          <SelectValue placeholder="Pick a period" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {applicablePeriods.map((p) => (
-                            <SelectItem key={p.id} value={p.id}>
-                              {p.start}–{p.end}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Select value={slot.room_id} onValueChange={(v) => updateSlot(i, si, { room_id: v })}>
-                        <SelectTrigger className="h-8 text-xs w-[160px]">
-                          <SelectValue placeholder="Room" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {roomsForKind.map((r) => (
-                            <SelectItem key={r.id} value={r.id}>
-                              {r.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <span title={issue ?? "No conflicts"} className="shrink-0">
-                        {issue ? (
-                          <AlertCircle className="h-3.5 w-3.5 text-destructive" />
-                        ) : (
-                          <Check className="h-3.5 w-3.5 text-success" />
-                        )}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-destructive hover:text-destructive"
-                        onClick={() => removeSlot(i, si)}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
+                <div className="rounded-lg border bg-card overflow-hidden">
+                  {g.slots.length === 0 ? (
+                    <div className="p-4 text-center text-muted-foreground text-sm">
+                      No class meetings scheduled yet
                     </div>
-                    {issue && (
-                      <p className="text-[10px] text-destructive pl-1.5">{issue}</p>
-                    )}
+                  ) : (
+                    <div className="divide-y">
+                      {g.slots.map((slot, si) => {
+                        const matchedPeriodId = applicablePeriods.find(
+                          (p) => p.start === slot.start && p.end === slot.end,
+                        )?.id ?? "";
+                        const issue = slotIssue(i, si);
+                        const room = roomsForKind.find(r => r.id === slot.room_id);
+                        return (
+                          <div
+                            key={si}
+                            className={cn(
+                              "p-3 space-y-2",
+                              issue ? "border-l-4 border-l-destructive bg-destructive/5" : "border-l-4 border-l-success bg-success/5"
+                            )}
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="text-xs font-semibold flex items-center gap-2">
+                                <span className="text-muted-foreground">{fmtDayTitle(slot.day || "SUN")}</span>
+                                <span className="font-mono text-sm">{fmtRange12(slot.start, slot.end)}</span>
+                                {room && <span className="text-emerald-600 font-bold">{room.name}</span>}
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 text-destructive hover:text-destructive"
+                                onClick={() => removeSlot(i, si)}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
+                            <div className="grid grid-cols-3 gap-2">
+                              <div>
+                                <Label className="text-[10px] text-muted-foreground">Day</Label>
+                                <Select value={slot.day} onValueChange={(v) => updateSlot(i, si, { day: v })}>
+                                  <SelectTrigger className="h-7 text-xs">
+                                    <SelectValue placeholder="Day" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {orderedDays.map((d) => (
+                                      <SelectItem key={d.id} value={d.name}>
+                                        {fmtDayTitle(d.name)}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div>
+                                <Label className="text-[10px] text-muted-foreground">Timeslot</Label>
+                                <Select
+                                  value={matchedPeriodId}
+                                  onValueChange={(id) => {
+                                    const p = data.periods.find((x) => x.id === id);
+                                    if (p) updateSlot(i, si, { start: p.start, end: p.end });
+                                  }}
+                                >
+                                  <SelectTrigger className="h-7 text-xs">
+                                    <SelectValue placeholder="Pick a period" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {applicablePeriods.map((p) => (
+                                      <SelectItem key={p.id} value={p.id}>
+                                        {fmtRange12(p.start, p.end)}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div>
+                                <Label className="text-[10px] text-muted-foreground">Room</Label>
+                                <Select value={slot.room_id} onValueChange={(v) => updateSlot(i, si, { room_id: v })}>
+                                  <SelectTrigger className="h-7 text-xs">
+                                    <SelectValue placeholder="Room" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {roomsForKind.map((r) => (
+                                      <SelectItem key={r.id} value={r.id}>
+                                        {r.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+                            {issue && (
+                              <div className="flex items-start gap-1.5 text-[10px] text-destructive">
+                                <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                                <span>{issue}</span>
+                              </div>
+                            )}
+                            {!issue && (
+                              <div className="flex items-start gap-1.5 text-[10px] text-success">
+                                <Check className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                                <span>No conflicts</span>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
-                    );
-                  })}
-                  <Button variant="outline" size="sm" onClick={() => addSlot(i)} className="gap-1.5 h-7 text-xs">
+                  )}
+                </div>
+                {g.slots.length < maxSlotsPerSection && (
+                  <Button variant="outline" size="sm" onClick={() => addSlot(i)} className="w-full gap-1.5 h-7 text-xs">
                     <Plus className="h-3 w-3" />
                     Add class meeting
                   </Button>
-                </div>
+                )}
+                {g.slots.length >= maxSlotsPerSection && course.credit === 1.5 && (
+                  <p className="text-[10px] text-muted-foreground italic">1.5 credit courses can only have 1 class meeting</p>
+                )}
               </div>
             </div>
           ))}
