@@ -50,6 +50,10 @@ export function SemesterSettingsPage() {
 
   const handleAddYear = async () => {
     const val = parseInt(newYear);
+    if (isNaN(val) || val < 2026 || val > 2100) {
+      toast.error("Please enter a valid year between 2026 and 2100");
+      return;
+    }
     if (yearDup(val)) {
       toast.error(`Year ${val} already exists — duplicate years aren't allowed.`);
       return;
