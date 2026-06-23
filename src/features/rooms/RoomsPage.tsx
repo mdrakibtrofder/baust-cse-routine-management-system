@@ -167,9 +167,18 @@ export function RoomsPage() {
                         onClick={() => setRoutineFor(r)}>
                         <CalendarDays className="h-3.5 w-3.5 text-primary" />
                       </Button>
-                      <Button size="icon" variant="ghost" title="Manage unavailability"
+                      <Button size="icon" variant="ghost" className="relative" title="Manage unavailability"
                         onClick={() => setUnavailFor(r)}>
                         <Clock className="h-3.5 w-3.5 text-warning" />
+                        {(() => {
+                          const count = data.room_unavailability.filter((u) => u.room_id === r.id).length;
+                          if (count === 0) return null;
+                          return (
+                            <span className="absolute -top-1 -right-1 h-4 min-w-4 px-0.5 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center leading-none">
+                              {count}
+                            </span>
+                          );
+                        })()}
                       </Button>
                       <Button size="icon" variant="ghost" onClick={() => {
                         setEditing(r);
