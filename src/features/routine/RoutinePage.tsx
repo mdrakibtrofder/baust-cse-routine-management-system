@@ -5,6 +5,7 @@ import { RoutineView, type RoutineScope } from "@/components/RoutineView";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { Filter, Users, DoorOpen, Boxes } from "lucide-react";
+import { HOME_DEPT_SHORT_NAME } from "@/lib/constants";
 
 type Mode = "teacher" | "room" | "section";
 
@@ -58,27 +59,52 @@ export function RoutinePage() {
     [data.rooms],
   );
 
-  const sectionOptions: ComboboxOption[] = useMemo(
-    () =>
-      [...data.sections]
-        .sort((a, b) => a.level - b.level || a.term.localeCompare(b.term) || a.name.localeCompare(b.name))
-        .map((s) => ({
+  const homeDept = useMemo(
+    () => data.departments.find((d) => d.short_name.trim().toUpperCase() === HOME_DEPT_SHORT_NAME),
+    [data.departments],
+  );
+
+  const sectionOptions: ComboboxOption[] = useMemo(() => {
+    const deptOf = (s: typeof data.sections[number]) =>
+      s.department_id ? data.departments.find((d) => d.id === s.department_id) ?? null : homeDept ?? null;
+    const isHome = (s: typeof data.sections[number]) => {
+      const d = deptOf(s);
+      return !d || d.id === homeDept?.id;
+    };
+
+    return [...data.sections]
+      .sort((a, b) => {
+        const aHome = isHome(a), bHome = isHome(b);
+        const aDept = deptOf(a)?.short_name ?? HOME_DEPT_SHORT_NAME;
+        const bDept = deptOf(b)?.short_name ?? HOME_DEPT_SHORT_NAME;
+        return (
+          (aHome === bHome ? 0 : aHome ? -1 : 1) ||
+          aDept.localeCompare(bDept) ||
+          a.level - b.level ||
+          a.term.localeCompare(b.term) ||
+          a.name.localeCompare(b.name)
+        );
+      })
+      .map((s) => {
+        const dept = deptOf(s);
+        const deptName = dept?.short_name ?? HOME_DEPT_SHORT_NAME;
+        return {
           value: s.id,
-          label: `Level ${s.level} Term ${s.term} Section ${s.name}`,
-          group: `Level ${s.level}, Term ${s.term}`,
+          label: `${deptName} Level ${s.level} Term ${s.term} Section ${s.name}`,
+          group: `${deptName} · Level ${s.level}, Term ${s.term}`,
           display: (
             <div className="flex flex-col gap-0.5 py-0.5">
               <div className="font-semibold text-sm">
                 Level {s.level}, Term {s.term} · Section {s.name}
               </div>
               <div className="text-[10px] text-muted-foreground font-medium">
-                {s.total_students} Students · CSE Dept
+                {s.total_students} Students · {deptName} Dept
               </div>
             </div>
           ),
-        })),
-    [data.sections],
-  );
+        };
+      });
+  }, [data.sections, data.departments, homeDept]);
 
   const scope: RoutineScope =
     mode === "teacher"
@@ -97,7 +123,10 @@ export function RoutinePage() {
       return r ? `Room ${r.name} (capacity ${r.capacity}, ${r.room_type})` : "";
     }
     const s = data.sections.find((x) => x.id === sectionId);
-    return s ? `Level ${s.level}, Term ${s.term} · Section ${s.name} · ${s.total_students} students` : "";
+    if (!s) return "";
+    const dept = s.department_id ? data.departments.find((d) => d.id === s.department_id) : null;
+    const deptName = dept?.short_name ?? HOME_DEPT_SHORT_NAME;
+    return `${deptName} · Level ${s.level}, Term ${s.term} · Section ${s.name} · ${s.total_students} students`;
   }, [mode, teacherId, roomId, sectionId, data]);
 
   return (
