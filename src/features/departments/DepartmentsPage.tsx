@@ -15,6 +15,8 @@ import { toast } from "sonner";
 import type { Department } from "@/lib/types";
 import { useConfirm } from "@/components/ConfirmDialog";
 import { cn, tagColorClasses } from "@/lib/utils";
+import { departmentDependencies } from "@/lib/conflicts";
+import { BlockedDeleteDialog } from "@/components/BlockedDeleteDialog";
 
 const empty: Omit<Department, "id"> = { short_name: "", full_name: "", faculty_name: "" };
 
@@ -27,6 +29,7 @@ export function DepartmentsPage() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<any>(empty);
   const [submitting, setSubmitting] = useState(false);
+  const [blocked, setBlocked] = useState<{ department: Department; deps: ReturnType<typeof departmentDependencies> } | null>(null);
 
   const filtered = useMemo(
     () => departments.filter(d => 
@@ -64,12 +67,21 @@ export function DepartmentsPage() {
   };
 
   const tryDelete = async (d: Department) => {
+    const deps = departmentDependencies(data, d.id);
+    if (deps.length > 0) { setBlocked({ department: d, deps }); return; }
     const ok = await confirmDialog({
       title: `Delete department ${d.short_name}?`,
       description: `${d.full_name} (${d.faculty_name}) will be permanently removed.`,
       destructive: true, confirmLabel: "Delete",
     });
-    if (ok) { deleteDepartment(d.id); toast.success("Deleted"); }
+    if (ok) {
+      try {
+        await deleteDepartment(d.id);
+        toast.success("Deleted");
+      } catch (err: any) {
+        toast.error(err.response?.data?.message || err.message || "Deletion failed");
+      }
+    }
   };
 
   return (
@@ -185,6 +197,15 @@ export function DepartmentsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <BlockedDeleteDialog
+        open={!!blocked}
+        onOpenChange={(v) => !v && setBlocked(null)}
+        title="this department"
+        entityLabel={blocked ? `Department ${blocked.department.short_name}` : ""}
+        dependencies={blocked?.deps ?? []}
+        hint="Reassign or remove the listed courses, sections, and rooms first, then try again."
+      />
     </div>
   );
 }

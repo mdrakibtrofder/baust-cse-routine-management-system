@@ -396,7 +396,7 @@ export function findAllConflictFreeSlots(
 // ---------- Dependency analysis (for protected deletes) ----------
 
 export interface Dependency {
-  kind: "class_slot" | "assignment";
+  kind: "class_slot" | "assignment" | "course" | "section" | "room";
   description: string;
 }
 
@@ -473,6 +473,26 @@ export function courseDependencies(data: AppData, courseId: string): Dependency[
       kind: "assignment",
       description: `Teacher assignment · Sec ${s?.name ?? "?"} · ${sem?.name ?? ""}`,
     });
+  }
+  return deps;
+}
+
+/** All courses/sections/rooms still pointing at this department.
+ *  Department delete is blocked while any of these exist (deleting them would
+ *  otherwise silently null out department_id via the DB's ON DELETE SET NULL). */
+export function departmentDependencies(data: AppData, departmentId: string): Dependency[] {
+  const deps: Dependency[] = [];
+  for (const c of data.courses) {
+    if (c.department_id !== departmentId) continue;
+    deps.push({ kind: "course", description: `Course ${c.code} — ${c.name}` });
+  }
+  for (const s of data.sections) {
+    if (s.department_id !== departmentId) continue;
+    deps.push({ kind: "section", description: `Section ${s.name} · Level ${s.level}, Term ${s.term}` });
+  }
+  for (const r of data.rooms) {
+    if (r.department_id !== departmentId) continue;
+    deps.push({ kind: "room", description: `Room ${r.name} (${r.room_type})` });
   }
   return deps;
 }

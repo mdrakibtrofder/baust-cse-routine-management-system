@@ -47,7 +47,11 @@ export function BlockedDeleteDialog({
           {dependencies.slice(0, 200).map((d, i) => (
             <div key={i} className="px-3 py-1.5 text-xs flex items-start gap-2">
               <span className="text-[10px] uppercase text-muted-foreground mt-0.5 shrink-0">
-                {d.kind === "class_slot" ? "Class" : "Assign"}
+                {d.kind === "class_slot" ? "Class"
+                  : d.kind === "assignment" ? "Assign"
+                  : d.kind === "course" ? "Course"
+                  : d.kind === "section" ? "Section"
+                  : "Room"}
               </span>
               <span>{d.description}</span>
             </div>

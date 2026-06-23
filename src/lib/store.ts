@@ -479,7 +479,10 @@ export const useStore = create<StoreState>((set, get) => ({
     try {
       await api.delete(`/departments/${id}`);
       set((s) => ({ departments: s.departments.filter((x) => x.id !== id) }));
-    } catch (err: any) { set({ error: err.message }); }
+    } catch (err: any) {
+      set({ error: err.message });
+      throw err;
+    }
   },
 
   addSection: async (sec) => {
@@ -520,7 +523,10 @@ export const useStore = create<StoreState>((set, get) => ({
     try {
       await api.delete(`/sections/${id}`);
       set((s) => ({ sections: s.sections.filter((x) => x.id !== id) }));
-    } catch (err: any) { set({ error: err.message }); }
+    } catch (err: any) {
+      set({ error: err.message });
+      throw err;
+    }
   },
   replaceSections: async (sections: Section[]) => {
     try {

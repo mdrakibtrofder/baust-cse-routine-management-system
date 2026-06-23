@@ -103,7 +103,14 @@ export function SectionsPage() {
       description: `Level ${s.level}, Term ${s.term}, ${s.total_students} students. No dependencies. This cannot be undone.`,
       destructive: true, confirmLabel: "Delete",
     });
-    if (ok) { deleteSection(s.id); toast.success("Deleted"); }
+    if (ok) {
+      try {
+        await deleteSection(s.id);
+        toast.success("Deleted");
+      } catch (err: any) {
+        toast.error(err.response?.data?.message || err.message || "Deletion failed");
+      }
+    }
   };
 
   return (
