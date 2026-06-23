@@ -196,7 +196,7 @@ export function SemesterSettingsPage() {
             </CardHeader>
             <CardContent className="flex items-end gap-4">
               <div className="grid gap-2 flex-1 max-w-xs">
-                <Label>Year (2026-2056)</Label>
+                <Label>Year</Label>
                 <Input 
                   type="number" 
                   placeholder="2026" 

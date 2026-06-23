@@ -51,6 +51,7 @@ export function Combobox({
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const selected = options.find((o) => o.value === value);
+  const selectedItemRef = React.useRef<HTMLDivElement | null>(null);
 
   const groups = React.useMemo(() => {
     const map = new Map<string, ComboboxOption[]>();
@@ -61,6 +62,16 @@ export function Combobox({
     }
     return [...map.entries()];
   }, [options]);
+
+  // Jump straight to the currently selected item instead of always opening at the
+  // top of the list — avoids having to scroll through everything to find it again.
+  React.useEffect(() => {
+    if (!open) return;
+    const raf = requestAnimationFrame(() => {
+      selectedItemRef.current?.scrollIntoView({ block: "center" });
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [open]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -88,6 +99,7 @@ export function Combobox({
                 {opts.map((opt) => (
                   <CommandItem
                     key={opt.value}
+                    ref={opt.value === value ? selectedItemRef : undefined}
                     value={`${opt.label} ${opt.value}`}
                     onSelect={() => {
                       onValueChange(opt.value);

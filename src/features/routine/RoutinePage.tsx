@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useStore } from "@/lib/store";
 import { PageHeader } from "@/components/PageHeader";
 import { RoutineView, type RoutineScope } from "@/components/RoutineView";
@@ -9,23 +9,62 @@ import { HOME_DEPT_SHORT_NAME } from "@/lib/constants";
 
 type Mode = "teacher" | "room" | "section";
 
+/** Persists the last-used "View by" tab and selection across page reloads and
+ *  navigation away/back, so reopening Routine View doesn't reset to the first item. */
+const STORAGE_KEY = "routineView:selection";
+
+interface StoredSelection {
+  mode: Mode;
+  teacherId: string;
+  roomId: string;
+  sectionId: string;
+}
+
+function readStoredSelection(): Partial<StoredSelection> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
 export function RoutinePage() {
   const data = useStore();
-  const [mode, setMode] = useState<Mode>("section");
-  const [teacherId, setTeacherId] = useState<string>("");
-  const [roomId, setRoomId] = useState<string>("");
-  const [sectionId, setSectionId] = useState<string>("");
+  const [mode, setMode] = useState<Mode>(() => readStoredSelection().mode ?? "section");
+  const [teacherId, setTeacherId] = useState<string>(() => readStoredSelection().teacherId ?? "");
+  const [roomId, setRoomId] = useState<string>(() => readStoredSelection().roomId ?? "");
+  const [sectionId, setSectionId] = useState<string>(() => readStoredSelection().sectionId ?? "");
 
-  useMemo(() => {
-    if (!teacherId && data.teachers.length > 0) setTeacherId(data.teachers[0].id);
-    if (!roomId && data.rooms.length > 0) setRoomId(data.rooms[0].id);
-    if (!sectionId && data.sections.length > 0) {
+  // Persist every change so the selection survives navigation and page refreshes.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ mode, teacherId, roomId, sectionId }));
+    } catch {
+      // localStorage unavailable (e.g. private browsing) — selection just won't persist.
+    }
+  }, [mode, teacherId, roomId, sectionId]);
+
+  // Once data has loaded: keep a restored selection if it still refers to a real
+  // entity; otherwise (nothing restored, or the entity was since deleted) fall back
+  // to the first item — exactly the prior default behavior, just not unconditional.
+  useEffect(() => {
+    if (data.teachers.length > 0 && (!teacherId || !data.teachers.some((t) => t.id === teacherId))) {
+      setTeacherId(data.teachers[0].id);
+    }
+    if (data.rooms.length > 0 && (!roomId || !data.rooms.some((r) => r.id === roomId))) {
+      setRoomId(data.rooms[0].id);
+    }
+    if (data.sections.length > 0 && (!sectionId || !data.sections.some((s) => s.id === sectionId))) {
       const sorted = [...data.sections].sort(
         (a, b) => a.level - b.level || a.term.localeCompare(b.term) || a.name.localeCompare(b.name)
       );
       setSectionId(sorted[0].id);
     }
-  }, [data]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.teachers, data.rooms, data.sections]);
 
   const teacherOptions: ComboboxOption[] = useMemo(
     () =>
