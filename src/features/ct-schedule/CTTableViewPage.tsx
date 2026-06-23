@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format, parseISO, isValid } from "date-fns";
-import { Loader2, CalendarIcon, RefreshCw, Wand2 } from "lucide-react";
+import { Loader2, CalendarIcon, Wand2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
 import { CTSetting, CTAssignment } from "@/lib/types";
@@ -143,24 +143,14 @@ export function CTTableViewPage() {
             </h3>
             <p className="text-sm text-muted-foreground mt-1">All class tests organized by date and room</p>
           </div>
-          <div className="flex gap-2 w-full sm:w-auto">
-            <Button
-              variant="outline"
-              onClick={loadData}
-              className="flex-1 sm:flex-none"
-            >
-              <RefreshCw className={cn("mr-2 h-4 w-4", loading && "animate-spin")} />
-              Reload
-            </Button>
-            <Button
-              onClick={handleGenerate}
-              disabled={generating}
-              className="flex-1 sm:flex-none bg-gradient-to-r from-primary to-primary/80"
-            >
-              {generating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
-              Generate
-            </Button>
-          </div>
+          <Button
+            onClick={handleGenerate}
+            disabled={generating}
+            className="w-full sm:w-auto bg-gradient-to-r from-primary to-primary/80 font-bold"
+          >
+            {generating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
+            Generate CT Schedule
+          </Button>
         </div>
 
         {assignments.length > 0 ? (

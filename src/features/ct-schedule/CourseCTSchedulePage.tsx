@@ -54,35 +54,52 @@ export function CourseCTSchedulePage() {
 
   // Get unique level-term combinations from assignments
   const uniqueLevelTerms = useMemo(() => {
-    const ltSet = new Set<string>();
+    const ltMap = new Map<string, {
+      level: number;
+      term: string;
+      deptType: string;
+      deptId: string | null;
+      deptName: string;
+      deptFullName: string;
+      assignment: CTAssignment | undefined;
+    }>();
+
     assignments.forEach(a => {
       if (a.course) {
-        const key = `${a.course.level}-${a.course.term}-${a.course.departmental_type}-${a.course.department_id || 'none'}`;
-        ltSet.add(key);
+        const deptId = a.course.department_id || 'none';
+        const key = `${a.course.level}-${a.course.term}-${a.course.departmental_type}-${deptId}`;
+
+        if (!ltMap.has(key)) {
+          // Get department info
+          let dept = null;
+          let deptName = 'CSE';
+          let deptFullName = 'Computer Science & Engineering';
+
+          if (a.course.departmental_type === 'Non-Departmental') {
+            deptName = 'Non-Dept';
+            deptFullName = 'Non-Departmental';
+          } else if (deptId !== 'none') {
+            dept = departments.find(d => d.id === deptId);
+            if (dept) {
+              deptName = dept.short_name;
+              deptFullName = dept.full_name;
+            }
+          }
+
+          ltMap.set(key, {
+            level: a.course.level,
+            term: a.course.term,
+            deptType: a.course.departmental_type,
+            deptId: deptId === 'none' ? null : deptId,
+            deptName,
+            deptFullName,
+            assignment: a
+          });
+        }
       }
     });
 
-    const ltArray = Array.from(ltSet).map(key => {
-      const [level, term, deptType, deptId] = key.split('-');
-      const assignment = assignments.find(a => a.course &&
-        a.course.level === Number(level) &&
-        a.course.term === term &&
-        a.course.departmental_type === deptType &&
-        (a.course.department_id || 'none') === deptId
-      );
-
-      const dept = deptId !== 'none' ? departments.find(d => d.id === deptId) : null;
-
-      return {
-        key,
-        level: Number(level),
-        term,
-        deptType,
-        deptId,
-        deptName: dept?.short_name || (deptType === 'Non-Departmental' ? 'Non-Dept' : 'CSE'),
-        assignment
-      };
-    });
+    const ltArray = Array.from(ltMap.values());
 
     // Sort: Departmental first, then by level, term
     return ltArray.sort((a, b) => {
@@ -164,17 +181,30 @@ export function CourseCTSchedulePage() {
         <div className="flex items-center gap-4 bg-card p-4 rounded-xl border shadow-sm">
           <BookOpen className="h-5 w-5 text-primary" />
           <div className="flex-1 max-w-sm">
-            <Select value={selectedLevelTerm} onValueChange={setSelectedLevelTerm}>
+            <Select
+              value={selectedLevelTerm}
+              onValueChange={setSelectedLevelTerm}
+            >
               <SelectTrigger className="font-medium">
                 <SelectValue placeholder="Filter by Level & Term" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Level & Terms</SelectItem>
-                {uniqueLevelTerms.map(lt => (
-                  <SelectItem key={lt.key} value={lt.key}>
-                    Level {lt.level} Term {lt.term} · {lt.deptName}
-                  </SelectItem>
-                ))}
+                {uniqueLevelTerms.map((lt) => {
+                  const key = `${lt.level}-${lt.term}-${lt.deptType}-${lt.deptId || 'none'}`;
+                  return (
+                    <SelectItem key={key} value={key}>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold">L{lt.level} T{lt.term}</span>
+                        <span className="text-muted-foreground">•</span>
+                        <span className="text-sm">{lt.deptName}</span>
+                        {lt.deptFullName && lt.deptFullName !== lt.deptName && (
+                          <span className="text-xs text-muted-foreground">({lt.deptFullName})</span>
+                        )}
+                      </div>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>
@@ -216,7 +246,7 @@ export function CourseCTSchedulePage() {
                   )}>
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
                           <h4 className="font-black text-base truncate text-foreground group-hover:text-primary transition-colors">
                             {course?.code}
                           </h4>
@@ -234,12 +264,25 @@ export function CourseCTSchedulePage() {
                           )}
                         </div>
                         <p className="text-[12px] font-semibold text-muted-foreground truncate">{course?.name}</p>
-                        <div className="flex items-center gap-3 mt-2">
+                        <div className="flex items-center gap-2 mt-2 flex-wrap">
                           <Badge variant="outline" className="text-[9px] py-1 bg-background shadow-sm">
                             L{course?.level} T{course?.term}
                           </Badge>
-                          <Badge variant="outline" className="text-[9px] py-1 bg-background shadow-sm">
-                            {course?.departmental_type === 'Non-Departmental' ? 'Non-Dept' : 'Dept'}
+                          <Badge
+                            variant="outline"
+                            className="text-[9px] py-1 bg-background shadow-sm font-bold"
+                            style={{
+                              borderColor: "hsl(var(--primary))",
+                              color: "hsl(var(--primary))"
+                            }}
+                          >
+                            {(() => {
+                              if (course?.departmental_type === 'Non-Departmental') {
+                                return 'Non-Dept';
+                              }
+                              const dept = departments.find(d => d.id === course?.department_id);
+                              return dept?.short_name || 'CSE';
+                            })()}
                           </Badge>
                         </div>
                       </div>
