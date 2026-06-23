@@ -204,13 +204,9 @@ function SectionRoomBlock({ group }: { group: any }) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {group.sections.map((s: Section) => {
-          // Only courses actually scheduled for this section (assignment exists).
-          const courses = group.courses.filter((c: Course) =>
-            data.course_section_teachers.some(
-              (x) => x.semester_id === data.active_semester_id && x.course_id === c.id && x.section_id === s.id,
-            ),
-          );
-          if (courses.length === 0) return null;
+          // Show every course in this block for every section — including ones with no
+          // room/teacher assigned yet — so a section isn't hidden just for lacking data.
+          const courses = group.courses;
           const summary = getSectionRoomSummary(s.id, courses);
 
           return (
