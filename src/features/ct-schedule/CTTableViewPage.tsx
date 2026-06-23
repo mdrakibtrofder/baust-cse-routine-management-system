@@ -39,6 +39,11 @@ export function CTTableViewPage() {
     loadData();
   }, [loadData]);
 
+  const [suggestedCTsToUpdate, setSuggestedCTsToUpdate] = useState<CTAssignment[]>([]);
+  const [selectedCTsToUpdate, setSelectedCTsToUpdate] = useState<Set<string>>(new Set());
+  const [showDateChangeModal, setShowDateChangeModal] = useState(false);
+  const [pendingUpdates, setPendingUpdates] = useState<{ assignment: CTAssignment; updates: Partial<CTAssignment> } | null>(null);
+
   const handleUpdateAssignment = async (id: string, updates: Partial<CTAssignment>) => {
     try {
       await api.put(`/ct-schedule/assignments/${id}`, updates);
@@ -48,6 +53,36 @@ export function CTTableViewPage() {
     } catch (error) {
       toast.error("Failed to update assignment");
     }
+  };
+
+  const handleDateChange = (newDate: string) => {
+    if (!editingAssignment) return;
+
+    const originalDate = typeof editingAssignment.date === 'string'
+      ? editingAssignment.date.split('T')[0]
+      : format(new Date(editingAssignment.date), 'yyyy-MM-dd');
+
+    const newDateStr = newDate.split('T')[0];
+
+    // Only show modal if date actually changed (not just room)
+    if (originalDate !== newDateStr) {
+      // Find all CTs on the original date (excluding this one)
+      const otherCTsOnDate = assignments.filter(a =>
+        a.id !== editingAssignment.id &&
+        (typeof a.date === 'string' ? a.date.split('T')[0] : format(new Date(a.date), 'yyyy-MM-dd')) === originalDate
+      );
+
+      if (otherCTsOnDate.length > 0) {
+        setSuggestedCTsToUpdate(otherCTsOnDate);
+        setSelectedCTsToUpdate(new Set());
+        setShowDateChangeModal(true);
+        setPendingUpdates({ assignment: editingAssignment, updates: { date: newDate } });
+        return;
+      }
+    }
+
+    // If no other CTs on that date, just update
+    setEditingAssignment({ ...editingAssignment, date: newDate });
   };
 
   const handleGenerate = async () => {
@@ -100,7 +135,7 @@ export function CTTableViewPage() {
       <div className="p-4 sm:p-6 space-y-6">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-primary flex items-center gap-2">
-             Assignments View
+             CT Schedule View
           </h3>
           <div className="flex gap-2">
             <Button variant="outline" onClick={loadData}>
@@ -143,10 +178,14 @@ export function CTTableViewPage() {
                               {a ? (
                                 <button
                                   onClick={() => setEditingAssignment(a)}
-                                  className="w-full bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-lg py-2 px-1 transition-all flex flex-col items-center justify-center gap-1"
+                                  className="w-full bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-lg py-2 px-1.5 transition-all flex flex-col items-center justify-center gap-0.5"
                                 >
                                   <span className="text-[10px] font-bold uppercase tracking-tight">CT {a.ct_number}</span>
-                                  <span className="text-[11px] font-mono font-black">{a.course?.code}</span>
+                                  <span className="text-[10px] font-mono font-black">{a.course?.code}</span>
+                                  <span className="text-[9px] text-muted-foreground">L{a.course?.level} T{a.course?.term}</span>
+                                  <span className="text-[9px] text-muted-foreground font-medium">
+                                    {a.course?.departmental_type === 'Non-Departmental' ? 'Common' : `Sec ${a.section?.name}`}
+                                  </span>
                                 </button>
                               ) : (
                                 <div className="h-10 flex items-center justify-center text-muted-foreground/20">—</div>
@@ -169,7 +208,7 @@ export function CTTableViewPage() {
         )}
       </div>
 
-      <Dialog open={!!editingAssignment} onOpenChange={(open) => !open && setEditingAssignment(null)}>
+      <Dialog open={!!editingAssignment && !showDateChangeModal} onOpenChange={(open) => !open && setEditingAssignment(null)}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Edit CT Assignment</DialogTitle>
@@ -182,7 +221,13 @@ export function CTTableViewPage() {
               </div>
               <div className="grid gap-2">
                 <Label>Section</Label>
-                <div className="text-sm font-medium">Section {editingAssignment.section?.name}</div>
+                <div className="text-sm font-medium">
+                  {editingAssignment.course?.departmental_type === 'Non-Departmental' ? 'Common' : `Section ${editingAssignment.section?.name}`}
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <Label>Level & Term</Label>
+                <div className="text-sm font-medium">Level {editingAssignment.course?.level}, Term {editingAssignment.course?.term}</div>
               </div>
               <div className="grid gap-2">
                 <Label>CT Number</Label>
@@ -219,7 +264,7 @@ export function CTTableViewPage() {
                     <Calendar
                       mode="single"
                       selected={parseISO(editingAssignment.date)}
-                      onSelect={(date) => date && setEditingAssignment({ ...editingAssignment, date: format(date, "yyyy-MM-dd") })}
+                      onSelect={(date) => date && handleDateChange(format(date, "yyyy-MM-dd"))}
                       initialFocus
                     />
                   </PopoverContent>
@@ -234,6 +279,94 @@ export function CTTableViewPage() {
               date: editingAssignment.date
             })}>
               Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showDateChangeModal} onOpenChange={(open) => !open && setShowDateChangeModal(false)}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Update Other CTs on This Date?</DialogTitle>
+          </DialogHeader>
+          {pendingUpdates && (
+            <div className="space-y-4 py-4">
+              <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-sm text-blue-900 font-medium">
+                  You're moving <strong>{pendingUpdates.assignment.course?.code} CT{pendingUpdates.assignment.ct_number}</strong> to a different date.
+                </p>
+                <p className="text-sm text-blue-800 mt-1">
+                  There are <strong>{suggestedCTsToUpdate.length}</strong> other CT(s) on the original date. Would you like to also move them?
+                </p>
+              </div>
+
+              <div className="space-y-2 max-h-64 overflow-y-auto border rounded-lg p-3">
+                {suggestedCTsToUpdate.map((ct) => (
+                  <label key={ct.id} className="flex items-center gap-3 p-2 hover:bg-muted rounded cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selectedCTsToUpdate.has(ct.id)}
+                      onChange={(e) => {
+                        const newSet = new Set(selectedCTsToUpdate);
+                        if (e.target.checked) {
+                          newSet.add(ct.id);
+                        } else {
+                          newSet.delete(ct.id);
+                        }
+                        setSelectedCTsToUpdate(newSet);
+                      }}
+                      className="rounded"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-semibold">
+                        {ct.course?.code} CT{ct.ct_number}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {ct.course?.departmental_type === 'Non-Departmental' ? 'Common' : `Section ${ct.section?.name}`} • {ct.room?.name}
+                      </div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                // Just update the current CT
+                if (pendingUpdates && editingAssignment) {
+                  handleUpdateAssignment(editingAssignment.id, pendingUpdates.updates);
+                }
+                setShowDateChangeModal(false);
+                setEditingAssignment(null);
+              }}
+            >
+              Update Only This CT
+            </Button>
+            <Button
+              onClick={async () => {
+                if (pendingUpdates && editingAssignment) {
+                  // Update main assignment
+                  try {
+                    await api.put(`/ct-schedule/assignments/${editingAssignment.id}`, pendingUpdates.updates);
+
+                    // Update selected CTs
+                    for (const ctId of selectedCTsToUpdate) {
+                      await api.put(`/ct-schedule/assignments/${ctId}`, pendingUpdates.updates);
+                    }
+
+                    toast.success(selectedCTsToUpdate.size > 0 ? `Updated ${selectedCTsToUpdate.size + 1} CTs` : "Assignment updated");
+                    loadData();
+                  } catch (error) {
+                    toast.error("Failed to update assignments");
+                  }
+                }
+                setShowDateChangeModal(false);
+                setEditingAssignment(null);
+              }}
+            >
+              Update All Selected ({selectedCTsToUpdate.size})
             </Button>
           </DialogFooter>
         </DialogContent>
