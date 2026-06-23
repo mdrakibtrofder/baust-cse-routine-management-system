@@ -67,6 +67,14 @@ export interface Period {
   end: string;
   duration: number; // minutes
   kind: "theory" | "sessional";
+  /** Marks this period as a break (lunch/prayer, etc.) rather than a class slot. */
+  is_break?: boolean;
+}
+
+/** Global app-wide toggles (single row, not semester-scoped). */
+export interface AppSettings {
+  id: string;
+  show_break_column: boolean;
 }
 
 export interface Day {
@@ -180,6 +188,7 @@ export interface AppData {
   semester_types: SemesterType[];
   teacher_unavailability: TeacherUnavailability[];
   room_unavailability: RoomUnavailability[];
+  app_settings: AppSettings;
 }
 
 export interface CTSetting {

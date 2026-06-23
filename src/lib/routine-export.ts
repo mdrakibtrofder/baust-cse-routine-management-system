@@ -14,8 +14,8 @@ import { buildRoutineCourseSummary, buildRoutineTeacherSummary } from "./routine
 
 const DEFAULT_DEPT = "CSE";
 
-function isBreak(name: string) {
-  return /break/i.test(name);
+function isBreak(p: { name: string; is_break?: boolean }) {
+  return !!p.is_break || /break/i.test(p.name);
 }
 
 /** Slugify a string for safe filenames: lowercase, dashes only. */
@@ -100,6 +100,7 @@ export function getScopeInfo(data: AppData, scope: RoutineScope) {
 export function buildRoutineMatrix(data: AppData, scope: RoutineScope) {
   const theoryPeriods = [...data.periods]
     .filter((p) => p.kind === "theory")
+    .filter((p) => data.app_settings.show_break_column || !isBreak(p))
     .sort((a, b) => compareTimeValues(a.start, b.start));
   const days = sortDays(data.days);
 
@@ -148,7 +149,7 @@ export function buildRoutineMatrix(data: AppData, scope: RoutineScope) {
         skipCount--;
         continue;
       }
-      if (isBreak(p.name)) {
+      if (isBreak(p)) {
         row.push("BREAK");
         continue;
       }

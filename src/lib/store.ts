@@ -17,6 +17,7 @@ import type {
   SemesterType,
   TeacherUnavailability,
   RoomUnavailability,
+  AppSettings,
 } from "./types";
 
 interface AuthState {
@@ -83,7 +84,10 @@ interface StoreState extends AppData {
   deletePeriod: (id: string) => Promise<void>;
   addDay: (name: string) => Promise<void>;
   deleteDay: (id: string) => Promise<void>;
-  
+
+  // app-wide settings
+  updateAppSettings: (patch: Partial<Omit<AppSettings, "id">>) => Promise<void>;
+
   // assignments
   setCourseSectionTeachers: (course_id: string, section_id: string, teacher_ids: string[], primary_room_id?: string | null, slot_teacher_ids?: string[][] | null, combined_section_ids?: string[] | null) => Promise<void>;
 
@@ -139,6 +143,7 @@ export const useStore = create<StoreState>((set, get) => ({
   semester_types: [],
   teacher_unavailability: [],
   room_unavailability: [],
+  app_settings: { id: "", show_break_column: true },
   isLoading: false,
   error: null,
   auth: {
@@ -149,7 +154,7 @@ export const useStore = create<StoreState>((set, get) => ({
   init: async () => {
     set({ isLoading: true, error: null });
     try {
-      const [teacherRes, rooms, departments, sections, courses, periods, days, semesters, years, types, unavailTeachers, unavailRooms] = await Promise.all([
+      const [teacherRes, rooms, departments, sections, courses, periods, days, semesters, years, types, unavailTeachers, unavailRooms, appSettings] = await Promise.all([
         api.get<Teacher[]>('/teachers'),
         api.get<Room[]>('/rooms'),
         api.get<Department[]>('/departments'),
@@ -162,6 +167,7 @@ export const useStore = create<StoreState>((set, get) => ({
         api.get<SemesterType[]>('/semester-types'),
         api.get<TeacherUnavailability[]>('/teacher-unavailability').catch(() => []),
         api.get<RoomUnavailability[]>('/room-unavailability').catch(() => []),
+        api.get<AppSettings>('/settings').catch(() => ({ id: "", show_break_column: true })),
       ]);
 
       const teachers = teacherRes;
@@ -197,6 +203,7 @@ export const useStore = create<StoreState>((set, get) => ({
         course_lab_sections,
         teacher_unavailability: unavailTeachers,
         room_unavailability: unavailRooms,
+        app_settings: appSettings,
         active_semester_id: active_semester,
         isLoading: false
       });
@@ -628,6 +635,16 @@ export const useStore = create<StoreState>((set, get) => ({
       await api.delete(`/days/${id}`);
       set((s) => ({ days: s.days.filter((d) => d.id !== id) }));
     } catch (err: any) { set({ error: err.message }); }
+  },
+
+  updateAppSettings: async (patch) => {
+    try {
+      const res = await api.patch<AppSettings>('/settings', patch);
+      set({ app_settings: res });
+    } catch (err: any) {
+      set({ error: err.message });
+      throw err;
+    }
   },
 
   setCourseSectionTeachers: async (course_id, section_id, teacher_ids, primary_room_id, slot_teacher_ids, combined_section_ids) => {

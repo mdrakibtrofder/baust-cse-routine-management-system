@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2, Plus, Pencil, Check, X } from "lucide-react";
+import { Trash2, Plus, Pencil, Check, X, Coffee } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { useConfirm } from "@/components/ConfirmDialog";
 import { compareDayNames, compareTimeValues, fmtRange12, sortDays } from "@/lib/utils";
 import { periodDependencies, dayDependencies } from "@/lib/conflicts";
@@ -22,9 +23,10 @@ function minutes(a: string, b: string) {
 
 export function SettingsPage() {
   const data = useStore();
-  const { periods, days, addPeriod, updatePeriod, deletePeriod, addDay, deleteDay } = data;
+  const { periods, days, addPeriod, updatePeriod, deletePeriod, addDay, deleteDay, updateAppSettings } = data;
   const confirmDialog = useConfirm();
-  const [p, setP] = useState({ start: "08:00", end: "09:00", kind: "theory" as "theory" | "sessional" });
+  const [p, setP] = useState({ start: "08:00", end: "09:00", kind: "theory" as "theory" | "sessional", is_break: false });
+  const [savingBreakToggle, setSavingBreakToggle] = useState(false);
   const [dayName, setDayName] = useState("");
   const [editing, setEditing] = useState<{ id: string; start: string; end: string } | null>(null);
   const [blockedPeriod, setBlockedPeriod] = useState<{ period: Period; deps: ReturnType<typeof periodDependencies> } | null>(null);
@@ -79,7 +81,38 @@ export function SettingsPage() {
   return (
     <div>
       <PageHeader title="Periods & Days" subtitle="Configure available time slots and class days. Editing a period's time auto-updates every existing class using that period." />
-      <div className="p-4 sm:p-6 grid md:grid-cols-2 gap-6">
+      <div className="p-4 sm:p-6 space-y-6">
+        <div className="rounded-lg border bg-card overflow-hidden">
+          <div className="px-4 py-3 border-b font-semibold flex items-center gap-2" style={{ background: "var(--gradient-soft)" }}>
+            <Coffee className="h-4 w-4 text-amber-600" /> Routine View
+          </div>
+          <div className="p-4 flex items-center justify-between gap-4">
+            <div>
+              <Label className="text-sm font-medium">Show break column</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                When on, any period marked "Break" below renders as a distinct BREAK column in all
+                routine views and exports. When off, break periods are hidden everywhere.
+              </p>
+            </div>
+            <Switch
+              checked={data.app_settings.show_break_column}
+              disabled={savingBreakToggle}
+              onCheckedChange={async (checked) => {
+                setSavingBreakToggle(true);
+                try {
+                  await updateAppSettings({ show_break_column: checked });
+                  toast.success(checked ? "Break column shown" : "Break column hidden");
+                } catch (err: any) {
+                  toast.error(err.message || "Failed to update setting");
+                } finally {
+                  setSavingBreakToggle(false);
+                }
+              }}
+            />
+          </div>
+        </div>
+      </div>
+      <div className="p-4 sm:p-6 pt-0 grid md:grid-cols-2 gap-6">
         <div className="rounded-lg border bg-card overflow-hidden">
           <div className="px-4 py-3 border-b font-semibold" style={{ background: "var(--gradient-soft)" }}>Class Days</div>
           <div className="p-4 space-y-3">
@@ -134,7 +167,13 @@ export function SettingsPage() {
                       <>
                         <div className="flex items-center gap-3 flex-1">
                           <span className="font-mono">{fmtRange12(p.start, p.end)}</span>
-                          <Badge variant={p.kind === "sessional" ? "default" : "secondary"} className="text-[10px]">{p.kind}</Badge>
+                          {p.is_break ? (
+                            <Badge variant="outline" className="text-[10px] gap-1 border-amber-300 bg-amber-50 text-amber-800">
+                              <Coffee className="h-2.5 w-2.5" /> break
+                            </Badge>
+                          ) : (
+                            <Badge variant={p.kind === "sessional" ? "default" : "secondary"} className="text-[10px]">{p.kind}</Badge>
+                          )}
                           <span className="text-xs text-muted-foreground">{p.duration} min</span>
                           {deps.length > 0 && (
                             <span className="text-[10px] text-muted-foreground">· {deps.length} class{deps.length === 1 ? "" : "es"}</span>
@@ -163,12 +202,21 @@ export function SettingsPage() {
                 </Select>
               </div>
             </div>
+            <div className="flex items-center justify-between rounded border px-3 py-2">
+              <Label className="text-xs flex items-center gap-1.5">
+                <Coffee className="h-3.5 w-3.5 text-amber-600" /> Mark as break period
+              </Label>
+              <Switch checked={p.is_break} onCheckedChange={(v) => setP({ ...p, is_break: v })} />
+            </div>
             <Button className="w-full" onClick={() => {
               const dur = minutes(p.start, p.end);
               if (dur <= 0) return toast.error("End must be after start");
               if (periodDup(p.start, p.end)) return toast.error("A period with this exact time already exists");
-              addPeriod({ name: `${p.start}-${p.end}`, start: p.start, end: p.end, duration: dur, kind: p.kind });
-              toast.success("Period added");
+              addPeriod({
+                name: p.is_break ? "BREAK" : `${p.start}-${p.end}`,
+                start: p.start, end: p.end, duration: dur, kind: p.kind, is_break: p.is_break,
+              });
+              toast.success(p.is_break ? "Break period added" : "Period added");
             }}><Plus className="h-4 w-4 mr-1.5" /> Add Period</Button>
           </div>
         </div>

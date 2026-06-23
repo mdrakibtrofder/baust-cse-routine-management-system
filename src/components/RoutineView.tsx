@@ -64,12 +64,16 @@ export function RoutineView({
   const editCourse = editTarget ? data.courses.find((c) => c.id === editTarget.course_id) ?? null : null;
   const editSection = editTarget ? data.sections.find((s) => s.id === editTarget.section_id) ?? null : null;
 
+  const isBreakPeriod = (p: { name: string; is_break?: boolean }) => p.is_break || /break/i.test(p.name);
+
   const theoryPeriods = useMemo(() => {
     // 14:30 = 2:30 PM is the boundary; default view only shows periods before this
     const EXTENDED_CUTOFF = "14:30";
+    const showBreaks = data.app_settings.show_break_column;
 
     const configured = [...data.periods]
       .filter(p => p.kind === "theory")
+      .filter(p => showBreaks || !isBreakPeriod(p))
       .sort((a, b) => compareTimeValues(a.start, b.start));
 
     const defaultPeriods = configured.filter(p => compareTimeValues(p.start, EXTENDED_CUTOFF) < 0);
@@ -104,7 +108,7 @@ export function RoutineView({
 
     if (synthetic.length === 0 && !hasExtendedSlots) return defaultPeriods;
     return [...allPeriods, ...synthetic].sort((a, b) => compareTimeValues(a.start, b.start));
-  }, [data.periods, data.class_slots, data.active_semester_id, unavailabilityEntries]);
+  }, [data.periods, data.class_slots, data.active_semester_id, unavailabilityEntries, data.app_settings.show_break_column]);
 
   const days = useMemo(() => sortDays(data.days), [data.days]);
 
@@ -151,7 +155,7 @@ export function RoutineView({
 
   const isBreak = (pid: string) => {
     const p = data.periods.find((x) => x.id === pid);
-    return !!p && /break/i.test(p.name);
+    return !!p && isBreakPeriod(p);
   };
 
   // When > 6 columns, table scrolls horizontally — no font reduction
