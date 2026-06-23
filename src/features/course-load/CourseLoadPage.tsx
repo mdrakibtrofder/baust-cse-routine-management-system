@@ -10,7 +10,7 @@ import { COURSE_TYPE_INFO } from "@/lib/types";
 import { TeacherPicker } from "./TeacherPicker";
 import { RoomPicker } from "./RoomPicker";
 import { ClassAssignDialog } from "./ClassAssignDialog";
-import { LabGroupsPanel } from "./LabGroupsPanel";
+import { LabSectionsPanel } from "./LabSectionsPanel";
 import { checkConflicts } from "@/lib/conflicts";
 import { RoutineDialog } from "@/components/RoutineDialog";
 import { CourseDetailsDialog } from "@/components/CourseDetailsDialog";
@@ -227,9 +227,9 @@ function CourseRow({ course, sections, onAssign, alt, onCourseDetails }: {
   const data = useStore();
   const info = COURSE_TYPE_INFO[course.course_type];
   const isSessional = info.roomKind === "sessional";
-  const [labGroupsOpen, setLabGroupsOpen] = useState(false);
+  const [labSectionsOpen, setLabSectionsOpen] = useState(false);
 
-  const labGroupCount = data.course_lab_groups.filter(
+  const labSectionCount = data.course_lab_sections.filter(
     (g) => g.course_id === course.id && g.semester_id === data.active_semester_id,
   ).length;
 
@@ -243,16 +243,16 @@ function CourseRow({ course, sections, onAssign, alt, onCourseDetails }: {
             </button>
             {isSessional && (
               <button
-                onClick={() => setLabGroupsOpen(true)}
+                onClick={() => setLabSectionsOpen(true)}
                 className={cn(
                   "flex items-center gap-1 text-[10px] rounded px-1.5 py-0.5 border transition-colors",
-                  labGroupCount > 0
+                  labSectionCount > 0
                     ? "border-purple-400 bg-purple-50 text-purple-700 hover:bg-purple-100"
                     : "border-dashed border-muted-foreground/40 text-muted-foreground hover:border-purple-400 hover:text-purple-600",
                 )}
               >
                 <FlaskConical className="h-2.5 w-2.5" />
-                {labGroupCount > 0 ? `${labGroupCount} lab groups` : "Lab groups"}
+                {labSectionCount > 0 ? `${labSectionCount} lab sections` : "Lab sections"}
               </button>
             )}
           </div>
@@ -269,27 +269,94 @@ function CourseRow({ course, sections, onAssign, alt, onCourseDetails }: {
           </Badge>
         </td>
         {sections.map(s => (
-          <SectionCell key={s.id} course={course} section={s} sections={sections} onAssign={onAssign} />
+          <SectionCell
+            key={s.id}
+            course={course}
+            section={s}
+            sections={sections}
+            onAssign={onAssign}
+            onManageLabSections={() => setLabSectionsOpen(true)}
+          />
         ))}
       </tr>
-      {isSessional && labGroupsOpen && (
-        <LabGroupsPanel
+      {isSessional && labSectionsOpen && (
+        <LabSectionsPanel
           course={course}
           sections={sections}
-          open={labGroupsOpen}
-          onClose={() => setLabGroupsOpen(false)}
+          open={labSectionsOpen}
+          onClose={() => setLabSectionsOpen(false)}
         />
       )}
     </>
   );
 }
 
-function SectionCell({ course, section, sections, onAssign }: {
+function SectionCell({ course, section, sections, onAssign, onManageLabSections }: {
   course: Course; section: Section; sections: Section[]; onAssign: (c: Course, s: Section) => void;
+  onManageLabSections?: () => void;
 }) {
   const [combineOpen, setCombineOpen] = useState(false);
   const data = useStore();
   const info = COURSE_TYPE_INFO[course.course_type];
+
+  // If this course has lab sections mapped to this actual section, the cell splits into
+  // one sub-block per lab section instead of a single teacher/room/schedule block.
+  const labSections = data.course_lab_sections.filter(
+    (g) =>
+      g.course_id === course.id &&
+      g.semester_id === data.active_semester_id &&
+      g.section_ids.includes(section.id),
+  );
+  if (labSections.length > 0) {
+    return (
+      <td className="px-3 py-2 border-l align-top">
+        <div className="space-y-2">
+          {labSections.map((g) => {
+            const gSlots = data.class_slots
+              .filter((s) => s.lab_section_id === g.id)
+              .sort(compareDayAndTime);
+            return (
+              <div key={g.id} className="rounded-md border border-purple-200 bg-purple-50/40 px-2 py-1.5 space-y-1">
+                <div className="flex items-center justify-between gap-1">
+                  <span className="flex items-center gap-1 text-[10px] font-bold text-purple-700 uppercase">
+                    <FlaskConical className="h-2.5 w-2.5" /> {g.label}
+                  </span>
+                  <div className="flex gap-1">
+                    {g.teacher_ids.map((tid) => {
+                      const t = data.teachers.find((x) => x.id === tid);
+                      return t ? (
+                        <Badge key={tid} variant="secondary" className="text-[9px] px-1 py-0 h-3.5">
+                          {t.short_name}
+                        </Badge>
+                      ) : null;
+                    })}
+                  </div>
+                </div>
+                {gSlots.length === 0 ? (
+                  <div className="text-[10px] text-muted-foreground">No schedule yet</div>
+                ) : (
+                  gSlots.map((slot) => {
+                    const room = data.rooms.find((r) => r.id === slot.room_id);
+                    return (
+                      <div key={slot.id} className="flex items-center gap-1 font-mono text-[10px]">
+                        <span className="font-semibold">{slot.day}</span>
+                        <span>{fmtRange12(slot.start, slot.end)}</span>
+                        {room && <Badge variant="outline" className="text-[9px] px-1 py-0 h-3.5">{room.name}</Badge>}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            );
+          })}
+          <Button variant="outline" size="sm" className="w-full h-6 text-[10px] gap-1" onClick={onManageLabSections}>
+            <FlaskConical className="h-2.5 w-2.5" /> Manage lab sections
+          </Button>
+        </div>
+      </td>
+    );
+  }
+
   const cst = data.course_section_teachers.find(
     x => x.semester_id === data.active_semester_id && x.course_id === course.id && x.section_id === section.id
   );

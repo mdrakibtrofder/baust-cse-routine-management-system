@@ -116,24 +116,27 @@ export function RoutineView({
       if (scope.kind === "section") {
         // Include slots directly for this section
         if (s.section_id === scope.section_id) return true;
-        // Include lab group slots (lab groups have their own section_id = actual section, already covered above)
-        // Include slots from primary combined-section assignments where this section is a combined secondary
-        if (!s.lab_group_id) {
-          const primaryCst = data.course_section_teachers.find(
-            (x) =>
-              x.semester_id === data.active_semester_id &&
-              x.course_id === s.course_id &&
-              x.section_id === s.section_id &&
-              x.combined_section_ids?.includes(scope.section_id),
-          );
-          if (primaryCst) return true;
+        // Include lab section slots whose mapping covers this actual section — a lab
+        // section's classes are pushed into every actual section it's mapped to.
+        if (s.lab_section_id) {
+          const ls = data.course_lab_sections.find((g) => g.id === s.lab_section_id);
+          return !!ls && ls.section_ids.includes(scope.section_id);
         }
+        // Include slots from primary combined-section assignments where this section is a combined secondary
+        const primaryCst = data.course_section_teachers.find(
+          (x) =>
+            x.semester_id === data.active_semester_id &&
+            x.course_id === s.course_id &&
+            x.section_id === s.section_id &&
+            x.combined_section_ids?.includes(scope.section_id),
+        );
+        if (primaryCst) return true;
         return false;
       }
       // teacher scope: check CST teacher_ids (covers both shared and split modes via union)
-      // Also check lab group teacher_ids
-      if (s.lab_group_id) {
-        const lg = data.course_lab_groups.find((g) => g.id === s.lab_group_id);
+      // Also check lab section teacher_ids
+      if (s.lab_section_id) {
+        const lg = data.course_lab_sections.find((g) => g.id === s.lab_section_id);
         return !!lg && lg.teacher_ids.includes(scope.teacher_id);
       }
       const cst = data.course_section_teachers.find(
@@ -335,9 +338,9 @@ export function RoutineView({
                                 slot={s}
                                 large={!isExtended}
                                 onEdit={
-                                  s.lab_group_id
+                                  s.lab_section_id || !s.section_id
                                     ? undefined
-                                    : () => setEditTarget({ course_id: s.course_id, section_id: s.section_id })
+                                    : () => setEditTarget({ course_id: s.course_id, section_id: s.section_id as string })
                                 }
                               />
                             ))}
@@ -550,12 +553,19 @@ function RoutineCell({ slot, large, onEdit }: { slot: ClassSlot; large?: boolean
   const section = data.sections.find((s) => s.id === slot.section_id);
   const room = data.rooms.find((r) => r.id === slot.room_id);
 
-  // Lab group slot: resolve teachers and label from the lab group
-  const labGroup = slot.lab_group_id
-    ? data.course_lab_groups.find((g) => g.id === slot.lab_group_id)
+  // Lab section slot: resolve teachers, label, and mapped sections from the lab section
+  const labSection = slot.lab_section_id
+    ? data.course_lab_sections.find((g) => g.id === slot.lab_section_id)
     : null;
 
-  const cst = labGroup
+  const labMappedSections = useMemo(() => {
+    if (!labSection) return [];
+    return labSection.section_ids
+      .map((id) => data.sections.find((s) => s.id === id))
+      .filter(Boolean) as typeof data.sections;
+  }, [labSection, data.sections]);
+
+  const cst = labSection
     ? null
     : data.course_section_teachers.find(
         (x) =>
@@ -566,14 +576,14 @@ function RoutineCell({ slot, large, onEdit }: { slot: ClassSlot; large?: boolean
 
   // For sessional_3.0 split mode, resolve which teacher(s) teach this specific slot
   const effectiveTeacherIds = useMemo(() => {
-    if (labGroup) return labGroup.teacher_ids;
+    if (labSection) return labSection.teacher_ids;
     if (cst?.slot_teacher_ids?.length) {
       const siblings = data.class_slots
         .filter(s =>
           s.semester_id === data.active_semester_id &&
           s.course_id === slot.course_id &&
           s.section_id === slot.section_id &&
-          !s.lab_group_id
+          !s.lab_section_id
         )
         .sort((a, b) => {
           const days = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
@@ -585,7 +595,7 @@ function RoutineCell({ slot, large, onEdit }: { slot: ClassSlot; large?: boolean
       if (idx >= 0 && cst.slot_teacher_ids[idx]?.length) return cst.slot_teacher_ids[idx];
     }
     return cst?.teacher_ids ?? [];
-  }, [labGroup, cst, slot, data.class_slots, data.active_semester_id]);
+  }, [labSection, cst, slot, data.class_slots, data.active_semester_id]);
 
   // Sections combined into this slot (only for regular slots with combined_section_ids)
   const combinedSections = useMemo(() => {
@@ -623,12 +633,12 @@ function RoutineCell({ slot, large, onEdit }: { slot: ClassSlot; large?: boolean
             <BookOpen className={large ? "h-4 w-4 text-blue-600" : "h-3.5 w-3.5 text-blue-600"} />
           )}
           {course.code}
-          {labGroup && (
+          {labSection && (
             <span className={cn(
               "rounded bg-purple-100 text-purple-700 font-bold",
               large ? "px-1.5 py-0.5 text-[11px]" : "px-1 py-0.5 text-[9px]",
             )}>
-              {labGroup.label}
+              {labSection.label}
             </span>
           )}
         </div>
@@ -663,7 +673,16 @@ function RoutineCell({ slot, large, onEdit }: { slot: ClassSlot; large?: boolean
             {room.name}
           </span>
         )}
-        {section && course && (
+        {labSection && course && labMappedSections.length > 0 && (
+          <span className={cn(
+            "inline-flex items-center gap-1 font-bold rounded shadow-sm",
+            large ? "px-2 py-1 text-[11px]" : "px-1.5 py-0.5 text-[10px]",
+            isSessional ? "bg-emerald-500 text-white" : "bg-sky-500 text-white",
+          )}>
+            {DEFAULT_DEPT} {course.level}-{course.term} {labMappedSections.map((s) => s.name).join("+")}
+          </span>
+        )}
+        {!labSection && section && course && (
           <span className={cn(
             "inline-flex items-center gap-1 font-bold rounded shadow-sm",
             large ? "px-2 py-1 text-[11px]" : "px-1.5 py-0.5 text-[10px]",

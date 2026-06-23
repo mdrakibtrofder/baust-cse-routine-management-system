@@ -78,14 +78,16 @@ export interface ClassSlot {
   id: string;
   semester_id: string;
   course_id: string;
-  section_id: string;
+  /** Null when this slot belongs to a lab section instead — the affected actual
+   *  section(s) are derived from the lab section's own `section_ids` mapping. */
+  section_id: string | null;
   day: string; // SUN
   start: string; // HH:MM
   end: string; // HH:MM
   room_id: string | null;
   week: WeekPattern;
-  /** Set when this slot belongs to a lab group, not the regular section schedule */
-  lab_group_id?: string | null;
+  /** Set when this slot belongs to a lab section, not the regular section schedule */
+  lab_section_id?: string | null;
 }
 
 /** Mapping: which teachers teach which course-section (scoped per semester) */
@@ -104,15 +106,17 @@ export interface CourseSectionTeacher {
   primary_room_id?: string | null;
 }
 
-/** A virtual sub-section of a sessional course for lab scheduling */
-export interface CourseLabGroup {
+/** A virtual sub-section of a sessional course for lab scheduling.
+ *  Many-to-many with actual sections: a lab section's classes can count toward
+ *  multiple actual sections at once (e.g. Lab Section B mapped to both Sec A and Sec B). */
+export interface CourseLabSection {
   id: string;
   semester_id: string;
   course_id: string;
   /** Display label: "Lab A", "Lab B", etc. */
   label: string;
-  /** The actual section this lab group belongs to */
-  section_id: string;
+  /** The actual section(s) this lab section's classes count toward */
+  section_ids: string[];
   teacher_ids: string[];
   primary_room_id: string | null;
 }
@@ -168,7 +172,7 @@ export interface AppData {
   days: Day[];
   class_slots: ClassSlot[];
   course_section_teachers: CourseSectionTeacher[];
-  course_lab_groups: CourseLabGroup[];
+  course_lab_sections: CourseLabSection[];
   semesters: Semester[];
   active_semester_id: string;
   years: Year[];

@@ -78,16 +78,18 @@ export function buildRoutineTeacherSummary(data: AppData, scope: RoutineScope): 
     if (scope.kind === "room") return s.room_id === scope.room_id;
     if (scope.kind === "section") {
       if (s.section_id === scope.section_id) return true;
-      if (!s.lab_group_id) {
-        const primaryCst = data.course_section_teachers.find(
-          (x) =>
-            x.semester_id === data.active_semester_id &&
-            x.course_id === s.course_id &&
-            x.section_id === s.section_id &&
-            x.combined_section_ids?.includes(scope.section_id),
-        );
-        if (primaryCst) return true;
+      if (s.lab_section_id) {
+        const ls = data.course_lab_sections.find((g) => g.id === s.lab_section_id);
+        return !!ls && ls.section_ids.includes(scope.section_id);
       }
+      const primaryCst = data.course_section_teachers.find(
+        (x) =>
+          x.semester_id === data.active_semester_id &&
+          x.course_id === s.course_id &&
+          x.section_id === s.section_id &&
+          x.combined_section_ids?.includes(scope.section_id),
+      );
+      if (primaryCst) return true;
       return false;
     }
     return true; // teacher scope: filter by resolved teacher ids below instead
@@ -97,8 +99,8 @@ export function buildRoutineTeacherSummary(data: AppData, scope: RoutineScope): 
   const days = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
   for (const s of slots) {
-    if (s.lab_group_id) {
-      const lg = data.course_lab_groups.find((g) => g.id === s.lab_group_id);
+    if (s.lab_section_id) {
+      const lg = data.course_lab_sections.find((g) => g.id === s.lab_section_id);
       if (lg) lg.teacher_ids.forEach((id) => teacherIds.add(id));
       continue;
     }
@@ -116,7 +118,7 @@ export function buildRoutineTeacherSummary(data: AppData, scope: RoutineScope): 
             x.semester_id === data.active_semester_id &&
             x.course_id === s.course_id &&
             x.section_id === s.section_id &&
-            !x.lab_group_id,
+            !x.lab_section_id,
         )
         .sort((a, b) => {
           const da = days.indexOf(a.day), db = days.indexOf(b.day);

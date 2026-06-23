@@ -162,6 +162,17 @@ function SectionRoomBlock({ group }: { group: any }) {
     const roomCounts: Record<string, number> = {};
 
     courses.forEach(c => {
+      const labSections = data.course_lab_sections.filter(
+        (g) => g.course_id === c.id && g.semester_id === data.active_semester_id && g.section_ids.includes(sid),
+      );
+      if (labSections.length > 0) {
+        for (const g of labSections) {
+          const room = g.primary_room_id ? data.rooms.find((r) => r.id === g.primary_room_id) : null;
+          const key = room ? room.name : "Unassigned";
+          roomCounts[key] = (roomCounts[key] || 0) + 1;
+        }
+        return;
+      }
       const cst = data.course_section_teachers.find(
         x => x.semester_id === data.active_semester_id && x.course_id === c.id && x.section_id === sid
       );
@@ -231,9 +242,31 @@ function SectionRoomBlock({ group }: { group: any }) {
               <CardContent className="p-0">
                 <div className="divide-y">
                   {courses.map((c: Course) => {
-                    const cst = data.course_section_teachers.find(
-                      x => x.semester_id === data.active_semester_id && x.course_id === c.id && x.section_id === s.id
+                    // If this course has lab sections mapped to this actual section, show
+                    // one room row per lab section instead of a single combined room.
+                    const labSections = data.course_lab_sections.filter(
+                      (g) =>
+                        g.course_id === c.id &&
+                        g.semester_id === data.active_semester_id &&
+                        g.section_ids.includes(s.id),
                     );
+                    if (labSections.length > 0) {
+                      return (
+                        <div key={c.id} className="p-3 space-y-1.5">
+                          <div className="text-[11px] font-mono font-bold text-primary">{c.code}</div>
+                          <div className="text-xs font-medium truncate" title={c.name}>{c.name}</div>
+                          {labSections.map((g) => {
+                            const room = g.primary_room_id ? data.rooms.find((r) => r.id === g.primary_room_id) : null;
+                            return (
+                              <div key={g.id} className="flex items-center justify-between gap-2 pl-2 border-l-2 border-purple-300">
+                                <span className="text-[10px] font-bold text-purple-700 uppercase">{g.label}</span>
+                                <span className="text-[11px] text-muted-foreground">{room ? room.name : "Unassigned"}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    }
                     return (
                       <div key={c.id} className="p-3 flex items-center justify-between gap-3 group">
                         <div className="min-w-0 flex-1">

@@ -11,7 +11,7 @@ import type {
   Day,
   ClassSlot,
   CourseSectionTeacher,
-  CourseLabGroup,
+  CourseLabSection,
   Semester,
   Year,
   SemesterType,
@@ -87,10 +87,10 @@ interface StoreState extends AppData {
   // assignments
   setCourseSectionTeachers: (course_id: string, section_id: string, teacher_ids: string[], primary_room_id?: string | null, slot_teacher_ids?: string[][] | null, combined_section_ids?: string[] | null) => Promise<void>;
 
-  // lab groups
-  saveLabGroups: (course_id: string, groups: Array<{ label: string; section_id: string; teacher_ids: string[]; primary_room_id?: string | null }>) => Promise<CourseLabGroup[]>;
-  deleteLabGroup: (id: string) => Promise<void>;
-  batchReplaceLabGroupSlots: (lab_group_id: string, slots: Array<{ day: string; start: string; end: string; room_id: string; week?: string }>) => Promise<void>;
+  // lab sections
+  saveLabSections: (course_id: string, sections: Array<{ label: string; section_ids: string[]; teacher_ids: string[]; primary_room_id?: string | null }>) => Promise<CourseLabSection[]>;
+  deleteLabSection: (id: string) => Promise<void>;
+  batchReplaceLabSectionSlots: (lab_section_id: string, slots: Array<{ day: string; start: string; end: string; room_id: string; week?: string }>) => Promise<void>;
   
   // class slots
   upsertClassSlot: (slot: Omit<ClassSlot, "id" | "semester_id"> & { id?: string; semester_id?: string }) => Promise<string>;
@@ -132,7 +132,7 @@ export const useStore = create<StoreState>((set, get) => ({
   days: [],
   class_slots: [],
   course_section_teachers: [],
-  course_lab_groups: [],
+  course_lab_sections: [],
   semesters: [],
   active_semester_id: "",
   years: [],
@@ -172,12 +172,12 @@ export const useStore = create<StoreState>((set, get) => ({
       let class_slots: ClassSlot[] = [];
       let course_section_teachers: CourseSectionTeacher[] = [];
       
-      let course_lab_groups: CourseLabGroup[] = [];
+      let course_lab_sections: CourseLabSection[] = [];
       if (active_semester) {
-        [class_slots, course_section_teachers, course_lab_groups] = await Promise.all([
+        [class_slots, course_section_teachers, course_lab_sections] = await Promise.all([
           api.get<ClassSlot[]>(`/class-slots?semester_id=${active_semester}`),
           api.get<CourseSectionTeacher[]>(`/assignments?semester_id=${active_semester}`),
-          api.get<CourseLabGroup[]>(`/lab-groups?semester_id=${active_semester}`).catch(() => []),
+          api.get<CourseLabSection[]>(`/lab-sections?semester_id=${active_semester}`).catch(() => []),
         ]);
       }
 
@@ -194,7 +194,7 @@ export const useStore = create<StoreState>((set, get) => ({
         semester_types: types,
         class_slots,
         course_section_teachers,
-        course_lab_groups,
+        course_lab_sections,
         teacher_unavailability: unavailTeachers,
         room_unavailability: unavailRooms,
         active_semester_id: active_semester,
@@ -303,15 +303,15 @@ export const useStore = create<StoreState>((set, get) => ({
   setActiveSemester: async (id) => {
     set({ active_semester_id: id, isLoading: true });
     try {
-      const [class_slots, course_section_teachers, course_lab_groups] = await Promise.all([
+      const [class_slots, course_section_teachers, course_lab_sections] = await Promise.all([
         api.get<ClassSlot[]>(`/class-slots?semester_id=${id}`),
         api.get<CourseSectionTeacher[]>(`/assignments?semester_id=${id}`),
-        api.get<CourseLabGroup[]>(`/lab-groups?semester_id=${id}`).catch(() => []),
+        api.get<CourseLabSection[]>(`/lab-sections?semester_id=${id}`).catch(() => []),
       ]);
       set((s) => ({
         class_slots,
         course_section_teachers,
-        course_lab_groups,
+        course_lab_sections,
         semesters: s.semesters.map(sem => ({ ...sem, is_active: sem.id === id })),
         isLoading: false
       }));
@@ -700,42 +700,42 @@ export const useStore = create<StoreState>((set, get) => ({
     });
     set((s) => ({
       class_slots: [
-        // Keep lab group slots; only replace non-lab-group slots for this course+section
-        ...s.class_slots.filter((x) => !(x.course_id === course_id && x.section_id === section_id && !x.lab_group_id)),
+        // Keep lab section slots; only replace non-lab-section slots for this course+section
+        ...s.class_slots.filter((x) => !(x.course_id === course_id && x.section_id === section_id && !x.lab_section_id)),
         ...res,
       ],
     }));
   },
 
-  saveLabGroups: async (course_id, groups) => {
+  saveLabSections: async (course_id, sections) => {
     const semester_id = get().active_semester_id;
-    const res = await api.post<CourseLabGroup[]>('/lab-groups/batch', {
+    const res = await api.post<CourseLabSection[]>('/lab-sections/batch', {
       semester_id,
       course_id,
-      lab_groups: groups,
+      lab_sections: sections,
     });
     set((s) => ({
-      course_lab_groups: [
-        ...s.course_lab_groups.filter((g) => !(g.course_id === course_id && g.semester_id === semester_id)),
+      course_lab_sections: [
+        ...s.course_lab_sections.filter((g) => !(g.course_id === course_id && g.semester_id === semester_id)),
         ...res,
       ],
     }));
     return res;
   },
 
-  deleteLabGroup: async (id) => {
-    await api.delete(`/lab-groups/${id}`);
+  deleteLabSection: async (id) => {
+    await api.delete(`/lab-sections/${id}`);
     set((s) => ({
-      course_lab_groups: s.course_lab_groups.filter((g) => g.id !== id),
-      class_slots: s.class_slots.filter((x) => x.lab_group_id !== id),
+      course_lab_sections: s.course_lab_sections.filter((g) => g.id !== id),
+      class_slots: s.class_slots.filter((x) => x.lab_section_id !== id),
     }));
   },
 
-  batchReplaceLabGroupSlots: async (lab_group_id, slots) => {
-    const res = await api.post<ClassSlot[]>(`/lab-groups/${lab_group_id}/slots/batch-replace`, { slots });
+  batchReplaceLabSectionSlots: async (lab_section_id, slots) => {
+    const res = await api.post<ClassSlot[]>(`/lab-sections/${lab_section_id}/slots/batch-replace`, { slots });
     set((s) => ({
       class_slots: [
-        ...s.class_slots.filter((x) => x.lab_group_id !== lab_group_id),
+        ...s.class_slots.filter((x) => x.lab_section_id !== lab_section_id),
         ...res,
       ],
     }));
