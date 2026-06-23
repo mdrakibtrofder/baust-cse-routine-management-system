@@ -144,7 +144,17 @@ export function RoomsPage() {
                   <TableRow key={r.id}>
                     <TableCell className="font-mono font-medium">{r.name}</TableCell>
                     <TableCell>
-                      <Badge variant={r.room_type === "Sessional" ? "default" : "secondary"}>{r.room_type}</Badge>
+                      <Badge
+                        variant={
+                          r.room_type === "Sessional"
+                            ? "default"
+                            : r.room_type === "Both"
+                              ? "outline"
+                              : "secondary"
+                        }
+                      >
+                        {r.room_type}
+                      </Badge>
                     </TableCell>
                     <TableCell className="text-right">{r.capacity}</TableCell>
                     <TableCell className="text-xs">{r.departmental_type ?? "Departmental"}</TableCell>
@@ -198,6 +208,7 @@ export function RoomsPage() {
                 <SelectContent>
                   <SelectItem value="Theory">Theory</SelectItem>
                   <SelectItem value="Sessional">Sessional</SelectItem>
+                  <SelectItem value="Both">Both</SelectItem>
                 </SelectContent>
               </Select>
             </div>

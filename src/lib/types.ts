@@ -46,7 +46,8 @@ export interface Section {
 export interface Room {
   id: string;
   name: string;
-  room_type: "Theory" | "Sessional";
+  /** "Both" means the room can be used for either theory or sessional classes. */
+  room_type: "Theory" | "Sessional" | "Both";
   capacity: number;
   departmental_type: DepartmentalType;
   department_id: string | null;

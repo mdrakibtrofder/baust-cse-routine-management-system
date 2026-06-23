@@ -7,7 +7,7 @@ import {
   Section,
   WeekPattern,
 } from "./types";
-import { fmtRange12 } from "./utils";
+import { fmtRange12, roomSupportsKind } from "./utils";
 
 function toMin(t: string) {
   if (!t) return 0;
@@ -118,10 +118,7 @@ export function checkConflicts(input: ConflictCheckInput): Conflict[] {
           message: `Room ${room.name} capacity ${room.capacity} < section students ${section.total_students}.`,
         });
       }
-      if (
-        (info.roomKind === "sessional" && room.room_type !== "Sessional") ||
-        (info.roomKind === "theory" && room.room_type !== "Theory")
-      ) {
+      if (!roomSupportsKind(room.room_type, info.roomKind)) {
         conflicts.push({
           type: "room_type",
           message: `Room ${room.name} is ${room.room_type} but course needs a ${info.roomKind} room.`,

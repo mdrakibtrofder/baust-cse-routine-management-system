@@ -49,7 +49,7 @@ import {
   type Conflict,
 } from "@/lib/conflicts";
 import { toast } from "sonner";
-import { cn, compareDayAndTime, compareTimeValues, sortDays, fmtRange12, fmtDayTitle, tagColorClasses } from "@/lib/utils";
+import { cn, compareDayAndTime, compareTimeValues, sortDays, fmtRange12, fmtDayTitle, tagColorClasses, roomSupportsKind } from "@/lib/utils";
 import { RankPill, TeacherChip } from "@/components/TeacherBadge";
 import { TeacherDetailsDialog } from "@/components/TeacherDetailsDialog";
 import { RoutineDialog } from "@/components/RoutineDialog";
@@ -682,7 +682,7 @@ export function ClassAssignDialog({
                   </SelectTrigger>
                   <SelectContent>
                     {data.rooms
-                      .filter((r) => r.room_type === (info.roomKind === "sessional" ? "Sessional" : "Theory"))
+                      .filter((r) => roomSupportsKind(r.room_type, info.roomKind))
                       .map((r) => {
                         const ok = availableRooms.some((ar) => ar.id === r.id);
                         const capOk = r.capacity >= section.total_students;
@@ -1073,7 +1073,7 @@ function RoomDayGrid({
   const confirmDialog = useConfirm();
 
   const rooms = data.rooms
-    .filter((r) => r.room_type === (info.roomKind === "sessional" ? "Sessional" : "Theory"))
+    .filter((r) => roomSupportsKind(r.room_type, info.roomKind))
     .filter((r) => r.capacity >= section.total_students)
     .sort((a, b) => a.name.localeCompare(b.name));
 

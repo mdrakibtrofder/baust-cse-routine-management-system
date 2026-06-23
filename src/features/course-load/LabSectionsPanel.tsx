@@ -29,7 +29,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { FlaskConical, Plus, Trash2, Save, Users, MapPin, Calendar } from "lucide-react";
-import { cn, sortDays, fmtDayTitle } from "@/lib/utils";
+import { cn, sortDays, fmtDayTitle, roomSupportsKind } from "@/lib/utils";
 import { toast } from "sonner";
 
 interface SlotDraft {
@@ -193,8 +193,7 @@ export function LabSectionsPanel({ course, sections, open, onClose }: Props) {
   };
 
   const activeTeachers = data.teachers.filter((t) => t.status === "active" || t.status === "Active");
-  const roomKind = info.roomKind === "sessional" ? "Sessional" : "Theory";
-  const roomsForKind = data.rooms.filter((r) => r.room_type === roomKind);
+  const roomsForKind = data.rooms.filter((r) => roomSupportsKind(r.room_type, info.roomKind));
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>

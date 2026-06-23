@@ -5,6 +5,13 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export function roomSupportsKind(
+  roomType: "Theory" | "Sessional" | "Both",
+  roomKind: "theory" | "sessional",
+): boolean {
+  return roomType === "Both" || roomType === (roomKind === "sessional" ? "Sessional" : "Theory");
+}
+
 /** Fixed palette of badge color classes, picked deterministically per id/string
  *  so the same entity (e.g. a department) always renders the same color. */
 const TAG_COLOR_PALETTE = [

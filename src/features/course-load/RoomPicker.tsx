@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Check, ChevronDown, X, MapPin } from "lucide-react";
 import type { Course, Section } from "@/lib/types";
 import { COURSE_TYPE_INFO } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { cn, roomSupportsKind } from "@/lib/utils";
 
 export function RoomPicker({ course, section }: {
   course: Course; section: Section;
@@ -27,14 +27,12 @@ export function RoomPicker({ course, section }: {
   const [q, setQ] = useState("");
 
   const info = COURSE_TYPE_INFO[course.course_type];
-  const roomKind = info.roomKind === "sessional" ? "Sessional" : "Theory";
-
   const setRoom = (rid: string | null) => {
     data.setCourseSectionTeachers(course.id, section.id, teacherIds, rid);
   };
 
   const list = data.rooms
-    .filter(r => r.room_type === roomKind)
+    .filter(r => roomSupportsKind(r.room_type, info.roomKind))
     .filter(r => {
       if (!q) return true;
       const s = q.toLowerCase();
@@ -78,7 +76,7 @@ export function RoomPicker({ course, section }: {
           )}
           {list.length === 0 && (
             <div className="p-4 text-center text-xs text-muted-foreground italic">
-              No {roomKind} rooms found.
+              No compatible rooms found.
             </div>
           )}
           {list.map(r => {
