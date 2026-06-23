@@ -216,7 +216,10 @@ export const useStore = create<StoreState>((set, get) => ({
     try {
       const res = await api.post<Year>('/years', { value });
       set((s) => ({ years: [...s.years, res].sort((a, b) => a.value - b.value) }));
-    } catch (err: any) { set({ error: err.message }); }
+    } catch (err: any) {
+      set({ error: err.message });
+      throw err;
+    }
   },
   updateYear: async (id, value) => {
     try {
@@ -239,7 +242,10 @@ export const useStore = create<StoreState>((set, get) => ({
     try {
       const res = await api.post<SemesterType>('/semester-types', { name });
       set((s) => ({ semester_types: [...s.semester_types, res].sort((a, b) => a.name.localeCompare(b.name)) }));
-    } catch (err: any) { set({ error: err.message }); }
+    } catch (err: any) {
+      set({ error: err.message });
+      throw err;
+    }
   },
   updateSemesterType: async (id, name) => {
     try {
@@ -263,7 +269,10 @@ export const useStore = create<StoreState>((set, get) => ({
       const res = await api.post<Semester>('/semesters', s);
       set((state) => ({ semesters: [...state.semesters, res] }));
       if (res.is_active) await get().setActiveSemester(res.id);
-    } catch (err: any) { set({ error: err.message }); }
+    } catch (err: any) {
+      set({ error: err.message });
+      throw err;
+    }
   },
   updateSemester: async (id, s) => {
     try {

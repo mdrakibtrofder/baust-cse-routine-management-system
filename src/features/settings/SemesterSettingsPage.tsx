@@ -35,22 +35,48 @@ export function SemesterSettingsPage() {
   const filteredTypes = semester_types.filter(t => t.name.toLowerCase().includes(typeSearch.toLowerCase()));
   const filteredSemesters = semesters.filter(s => s.name.toLowerCase().includes(semesterSearch.toLowerCase()));
 
+  /** A year is identified by its numeric value — only one entry per year. */
+  const yearDup = (value: number, ignoreId?: string) =>
+    years.some(y => y.id !== ignoreId && y.value === value);
+
+  /** A semester type is identified by its name (case-insensitive). */
+  const typeDup = (name: string, ignoreId?: string) =>
+    semester_types.some(t => t.id !== ignoreId && t.name.trim().toLowerCase() === name.trim().toLowerCase());
+
+  /** A semester is identified by its year + type combination — you can't have two
+   *  "Spring 2026" semesters, for example. */
+  const semesterDup = (yearId: string, typeId: string, ignoreId?: string) =>
+    semesters.some(s => s.id !== ignoreId && s.year_id === yearId && s.type_id === typeId);
+
   const handleAddYear = async () => {
     const val = parseInt(newYear);
-    if (isNaN(val) || val < 2026 || val > 2056) {
-      toast.error("Please enter a valid year between 2026 and 2056");
+    if (yearDup(val)) {
+      toast.error(`Year ${val} already exists — duplicate years aren't allowed.`);
       return;
     }
-    await addYear(val);
-    setNewYear("");
-    toast.success(`Year ${val} added`);
+    try {
+      await addYear(val);
+      setNewYear("");
+      toast.success(`Year ${val} added`);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || err?.message || "Failed to add year");
+    }
   };
 
   const handleAddType = async () => {
-    if (!newTypeName.trim()) return;
-    await addSemesterType(newTypeName.trim());
-    setNewTypeName("");
-    toast.success(`Semester type "${newTypeName}" added`);
+    const name = newTypeName.trim();
+    if (!name) return;
+    if (typeDup(name)) {
+      toast.error(`Semester type "${name}" already exists — duplicate types aren't allowed.`);
+      return;
+    }
+    try {
+      await addSemesterType(name);
+      setNewTypeName("");
+      toast.success(`Semester type "${name}" added`);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || err?.message || "Failed to add semester type");
+    }
   };
 
   const handleCreateSemester = async () => {
@@ -63,13 +89,21 @@ export function SemesterSettingsPage() {
     if (!year || !type) return;
 
     const name = `${type.name} ${year.value}`;
-    await addSemester({
-      name,
-      year_id: selectedYearId,
-      type_id: selectedTypeId,
-      is_active: semesters.length === 0
-    });
-    toast.success(`Semester "${name}" created`);
+    if (semesterDup(selectedYearId, selectedTypeId)) {
+      toast.error(`"${name}" already exists — this year and type combination is already a semester.`);
+      return;
+    }
+    try {
+      await addSemester({
+        name,
+        year_id: selectedYearId,
+        type_id: selectedTypeId,
+        is_active: semesters.length === 0
+      });
+      toast.success(`Semester "${name}" created`);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || err?.message || "Failed to create semester");
+    }
   };
 
   const toggleActive = async (id: string) => {
@@ -130,12 +164,17 @@ export function SemesterSettingsPage() {
                 Create Semester
               </Button>
             </CardContent>
+            {selectedYearId && selectedTypeId && semesterDup(selectedYearId, selectedTypeId) && (
+              <p className="text-[11px] text-destructive px-6 pb-3 -mt-2">
+                This year and type combination is already a semester.
+              </p>
+            )}
           </Card>
 
           <div className="flex items-center gap-2 max-w-sm mb-4">
             <Search className="h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Search semesters..." 
+            <Input
+              placeholder="Search semesters..."
               value={semesterSearch}
               onChange={(e) => setSemesterSearch(e.target.value)}
             />
@@ -197,12 +236,15 @@ export function SemesterSettingsPage() {
             <CardContent className="flex items-end gap-4">
               <div className="grid gap-2 flex-1 max-w-xs">
                 <Label>Year</Label>
-                <Input 
-                  type="number" 
-                  placeholder="2026" 
+                <Input
+                  type="number"
+                  placeholder="2026"
                   value={newYear}
                   onChange={(e) => setNewYear(e.target.value)}
                 />
+                {newYear && !isNaN(parseInt(newYear)) && yearDup(parseInt(newYear)) && (
+                  <p className="text-[11px] text-destructive">Year {parseInt(newYear)} already exists</p>
+                )}
               </div>
               <Button onClick={handleAddYear}>Add Year</Button>
             </CardContent>
@@ -263,11 +305,14 @@ export function SemesterSettingsPage() {
             <CardContent className="flex items-end gap-4">
               <div className="grid gap-2 flex-1 max-w-xs">
                 <Label>Type Name</Label>
-                <Input 
-                  placeholder="e.g. Winter, Summer, Special" 
+                <Input
+                  placeholder="e.g. Winter, Summer, Special"
                   value={newTypeName}
                   onChange={(e) => setNewTypeName(e.target.value)}
                 />
+                {newTypeName.trim() && typeDup(newTypeName.trim()) && (
+                  <p className="text-[11px] text-destructive">"{newTypeName.trim()}" already exists</p>
+                )}
               </div>
               <Button onClick={handleAddType}>Add Type</Button>
             </CardContent>

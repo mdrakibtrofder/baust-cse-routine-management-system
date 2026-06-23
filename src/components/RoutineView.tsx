@@ -616,11 +616,6 @@ function RoutineCell({ slot, large, onEdit }: { slot: ClassSlot; large?: boolean
   if (!course) return null;
   const info = COURSE_TYPE_INFO[course.course_type];
   const isSessional = info.roomKind === "sessional";
-  // Use the course's own owning department, not a hardcoded one — matters for
-  // non-departmental courses (e.g. an ENG-owned course taught to CSE students).
-  const deptTag = course.department_id
-    ? data.departments.find((d) => d.id === course.department_id)?.short_name ?? DEFAULT_DEPT
-    : DEFAULT_DEPT;
 
   return (
     <div
@@ -688,7 +683,7 @@ function RoutineCell({ slot, large, onEdit }: { slot: ClassSlot; large?: boolean
             large ? "px-2 py-1 text-[11px]" : "px-1.5 py-0.5 text-[10px]",
             isSessional ? "bg-emerald-500 text-white" : "bg-sky-500 text-white",
           )}>
-            {deptTag} {course.level}-{course.term} {labMappedSections.map((s) => s.name).join("+")}
+            {labMappedSections.map((s) => s.name).join("+")}
           </span>
         )}
         {!labSection && section && course && (
@@ -697,7 +692,7 @@ function RoutineCell({ slot, large, onEdit }: { slot: ClassSlot; large?: boolean
             large ? "px-2 py-1 text-[11px]" : "px-1.5 py-0.5 text-[10px]",
             isSessional ? "bg-emerald-500 text-white" : "bg-sky-500 text-white",
           )}>
-            {deptTag} {course.level}-{course.term} {section.name}
+            {section.name}
             {combinedSections.map((s) => `+${s.name}`).join("")}
           </span>
         )}
