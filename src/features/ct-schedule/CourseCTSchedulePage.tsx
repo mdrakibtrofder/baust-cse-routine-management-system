@@ -353,70 +353,136 @@ export function CourseCTSchedulePage() {
 
       {/* Timeline View Dialog */}
       <Dialog open={!!viewingCourseKey} onOpenChange={(open) => !open && setViewingCourseKey(null)}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[550px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <CalendarDays className="h-5 w-5 text-primary" />
               CT Schedule Timeline
             </DialogTitle>
           </DialogHeader>
-          
-          <div className="py-6 px-2">
-             {viewingCourseKey && (
-                <div className="mb-6">
-                   <h3 className="font-black text-lg leading-tight">{viewingCourseKey.split('|')[0]}</h3>
-                   <div className="flex gap-2 mt-2">
-                      <Badge variant="secondary" className="text-[10px]">{selectedCourseCTs[0]?.course?.departmental_type}</Badge>
-                      <Badge variant="outline" className="text-[10px]">Level {selectedCourseCTs[0]?.course?.level} Term {selectedCourseCTs[0]?.course?.term}</Badge>
-                   </div>
-                </div>
-             )}
 
-            <div className="relative space-y-8 before:absolute before:inset-0 before:ml-4 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-primary/20 before:to-transparent">
-              {selectedCourseCTs.map((ct, idx) => (
-                <div key={ct.id} className="relative flex items-center justify-between group">
-                  <div className="flex items-center w-full">
-                    <div className="absolute left-0 w-8 h-8 rounded-full border-2 border-background bg-primary flex items-center justify-center text-primary-foreground shadow-lg z-10 transition-transform group-hover:scale-110">
-                      <span className="text-[10px] font-black">{ct.ct_number}</span>
-                    </div>
-                    <div className="ml-12 flex-1 bg-muted/30 hover:bg-muted/50 p-4 rounded-xl border border-transparent hover:border-primary/20 transition-all">
-                      <div className="flex justify-between items-start">
-                         <div>
-                            <div className="text-sm font-black text-primary">Class Test {ct.ct_number}</div>
-                            <div className="flex items-center gap-4 mt-2">
-                               <div className="flex items-center gap-1 text-[11px] font-bold text-muted-foreground">
-                                  <CalendarIcon className="h-3 w-3" />
-                                  {format(parseISO(ct.date), "EEEE, dd MMMM")}
-                               </div>
-                               <div className="flex items-center gap-1 text-[11px] font-bold text-muted-foreground">
-                                  <MapPin className="h-3 w-3" />
-                                  Room {ct.room?.name}
-                               </div>
+          <div className="py-6 px-2 space-y-6">
+            {/* Header with Course and Department Info */}
+            {viewingCourseKey && selectedCourseCTs.length > 0 && (
+              <div className="bg-gradient-to-r from-primary/15 to-primary/10 p-4 rounded-xl border-2 border-primary/20">
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div>
+                    <h3 className="font-black text-lg leading-tight text-foreground">
+                      {viewingCourseKey.split('|')[0]}
+                    </h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {selectedCourseCTs[0]?.course?.name}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Badge
+                    variant="outline"
+                    className="font-bold"
+                    style={{
+                      borderColor: "hsl(var(--primary))",
+                      color: "hsl(var(--primary))"
+                    }}
+                  >
+                    L{selectedCourseCTs[0]?.course?.level} T{selectedCourseCTs[0]?.course?.term}
+                  </Badge>
+                  <Badge
+                    variant="outline"
+                    className="font-bold"
+                    style={{
+                      borderColor: "hsl(var(--primary))",
+                      color: "hsl(var(--primary))"
+                    }}
+                  >
+                    {selectedCourseCTs[0]?.course?.departmental_type === 'Non-Departmental'
+                      ? 'Non-Dept'
+                      : (() => {
+                          const dept = departments.find(
+                            d => d.id === selectedCourseCTs[0]?.course?.department_id
+                          );
+                          return dept?.short_name || 'CSE';
+                        })()}
+                  </Badge>
+                </div>
+              </div>
+            )}
+
+            {/* Timeline */}
+            <div className="relative space-y-6 before:absolute before:inset-0 before:ml-4 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-primary/20 before:to-transparent">
+              {selectedCourseCTs.map((ct, idx) => {
+                const sectionLabel =
+                  ct.course?.departmental_type === 'Non-Departmental'
+                    ? 'Common'
+                    : `${ct.course?.level}-${ct.course?.term} ${ct.section?.name}`;
+
+                return (
+                  <div key={ct.id} className="relative flex items-center justify-between group">
+                    <div className="flex items-center w-full">
+                      <div className="absolute left-0 w-8 h-8 rounded-full border-2 border-background bg-primary flex items-center justify-center text-primary-foreground shadow-lg z-10 transition-transform group-hover:scale-110">
+                        <span className="text-[10px] font-black">{ct.ct_number}</span>
+                      </div>
+                      <div className="ml-12 flex-1 bg-gradient-to-br from-primary/10 to-primary/5 hover:from-primary/15 hover:to-primary/10 p-4 rounded-xl border-2 border-primary/20 hover:border-primary/40 transition-all">
+                        <div className="flex justify-between items-start gap-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <div className="text-sm font-black text-primary">
+                                CT {ct.ct_number}
+                              </div>
+                              <Badge
+                                variant="outline"
+                                className="text-[10px] font-bold bg-background"
+                                style={{
+                                  borderColor: "hsl(var(--primary))",
+                                  color: "hsl(var(--primary))"
+                                }}
+                              >
+                                {sectionLabel}
+                              </Badge>
                             </div>
-                            <div className="mt-1 text-[10px] font-black text-primary/60 uppercase">Week {ct.week_number}</div>
-                         </div>
-                         <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 rounded-full hover:bg-primary hover:text-primary-foreground"
+
+                            <div className="space-y-1.5">
+                              <div className="flex items-center gap-1 text-[11px] font-bold text-muted-foreground">
+                                <CalendarIcon className="h-3 w-3 text-primary" />
+                                <span className="text-foreground">
+                                  {format(parseISO(ct.date), "EEE, dd MMM yyyy")}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1 text-[11px] font-bold text-muted-foreground">
+                                <MapPin className="h-3 w-3 text-primary" />
+                                <span className="font-mono text-foreground">Room {ct.room?.name}</span>
+                              </div>
+                            </div>
+
+                            <div className="mt-2 text-[10px] font-black text-primary/60 uppercase tracking-tight">
+                              Week {ct.week_number}
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 rounded-full hover:bg-primary hover:text-primary-foreground shrink-0"
                             onClick={(e) => {
-                               e.stopPropagation();
-                               setEditingAssignment(ct);
-                               setViewingCourseKey(null);
+                              e.stopPropagation();
+                              setEditingAssignment(ct);
+                              setViewingCourseKey(null);
                             }}
-                         >
+                            title="Edit CT"
+                          >
                             <Edit3 className="h-3.5 w-3.5" />
-                         </Button>
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
-          
+
           <DialogFooter>
-            <Button variant="outline" onClick={() => setViewingCourseKey(null)} className="font-bold">Close</Button>
+            <Button variant="outline" onClick={() => setViewingCourseKey(null)} className="font-bold">
+              Close
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
