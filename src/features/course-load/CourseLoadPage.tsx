@@ -34,13 +34,12 @@ export function CourseLoadPage() {
     [data.departments],
   );
 
-  /** Departmental courses' sections are limited to their own department's sections for
-   *  that level-term — never another department's, even though they share the level-term.
-   *  Non-Departmental courses are owned/offered by another department (e.g. ENG, CE, DBA)
-   *  but are taken by the home department's (CSE) students, so they use CSE's sections —
-   *  while still being labeled and grouped separately per owning department, shown after
-   *  every CSE-departmental block instead of merged into it or dropped for lacking their
-   *  own sections. */
+  /** Every course's columns are limited to its own department's sections for that
+   *  level-term — never another department's, even though they share the level-term.
+   *  This applies to Departmental and Non-Departmental courses alike: a course owned by
+   *  e.g. CE, EEE, or DBA uses that department's own sections (configured on the Sections
+   *  page), not CSE's. Blocks are still labeled/grouped per department, shown after every
+   *  CSE-departmental block. */
   const grouped = useMemo(() => {
     const deptKey = (id: string | null | undefined) => id || homeDept?.id || "__none__";
 
@@ -50,20 +49,18 @@ export function CourseLoadPage() {
     }>();
 
     for (const c of data.courses) {
-      const isNonDept = c.departmental_type === "Non-Departmental";
-      // Which department's sections this course is actually taught in.
-      const sectionScopeKey = isNonDept ? (homeDept?.id || "__none__") : deptKey(c.department_id);
-      // Which department this block is labeled/grouped by (the course's own department).
-      const labelDeptId = c.department_id || homeDept?.id || null;
-      const k = `${c.level}|${c.term}|${c.departmental_type}|${labelDeptId ?? "__none__"}`;
+      const dk = deptKey(c.department_id);
+      const k = `${c.level}|${c.term}|${c.departmental_type}|${dk}`;
       if (!deptMap.has(k)) {
-        const department = labelDeptId ? data.departments.find((d) => d.id === labelDeptId) ?? null : null;
+        const department = c.department_id
+          ? data.departments.find((d) => d.id === c.department_id) ?? null
+          : homeDept ?? null;
         deptMap.set(k, {
           level: c.level, term: c.term, departmental_type: c.departmental_type,
           department,
           courses: [],
           sections: data.sections
-            .filter((s) => s.level === c.level && s.term === c.term && deptKey(s.department_id) === sectionScopeKey)
+            .filter((s) => s.level === c.level && s.term === c.term && deptKey(s.department_id) === dk)
             .sort((a, b) => a.name.localeCompare(b.name)),
         });
       }

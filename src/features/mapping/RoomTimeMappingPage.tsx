@@ -63,12 +63,11 @@ function SectionRoomMapping() {
     [data.departments],
   );
 
-  /** Departmental courses' sections are scoped to their own department, mirroring Course
-   *  Load. Non-Departmental courses are owned/offered by another department (e.g. ENG, CE,
-   *  DBA) but taken by the home department's (CSE) students, so they use CSE's sections —
-   *  while still being labeled and grouped separately per owning department, sorted after
-   *  every CSE-departmental block instead of being merged into it or dropped for lacking
-   *  their own sections. */
+  /** Every course's sections are scoped to its own department — Departmental and
+   *  Non-Departmental alike — mirroring Course Load exactly. A course owned by e.g. CE,
+   *  EEE, or DBA uses that department's own sections (configured on the Sections page),
+   *  not CSE's. Blocks are still labeled/grouped per department, sorted after every
+   *  CSE-departmental block. */
   const grouped = useMemo(() => {
     const deptKey = (id: string | null | undefined) => id || homeDept?.id || "__none__";
 
@@ -78,17 +77,17 @@ function SectionRoomMapping() {
     }>();
 
     for (const c of data.courses) {
-      const isNonDept = c.departmental_type === "Non-Departmental";
-      const sectionScopeKey = isNonDept ? (homeDept?.id || "__none__") : deptKey(c.department_id);
-      const labelDeptId = c.department_id || homeDept?.id || null;
-      const k = `${c.level}|${c.term}|${c.departmental_type}|${labelDeptId ?? "__none__"}`;
+      const dk = deptKey(c.department_id);
+      const k = `${c.level}|${c.term}|${c.departmental_type}|${dk}`;
       if (!blockMap.has(k)) {
-        const department = labelDeptId ? data.departments.find((d) => d.id === labelDeptId) ?? null : null;
+        const department = c.department_id
+          ? data.departments.find((d) => d.id === c.department_id) ?? null
+          : homeDept ?? null;
         blockMap.set(k, {
           level: c.level, term: c.term, departmental_type: c.departmental_type, department,
           courses: [],
           sections: data.sections
-            .filter((s) => s.level === c.level && s.term === c.term && deptKey(s.department_id) === sectionScopeKey)
+            .filter((s) => s.level === c.level && s.term === c.term && deptKey(s.department_id) === dk)
             .sort((a, b) => a.name.localeCompare(b.name)),
         });
       }
