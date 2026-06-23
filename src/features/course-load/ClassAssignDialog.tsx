@@ -357,7 +357,7 @@ export function ClassAssignDialog({
                   <span
                     className={cn(
                       "inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-semibold",
-                      tagColorClasses(dept.id),
+                      tagColorClasses(dept.id, dept.short_name),
                     )}
                   >
                     {dept.short_name}

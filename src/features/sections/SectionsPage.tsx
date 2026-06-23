@@ -155,7 +155,7 @@ export function SectionsPage() {
             <div className="flex items-center gap-2">
               <span className={cn(
                 "inline-flex items-center rounded-md border px-2.5 py-1 text-xs font-bold",
-                tagColorClasses(dept?.id),
+                tagColorClasses(dept?.id, dept?.short_name ?? HOME_DEPT_SHORT_NAME),
               )}>
                 {dept?.short_name ?? HOME_DEPT_SHORT_NAME}
               </span>
@@ -190,7 +190,7 @@ export function SectionsPage() {
                               return (
                                 <span className={cn(
                                   "inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-semibold",
-                                  tagColorClasses(sDept?.id ?? homeDept?.id),
+                                  tagColorClasses(sDept?.id ?? homeDept?.id, label),
                                 )}>
                                   {label}
                                 </span>

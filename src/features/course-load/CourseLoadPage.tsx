@@ -155,7 +155,7 @@ function LevelTermBlock({ level, term, departmental_type, department, courses, s
             {department && (
               <span className={cn(
                 "inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-bold",
-                tagColorClasses(department.id),
+                tagColorClasses(department.id, department.short_name),
               )}>
                 {department.short_name}
               </span>

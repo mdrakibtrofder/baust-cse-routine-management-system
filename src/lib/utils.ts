@@ -22,9 +22,15 @@ const TAG_COLOR_PALETTE = [
   "bg-pink-100 text-pink-700 border-pink-200",
 ];
 
+/** Fixed color for the home department (CSE) — overrides the hash-based palette so it's
+ *  always immediately recognizable, regardless of what its id happens to hash to. */
+const HOME_DEPT_TAG_COLOR = "bg-blue-100 text-blue-700 border-blue-200";
+
 /** Deterministic color classes for a given key (e.g. department id).
- *  Same key always yields the same color; different keys are spread across the palette. */
-export function tagColorClasses(key: string | null | undefined): string {
+ *  Same key always yields the same color; different keys are spread across the palette.
+ *  Pass `label` (e.g. department short_name) to special-case CSE to a fixed color. */
+export function tagColorClasses(key: string | null | undefined, label?: string | null): string {
+  if (label && label.trim().toUpperCase() === "CSE") return HOME_DEPT_TAG_COLOR;
   if (!key) return "bg-muted text-muted-foreground border-border";
   let hash = 0;
   for (let i = 0; i < key.length; i++) {

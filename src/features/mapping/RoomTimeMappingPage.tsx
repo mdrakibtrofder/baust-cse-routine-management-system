@@ -189,7 +189,7 @@ function SectionRoomBlock({ group }: { group: any }) {
         {group.department && (
           <span className={cn(
             "inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-bold",
-            tagColorClasses(group.department.id),
+            tagColorClasses(group.department.id, group.department.short_name),
           )}>
             {group.department.short_name}
           </span>
