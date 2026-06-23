@@ -78,11 +78,14 @@ export function getScopeInfo(data: AppData, scope: RoutineScope) {
     const s = data.sections.find((x) => x.id === scope.section_id);
     if (!s) return { title: "Section", slug: "Section-Routine", meta: [] };
     const termRoman = s.term;
+    const sectionDept = s.department_id
+      ? data.departments.find((d) => d.id === s.department_id)?.short_name ?? DEFAULT_DEPT
+      : DEFAULT_DEPT;
     return {
       title: `Routine of Level ${s.level} Term ${termRoman} Section ${s.name}`,
       slug: `Level-${s.level}-Term-${termRoman}-Section-${sentenceCaseDashed(s.name)}-Routine`,
       meta: [
-        { label: "Department", value: DEFAULT_DEPT },
+        { label: "Department", value: sectionDept },
         { label: "Level", value: String(s.level) },
         { label: "Term", value: s.term },
         { label: "Section", value: s.name },
@@ -128,7 +131,10 @@ export function buildRoutineMatrix(data: AppData, scope: RoutineScope) {
       .map((tid) => data.teachers.find((t) => t.id === tid)?.short_name)
       .filter(Boolean)
       .join(", ");
-    const sectionTag = sec && c ? `${DEFAULT_DEPT} ${c.level}-${c.term} ${sec.name}` : "";
+    const courseDept = c?.department_id
+      ? data.departments.find((d) => d.id === c.department_id)?.short_name ?? DEFAULT_DEPT
+      : DEFAULT_DEPT;
+    const sectionTag = sec && c ? `${courseDept} ${c.level}-${c.term} ${sec.name}` : "";
     return [c?.code ?? "", teachers, room?.name ?? "", sectionTag].filter(Boolean).join("\n");
   };
 
