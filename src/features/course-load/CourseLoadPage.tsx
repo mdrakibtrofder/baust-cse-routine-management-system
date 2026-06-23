@@ -16,6 +16,7 @@ import { RoutineDialog } from "@/components/RoutineDialog";
 import { CourseDetailsDialog } from "@/components/CourseDetailsDialog";
 import { CombineSectionsDialog } from "./CombineSectionsDialog";
 import { HOME_DEPT_SHORT_NAME } from "@/lib/constants";
+import { toast } from "sonner";
 
 const TERM_ORDER = ["I", "II"];
 
@@ -268,16 +269,41 @@ function CourseRow({ course, sections, onAssign, alt, onCourseDetails }: {
             {info.classCount}×{info.classDuration % 60 === 0 ? `${info.classDuration / 60}h` : `${info.classDuration}m`}
           </Badge>
         </td>
-        {sections.map(s => (
-          <SectionCell
-            key={s.id}
-            course={course}
-            section={s}
-            sections={sections}
-            onAssign={onAssign}
-            onManageLabSections={() => setLabSectionsOpen(true)}
-          />
-        ))}
+        {(() => {
+          // A section combined into another's cst.combined_section_ids is rendered
+          // merged into the primary section's cell (colSpan), not as its own column.
+          const hiddenSecondaryIds = new Set<string>();
+          for (const s of sections) {
+            const cst = data.course_section_teachers.find(
+              (x) => x.semester_id === data.active_semester_id && x.course_id === course.id && x.section_id === s.id,
+            );
+            cst?.combined_section_ids?.forEach((id) => {
+              if (sections.some((sec) => sec.id === id)) hiddenSecondaryIds.add(id);
+            });
+          }
+          return sections
+            .filter((s) => !hiddenSecondaryIds.has(s.id))
+            .map((s) => {
+              const cst = data.course_section_teachers.find(
+                (x) => x.semester_id === data.active_semester_id && x.course_id === course.id && x.section_id === s.id,
+              );
+              const combinedWith = (cst?.combined_section_ids ?? [])
+                .map((id) => sections.find((sec) => sec.id === id))
+                .filter(Boolean) as Section[];
+              return (
+                <SectionCell
+                  key={s.id}
+                  course={course}
+                  section={s}
+                  sections={sections}
+                  onAssign={onAssign}
+                  onManageLabSections={() => setLabSectionsOpen(true)}
+                  combinedWith={combinedWith}
+                  colSpan={1 + combinedWith.length}
+                />
+              );
+            });
+        })()}
       </tr>
       {isSessional && labSectionsOpen && (
         <LabSectionsPanel
@@ -291,12 +317,16 @@ function CourseRow({ course, sections, onAssign, alt, onCourseDetails }: {
   );
 }
 
-function SectionCell({ course, section, sections, onAssign, onManageLabSections }: {
+function SectionCell({ course, section, sections, onAssign, onManageLabSections, combinedWith = [], colSpan = 1 }: {
   course: Course; section: Section; sections: Section[]; onAssign: (c: Course, s: Section) => void;
   onManageLabSections?: () => void;
+  combinedWith?: Section[];
+  colSpan?: number;
 }) {
   const [combineOpen, setCombineOpen] = useState(false);
+  const [uncombining, setUncombining] = useState(false);
   const data = useStore();
+  const { setCourseSectionTeachers } = useStore();
   const info = COURSE_TYPE_INFO[course.course_type];
 
   // If this course has lab sections mapped to this actual section, the cell splits into
@@ -378,9 +408,45 @@ function SectionCell({ course, section, sections, onAssign, onManageLabSections 
   const slotsOk = slots.length === info.classCount;
   const allOk = teachersOk && slotsOk && allConflicts.length === 0;
 
+  const handleUncombine = async () => {
+    setUncombining(true);
+    try {
+      await setCourseSectionTeachers(
+        course.id,
+        section.id,
+        cst?.teacher_ids ?? [],
+        cst?.primary_room_id ?? null,
+        cst?.slot_teacher_ids ?? null,
+        null,
+      );
+      toast.success("Sections uncombined.");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to uncombine sections.");
+    } finally {
+      setUncombining(false);
+    }
+  };
+
   return (
-    <td className="px-3 py-2 border-l align-top">
+    <td className="px-3 py-2 border-l align-top" colSpan={colSpan}>
       <div className="space-y-1.5">
+        {combinedWith.length > 0 && (
+          <div className="flex items-center justify-between gap-1.5 rounded-md bg-indigo-50 border border-indigo-200 px-2 py-1">
+            <span className="flex items-center gap-1 text-[10px] font-bold text-indigo-700">
+              <GitMerge className="h-2.5 w-2.5" />
+              Combined: Sec {section.name} + {combinedWith.map((s) => s.name).join(" + ")}
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-5 px-1.5 text-[10px] text-indigo-700 hover:text-indigo-900 hover:bg-indigo-100"
+              onClick={handleUncombine}
+              disabled={uncombining}
+            >
+              Uncombine
+            </Button>
+          </div>
+        )}
         <div className="flex items-center gap-1.5 flex-wrap">
           {Array.from({ length: info.teachersRequired }).map((_, i) => (
             <TeacherPicker key={i} course={course} section={section} slotIndex={i} />
@@ -431,22 +497,16 @@ function SectionCell({ course, section, sections, onAssign, onManageLabSections 
             </div>
           )}
         </button>
-        {/* Combine sections — only show if there are multiple sections in the level-term */}
-        {sections.length > 1 && (
+        {/* Combine sections — only show if there are multiple sections in the level-term
+            and this section isn't already combined (use "Uncombine" above instead) */}
+        {sections.length > 1 && combinedWith.length === 0 && (
           <>
             <button
               onClick={() => setCombineOpen(true)}
-              className={cn(
-                "flex items-center gap-1 text-[10px] rounded px-1.5 py-0.5 border transition-colors w-full",
-                cst?.combined_section_ids?.length
-                  ? "border-indigo-400 bg-indigo-50 text-indigo-700 hover:bg-indigo-100"
-                  : "border-dashed border-muted-foreground/40 text-muted-foreground hover:border-indigo-400 hover:text-indigo-600",
-              )}
+              className="flex items-center gap-1 text-[10px] rounded px-1.5 py-0.5 border transition-colors w-full border-dashed border-muted-foreground/40 text-muted-foreground hover:border-indigo-400 hover:text-indigo-600"
             >
               <GitMerge className="h-2.5 w-2.5" />
-              {cst?.combined_section_ids?.length
-                ? `Combined +${cst.combined_section_ids.map(id => sections.find(s => s.id === id)?.name ?? "?").join("+")}`
-                : "Combine sections"}
+              Combine sections
             </button>
             {combineOpen && (
               <CombineSectionsDialog
