@@ -95,6 +95,7 @@ interface StoreState extends AppData {
   saveLabSections: (course_id: string, sections: Array<{ label: string; section_ids: string[]; teacher_ids: string[]; primary_room_id?: string | null }>) => Promise<CourseLabSection[]>;
   deleteLabSection: (id: string) => Promise<void>;
   batchReplaceLabSectionSlots: (lab_section_id: string, slots: Array<{ day: string; start: string; end: string; room_id: string; week?: string }>) => Promise<void>;
+  updateLabSection: (id: string, patch: { primary_room_id?: string | null; teacher_ids?: string[] }) => Promise<void>;
   
   // class slots
   upsertClassSlot: (slot: Omit<ClassSlot, "id" | "semester_id"> & { id?: string; semester_id?: string }) => Promise<string>;
@@ -764,6 +765,13 @@ export const useStore = create<StoreState>((set, get) => ({
         ...s.class_slots.filter((x) => x.lab_section_id !== lab_section_id),
         ...res,
       ],
+    }));
+  },
+
+  updateLabSection: async (id, patch) => {
+    const res = await api.patch<CourseLabSection>(`/lab-sections/${id}`, patch);
+    set((s) => ({
+      course_lab_sections: s.course_lab_sections.map((g) => (g.id === id ? res : g)),
     }));
   },
 

@@ -131,10 +131,10 @@ export function buildRoutineMatrix(data: AppData, scope: RoutineScope) {
       .map((tid) => data.teachers.find((t) => t.id === tid)?.short_name)
       .filter(Boolean)
       .join(", ");
-    const courseDept = c?.department_id
-      ? data.departments.find((d) => d.id === c.department_id)?.short_name ?? DEFAULT_DEPT
+    const sectionDept = sec?.department_id
+      ? data.departments.find((d) => d.id === sec.department_id)?.short_name ?? DEFAULT_DEPT
       : DEFAULT_DEPT;
-    const sectionTag = sec && c ? `${courseDept} ${c.level}-${c.term} ${sec.name}` : "";
+    const sectionTag = sec && c ? `${sectionDept} L${sec.level}T${sec.term} ${sec.name}` : "";
     return [c?.code ?? "", teachers, room?.name ?? "", sectionTag].filter(Boolean).join("\n");
   };
 

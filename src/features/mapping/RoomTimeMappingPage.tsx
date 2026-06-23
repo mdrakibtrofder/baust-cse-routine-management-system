@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import type { Course, Section, Teacher, Room, Period, ClassSlot, Department } from "@/lib/types";
 import { RoomPicker } from "@/features/course-load/RoomPicker";
+import { LabSectionRoomPicker } from "@/features/course-load/LabSectionRoomPicker";
 import { Input } from "@/components/ui/input";
 import { HOME_DEPT_SHORT_NAME } from "@/lib/constants";
 
@@ -255,15 +256,12 @@ function SectionRoomBlock({ group }: { group: any }) {
                         <div key={c.id} className="p-3 space-y-1.5">
                           <div className="text-[11px] font-mono font-bold text-primary">{c.code}</div>
                           <div className="text-xs font-medium truncate" title={c.name}>{c.name}</div>
-                          {labSections.map((g) => {
-                            const room = g.primary_room_id ? data.rooms.find((r) => r.id === g.primary_room_id) : null;
-                            return (
-                              <div key={g.id} className="flex items-center justify-between gap-2 pl-2 border-l-2 border-purple-300">
-                                <span className="text-[10px] font-bold text-purple-700 uppercase">{g.label}</span>
-                                <span className="text-[11px] text-muted-foreground">{room ? room.name : "Unassigned"}</span>
-                              </div>
-                            );
-                          })}
+                          {labSections.map((g) => (
+                            <div key={g.id} className="flex items-center justify-between gap-2 pl-2 border-l-2 border-purple-300">
+                              <span className="text-[10px] font-bold text-purple-700 uppercase">{g.label}</span>
+                              <LabSectionRoomPicker course={c} labSection={g} />
+                            </div>
+                          ))}
                         </div>
                       );
                     }

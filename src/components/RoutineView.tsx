@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useStore } from "@/lib/store";
 import { cn, compareTimeValues, fmtTime12, fmtRange12, sortDays, fmtDayTitle } from "@/lib/utils";
 import { BookOpen, MapPin, Coffee, FlaskConical, FileSpreadsheet, FileText, FileType, FileJson, Image as ImageIcon, Eye, Users, Ban } from "lucide-react";
-import { COURSE_TYPE_INFO, type ClassSlot } from "@/lib/types";
+import { COURSE_TYPE_INFO, type ClassSlot, type Section } from "@/lib/types";
 import { timesOverlap } from "@/lib/conflicts";
 import { Button } from "@/components/ui/button";
 import {
@@ -199,10 +199,10 @@ export function RoutineView({
             onClick={() => { try { exportRoutineExcel(data, scope); } catch (e: any) { toast.error(e.message); } }}>
             <FileSpreadsheet className="h-3.5 w-3.5 mr-1" /> Excel
           </Button>
-          <Button size="sm" variant="outline" className="h-7 text-xs"
+          {/* <Button size="sm" variant="outline" className="h-7 text-xs"
             onClick={async () => { try { await exportRoutineDocx(data, scope); } catch (e: any) { toast.error(e.message); } }}>
             <FileType className="h-3.5 w-3.5 mr-1" /> DOCX
-          </Button>
+          </Button> */}
           <Button size="sm" variant="outline" className="h-7 text-xs"
             onClick={() => { try { exportRoutineJson(data, scope); } catch (e: any) { toast.error(e.message); } }}>
             <FileJson className="h-3.5 w-3.5 mr-1" /> JSON
@@ -478,6 +478,18 @@ export function RoutineView({
                                   const room = data.rooms.find(r => r.id === s.room_id);
                                   const cst = data.course_section_teachers.find(x => x.semester_id === data.active_semester_id && x.course_id === s.course_id && x.section_id === s.section_id);
                                   const tshorts = (cst?.teacher_ids ?? []).map(tid => data.teachers.find(t => t.id === tid)?.short_name).filter(Boolean);
+                                  
+                                  // Format section for preview
+                                  const getPreviewDeptShortName = (deptId: string | null) => {
+                                    if (!deptId) return "CSE";
+                                    const dept = data.departments.find(d => d.id === deptId);
+                                    return dept?.short_name || "CSE";
+                                  };
+                                  const formatPreviewSection = (s: Section) => {
+                                    const dept = getPreviewDeptShortName(s.department_id);
+                                    return `${dept} L${s.level}T${s.term} ${s.name}`;
+                                  };
+                                  
                                   return (
                                     <div key={s.id} className="p-2 border rounded bg-slate-50 shadow-sm space-y-1.5 border-slate-200">
                                       <div className="flex justify-between items-start gap-1">
@@ -491,9 +503,11 @@ export function RoutineView({
                                         <span className="px-1.5 py-0.5 bg-orange-500 text-white font-bold rounded-[2px] text-[8px] flex items-center gap-0.5">
                                           <MapPin className="h-2 w-2" /> {room?.name}
                                         </span>
-                                        <span className="px-1.5 py-0.5 bg-emerald-600 text-white font-bold rounded-[2px] text-[8px]">
-                                          {sec?.name}
-                                        </span>
+                                        {sec && (
+                                          <span className="px-1.5 py-0.5 bg-emerald-600 text-white font-bold rounded-[2px] text-[8px]">
+                                            {formatPreviewSection(sec)}
+                                          </span>
+                                        )}
                                       </div>
                                     </div>
                                   );
@@ -556,6 +570,19 @@ function RoutineCell({ slot, large, onEdit }: { slot: ClassSlot; large?: boolean
   const course = data.courses.find((c) => c.id === slot.course_id);
   const section = data.sections.find((s) => s.id === slot.section_id);
   const room = data.rooms.find((r) => r.id === slot.room_id);
+
+  // Helper to get department short name
+  const getDeptShortName = (deptId: string | null) => {
+    if (!deptId) return "CSE"; // default
+    const dept = data.departments.find(d => d.id === deptId);
+    return dept?.short_name || "CSE";
+  };
+
+  // Helper to format section string with level, term, and name
+  const formatSection = (s: Section) => {
+    const dept = getDeptShortName(s.department_id);
+    return `${dept} ${s.level}-${s.term} ${s.name}`;
+  };
 
   // Lab section slot: resolve teachers, label, and mapped sections from the lab section
   const labSection = slot.lab_section_id
@@ -683,7 +710,7 @@ function RoutineCell({ slot, large, onEdit }: { slot: ClassSlot; large?: boolean
             large ? "px-2 py-1 text-[11px]" : "px-1.5 py-0.5 text-[10px]",
             isSessional ? "bg-emerald-500 text-white" : "bg-sky-500 text-white",
           )}>
-            {labMappedSections.map((s) => s.name).join("+")}
+            {labMappedSections.map((s) => formatSection(s)).join("+")}
           </span>
         )}
         {!labSection && section && course && (
@@ -692,8 +719,8 @@ function RoutineCell({ slot, large, onEdit }: { slot: ClassSlot; large?: boolean
             large ? "px-2 py-1 text-[11px]" : "px-1.5 py-0.5 text-[10px]",
             isSessional ? "bg-emerald-500 text-white" : "bg-sky-500 text-white",
           )}>
-            {section.name}
-            {combinedSections.map((s) => `+${s.name}`).join("")}
+            {formatSection(section)}
+            {combinedSections.map((s) => `+${formatSection(s)}`).join("")}
           </span>
         )}
       </div>
