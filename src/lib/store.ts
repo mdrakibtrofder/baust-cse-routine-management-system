@@ -115,7 +115,7 @@ interface StoreState extends AppData {
   resetToSeed: () => Promise<void>;
 
   // routine generator
-  startRoutineGeneration: () => Promise<void>;
+  startRoutineGeneration: (resolveConflicts?: boolean) => Promise<void>;
   pauseRoutineGeneration: () => Promise<void>;
   resumeRoutineGeneration: () => Promise<void>;
   stopRoutineGeneration: () => Promise<void>;
@@ -783,9 +783,12 @@ export const useStore = create<StoreState>((set, get) => ({
     } catch (err: any) { set({ error: err.message, isLoading: false }); }
   },
 
-  startRoutineGeneration: async () => {
+  startRoutineGeneration: async (resolveConflicts = true) => {
     try {
-      await api.post('/routine-generator/start', { semester_id: get().active_semester_id });
+      await api.post('/routine-generator/start', {
+        semester_id: get().active_semester_id,
+        resolve_conflicts: resolveConflicts,
+      });
     } catch (err: any) { set({ error: err.message }); }
   },
   pauseRoutineGeneration: async () => {

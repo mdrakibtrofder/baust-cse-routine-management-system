@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useStore } from "@/lib/store";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
@@ -23,6 +24,7 @@ export function RoutineGeneratorPage() {
   const store = useStore();
   const [status, setStatus] = useState<any>(null);
   const [isPolling, setIsPolling] = useState(false);
+  const [resolveConflicts, setResolveConflicts] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const fetchStatus = async () => {
@@ -59,7 +61,7 @@ export function RoutineGeneratorPage() {
   }, [status?.logs]);
 
   const handleStart = async () => {
-    await store.startRoutineGeneration();
+    await store.startRoutineGeneration(resolveConflicts);
     setIsPolling(true);
     toast.info("Routine generation started");
   };
@@ -128,11 +130,20 @@ export function RoutineGeneratorPage() {
               </p>
             </div>
             
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-4">
               {isIdle || isCompleted || isStopped || isFailed ? (
-                <Button onClick={handleStart} className="gap-2 px-6">
-                  <Play className="h-4 w-4 fill-current" /> {isIdle ? "Start Generation" : "Restart"}
-                </Button>
+                <>
+                  <label className="flex items-center gap-2 text-sm font-medium cursor-pointer select-none">
+                    <Checkbox
+                      checked={resolveConflicts}
+                      onCheckedChange={(v) => setResolveConflicts(v === true)}
+                    />
+                    Auto-resolve conflicts
+                  </label>
+                  <Button onClick={handleStart} className="gap-2 px-6">
+                    <Play className="h-4 w-4 fill-current" /> {isIdle ? "Start Generation" : "Restart"}
+                  </Button>
+                </>
               ) : (
                 <>
                   {isRunning ? (
@@ -215,6 +226,12 @@ export function RoutineGeneratorPage() {
                         <div className="text-sm font-bold text-emerald-600">{status.report.successful}</div>
                         <div className="text-[9px] text-muted-foreground uppercase">Successful</div>
                       </div>
+                      {typeof status.report.resolved === "number" && (
+                        <div className="bg-muted/50 p-2 rounded border text-center col-span-2">
+                          <div className="text-sm font-bold text-blue-600">{status.report.resolved}</div>
+                          <div className="text-[9px] text-muted-foreground uppercase">Resolved by Conflict Resolution</div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
