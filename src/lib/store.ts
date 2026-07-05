@@ -18,6 +18,7 @@ import type {
   TeacherUnavailability,
   RoomUnavailability,
   AppSettings,
+  PriorityClass,
 } from "./types";
 
 interface AuthState {
@@ -29,6 +30,9 @@ interface StoreState extends AppData {
   isLoading: boolean;
   error: string | null;
   auth: AuthState;
+
+  login: (username: string, password: string) => Promise<void>;
+  logout: () => void;
 
   // initialization
   init: () => Promise<void>;
@@ -111,6 +115,11 @@ interface StoreState extends AppData {
   updateRoomUnavailability: (id: string, u: Partial<RoomUnavailability>) => Promise<RoomUnavailability>;
   deleteRoomUnavailability: (id: string) => Promise<void>;
 
+  // priority classes
+  addPriorityClass: (p: Omit<PriorityClass, "id">) => Promise<void>;
+  updatePriorityClass: (id: string, p: Partial<PriorityClass>) => Promise<PriorityClass>;
+  deletePriorityClass: (id: string) => Promise<void>;
+
   // bulk
   resetToSeed: () => Promise<void>;
 
@@ -144,6 +153,7 @@ export const useStore = create<StoreState>((set, get) => ({
   semester_types: [],
   teacher_unavailability: [],
   room_unavailability: [],
+  priority_classes: [],
   app_settings: { id: "", show_break_column: true },
   isLoading: false,
   error: null,
@@ -178,13 +188,15 @@ export const useStore = create<StoreState>((set, get) => ({
       
       let class_slots: ClassSlot[] = [];
       let course_section_teachers: CourseSectionTeacher[] = [];
-      
       let course_lab_sections: CourseLabSection[] = [];
+      let priority_classes: PriorityClass[] = [];
+      
       if (active_semester) {
-        [class_slots, course_section_teachers, course_lab_sections] = await Promise.all([
+        [class_slots, course_section_teachers, course_lab_sections, priority_classes] = await Promise.all([
           api.get<ClassSlot[]>(`/class-slots?semester_id=${active_semester}`),
           api.get<CourseSectionTeacher[]>(`/assignments?semester_id=${active_semester}`),
           api.get<CourseLabSection[]>(`/lab-sections?semester_id=${active_semester}`).catch(() => []),
+          api.get<PriorityClass[]>(`/priority-classes?semester_id=${active_semester}`).catch(() => []),
         ]);
       }
 
@@ -204,6 +216,7 @@ export const useStore = create<StoreState>((set, get) => ({
         course_lab_sections,
         teacher_unavailability: unavailTeachers,
         room_unavailability: unavailRooms,
+        priority_classes,
         app_settings: appSettings,
         active_semester_id: active_semester,
         isLoading: false
@@ -320,15 +333,17 @@ export const useStore = create<StoreState>((set, get) => ({
   setActiveSemester: async (id) => {
     set({ active_semester_id: id, isLoading: true });
     try {
-      const [class_slots, course_section_teachers, course_lab_sections] = await Promise.all([
+      const [class_slots, course_section_teachers, course_lab_sections, priority_classes] = await Promise.all([
         api.get<ClassSlot[]>(`/class-slots?semester_id=${id}`),
         api.get<CourseSectionTeacher[]>(`/assignments?semester_id=${id}`),
         api.get<CourseLabSection[]>(`/lab-sections?semester_id=${id}`).catch(() => []),
+        api.get<PriorityClass[]>(`/priority-classes?semester_id=${id}`).catch(() => []),
       ]);
       set((s) => ({
         class_slots,
         course_section_teachers,
         course_lab_sections,
+        priority_classes,
         semesters: s.semesters.map(sem => ({ ...sem, is_active: sem.id === id })),
         isLoading: false
       }));
@@ -861,6 +876,35 @@ export const useStore = create<StoreState>((set, get) => ({
       await api.delete(`/room-unavailability/${id}`);
       set((s) => ({ room_unavailability: s.room_unavailability.filter(x => x.id !== id) }));
     } catch (err: any) { set({ error: err.message }); }
+  },
+
+  addPriorityClass: async (p) => {
+    try {
+      const res = await api.post<PriorityClass>('/priority-classes', p);
+      set((s) => ({ priority_classes: [...s.priority_classes, res] }));
+    } catch (err: any) {
+      set({ error: err.message });
+      throw err;
+    }
+  },
+  updatePriorityClass: async (id, p) => {
+    try {
+      const res = await api.patch<PriorityClass>(`/priority-classes/${id}`, p);
+      set((s) => ({ priority_classes: s.priority_classes.map(x => x.id === id ? res : x) }));
+      return res;
+    } catch (err: any) {
+      set({ error: err.message });
+      throw err;
+    }
+  },
+  deletePriorityClass: async (id) => {
+    try {
+      await api.delete(`/priority-classes/${id}`);
+      set((s) => ({ priority_classes: s.priority_classes.filter(x => x.id !== id) }));
+    } catch (err: any) {
+      set({ error: err.message });
+      throw err;
+    }
   },
 }));
 

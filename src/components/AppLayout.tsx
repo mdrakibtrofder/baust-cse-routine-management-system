@@ -19,6 +19,7 @@ import {
   Building2,
   Lock,
   AlertTriangle,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ConfirmProvider } from "@/components/ConfirmDialog";
@@ -29,6 +30,7 @@ const nav = [
   { to: "/", label: "Course Load", icon: LayoutGrid },
   { to: "/locked-classes", label: "Locked Classes", icon: Lock },
   { to: "/conflicted-classes", label: "Conflicted Classes", icon: AlertTriangle },
+  { to: "/priority-classes", label: "Priority Classes", icon: ShieldCheck },
   { to: "/routine", label: "Routine View", icon: CalendarDays },
   {
     label: "CT Schedule",

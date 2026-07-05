@@ -190,6 +190,25 @@ export interface AppData {
   teacher_unavailability: TeacherUnavailability[];
   room_unavailability: RoomUnavailability[];
   app_settings: AppSettings;
+  priority_classes: PriorityClass[];
+}
+
+export interface PriorityClass {
+  id: string;
+  semester_id: string;
+  department_id: string;
+  level: number;
+  term: string;
+  section_id: string;
+  course_ids: string[];
+  room_ids: string[];
+  time_slots: { start: string; end: string }[] | null;
+  days: string[];
+  created_at?: string;
+  updated_at?: string;
+  semester?: Semester;
+  department?: Department;
+  section?: Section;
 }
 
 export interface CTSetting {

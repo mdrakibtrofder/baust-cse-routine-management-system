@@ -26,6 +26,11 @@ export function roomAllowedForCourse(room: Room, course: Course, departments: De
   return roomDept === courseCodeDeptShort(course.code);
 }
 
+export function roomAllowedForHomeDept(room: Room, departments: Department[]): boolean {
+  const roomDept = roomDeptShort(room, departments);
+  return roomDept === HOME_DEPT_SHORT_NAME;
+}
+
 /** Split a room list into [allowed, other] for a course, preserving order. */
 export function partitionRoomsForCourse<T extends Room>(
   rooms: T[],

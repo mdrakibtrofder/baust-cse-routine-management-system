@@ -16,6 +16,7 @@ import { Route as SectionsRouteImport } from './routes/sections'
 import { Route as RoutineRouteImport } from './routes/routine'
 import { Route as RoomsRouteImport } from './routes/rooms'
 import { Route as ReportsRouteImport } from './routes/reports'
+import { Route as PriorityClassesRouteImport } from './routes/priority-classes'
 import { Route as MappingRouteImport } from './routes/mapping'
 import { Route as LockedClassesRouteImport } from './routes/locked-classes'
 import { Route as GenerateRoutineRouteImport } from './routes/generate-routine'
@@ -61,6 +62,11 @@ const RoomsRoute = RoomsRouteImport.update({
 const ReportsRoute = ReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PriorityClassesRoute = PriorityClassesRouteImport.update({
+  id: '/priority-classes',
+  path: '/priority-classes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MappingRoute = MappingRouteImport.update({
@@ -128,6 +134,7 @@ export interface FileRoutesByFullPath {
   '/generate-routine': typeof GenerateRoutineRoute
   '/locked-classes': typeof LockedClassesRoute
   '/mapping': typeof MappingRoute
+  '/priority-classes': typeof PriorityClassesRoute
   '/reports': typeof ReportsRoute
   '/rooms': typeof RoomsRoute
   '/routine': typeof RoutineRoute
@@ -148,6 +155,7 @@ export interface FileRoutesByTo {
   '/generate-routine': typeof GenerateRoutineRoute
   '/locked-classes': typeof LockedClassesRoute
   '/mapping': typeof MappingRoute
+  '/priority-classes': typeof PriorityClassesRoute
   '/reports': typeof ReportsRoute
   '/rooms': typeof RoomsRoute
   '/routine': typeof RoutineRoute
@@ -169,6 +177,7 @@ export interface FileRoutesById {
   '/generate-routine': typeof GenerateRoutineRoute
   '/locked-classes': typeof LockedClassesRoute
   '/mapping': typeof MappingRoute
+  '/priority-classes': typeof PriorityClassesRoute
   '/reports': typeof ReportsRoute
   '/rooms': typeof RoomsRoute
   '/routine': typeof RoutineRoute
@@ -191,6 +200,7 @@ export interface FileRouteTypes {
     | '/generate-routine'
     | '/locked-classes'
     | '/mapping'
+    | '/priority-classes'
     | '/reports'
     | '/rooms'
     | '/routine'
@@ -211,6 +221,7 @@ export interface FileRouteTypes {
     | '/generate-routine'
     | '/locked-classes'
     | '/mapping'
+    | '/priority-classes'
     | '/reports'
     | '/rooms'
     | '/routine'
@@ -231,6 +242,7 @@ export interface FileRouteTypes {
     | '/generate-routine'
     | '/locked-classes'
     | '/mapping'
+    | '/priority-classes'
     | '/reports'
     | '/rooms'
     | '/routine'
@@ -252,6 +264,7 @@ export interface RootRouteChildren {
   GenerateRoutineRoute: typeof GenerateRoutineRoute
   LockedClassesRoute: typeof LockedClassesRoute
   MappingRoute: typeof MappingRoute
+  PriorityClassesRoute: typeof PriorityClassesRoute
   ReportsRoute: typeof ReportsRoute
   RoomsRoute: typeof RoomsRoute
   RoutineRoute: typeof RoutineRoute
@@ -313,6 +326,13 @@ declare module '@tanstack/react-router' {
       path: '/reports'
       fullPath: '/reports'
       preLoaderRoute: typeof ReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/priority-classes': {
+      id: '/priority-classes'
+      path: '/priority-classes'
+      fullPath: '/priority-classes'
+      preLoaderRoute: typeof PriorityClassesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mapping': {
@@ -404,6 +424,7 @@ const rootRouteChildren: RootRouteChildren = {
   GenerateRoutineRoute: GenerateRoutineRoute,
   LockedClassesRoute: LockedClassesRoute,
   MappingRoute: MappingRoute,
+  PriorityClassesRoute: PriorityClassesRoute,
   ReportsRoute: ReportsRoute,
   RoomsRoute: RoomsRoute,
   RoutineRoute: RoutineRoute,
