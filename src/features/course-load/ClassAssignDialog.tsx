@@ -172,7 +172,7 @@ export function ClassAssignDialog({
   const applicablePeriods = useMemo(
     () =>
       data.periods
-        .filter((p) => p.kind === info.roomKind)
+        .filter((p) => p.kind === info.roomKind && !p.is_break)
         .sort((a, b) => compareTimeValues(a.start, b.start)),
     [data.periods, info.roomKind],
   );
@@ -1230,7 +1230,7 @@ function RoomDayGrid({
     .sort((a, b) => a.name.localeCompare(b.name));
 
   const periods = data.periods
-    .filter((p) => p.kind === info.roomKind)
+    .filter((p) => p.kind === info.roomKind && !p.is_break)
     .sort((a, b) => compareTimeValues(a.start, b.start));
 
   const teacherStatusByPeriod = useMemo(() => {

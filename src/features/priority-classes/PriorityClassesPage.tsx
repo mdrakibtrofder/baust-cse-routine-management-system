@@ -97,7 +97,7 @@ export function PriorityClassesPage() {
   // Derived periods matching Course Type
   const filteredPeriods = useMemo(() => {
     return data.periods.filter(
-      (p) => p.kind === courseType.toLowerCase()
+      (p) => p.kind === courseType.toLowerCase() && !p.is_break
     );
   }, [data.periods, courseType]);
 
@@ -586,7 +586,7 @@ export function PriorityClassesPage() {
                     No courses available for selected Level/Term/Department/Type.
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 gap-2 border rounded-lg p-3 max-h-48 overflow-y-auto">
+                  <div className="flex flex-col gap-2 border rounded-lg p-3 max-h-48 overflow-y-auto">
                     {filteredCourses.map((c) => {
                       const checked = selectedCourseIds.includes(c.id);
                       return (
@@ -633,7 +633,7 @@ export function PriorityClassesPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 border rounded-lg p-3 max-h-48 overflow-y-auto">
+                <div className="flex flex-col gap-2 border rounded-lg p-3 max-h-48 overflow-y-auto">
                   {partitionedRooms.allowed.map((r) => {
                     const checked = selectedRoomIds.includes(r.id);
                     return (
@@ -685,7 +685,7 @@ export function PriorityClassesPage() {
                   </div>
                 </div>
                 <Label className="block text-sm font-medium mt-2">Select Periods</Label>
-                <div className="grid grid-cols-2 gap-2 border rounded-lg p-3 max-h-48 overflow-y-auto">
+                <div className="flex flex-col gap-2 border rounded-lg p-3 max-h-48 overflow-y-auto">
                   {filteredPeriods.map((p) => {
                     const checked = selectedPeriods.some((x) => x.id === p.id);
                     return (
@@ -718,7 +718,7 @@ export function PriorityClassesPage() {
                   </div>
                 </div>
                 <Label className="block text-sm font-medium mt-2">Select Days</Label>
-                <div className="grid grid-cols-2 gap-2 border rounded-lg p-3 max-h-48 overflow-y-auto">
+                <div className="flex flex-col gap-2 border rounded-lg p-3 max-h-48 overflow-y-auto">
                   {data.days.map((d) => {
                     const checked = selectedDays.includes(d.name);
                     return (
