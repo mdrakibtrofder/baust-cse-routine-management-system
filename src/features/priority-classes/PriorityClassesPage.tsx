@@ -128,12 +128,12 @@ export function PriorityClassesPage() {
     setIsOpen(true);
   };
 
-  const validateStep = () => {
-    if (currentStep === 0 && !deptId) {
+  const validateStepAt = (step: number) => {
+    if (step === 0 && !deptId) {
       toast.error("Please select a department");
       return false;
     }
-    if (currentStep === 1) {
+    if (step === 1) {
       if (!level || !term) {
         toast.error("Please select Level and Term");
         return false;
@@ -145,6 +145,8 @@ export function PriorityClassesPage() {
     }
     return true;
   };
+
+  const validateStep = () => validateStepAt(currentStep);
 
   const handleNext = () => {
     if (!validateStep()) return;
@@ -163,6 +165,24 @@ export function PriorityClassesPage() {
     if (currentStep === 5) setSelectedDays([]);
 
     setCurrentStep((prev) => Math.min(prev + 1, STEPS.length - 1));
+  };
+
+  // Click handler for Stepper circles. Backward navigation is unrestricted;
+  // forward navigation validates every step between current and target,
+  // stopping at the first invalid step (consistent with Next-button behavior).
+  const handleStepSelect = (targetStep: number) => {
+    if (targetStep === currentStep) return;
+    if (targetStep < currentStep) {
+      setCurrentStep(targetStep);
+      return;
+    }
+    for (let s = currentStep; s <= targetStep; s++) {
+      if (!validateStepAt(s)) {
+        setCurrentStep(s);
+        return;
+      }
+    }
+    setCurrentStep(targetStep);
   };
 
   const hasAtLeastOneOptional = useMemo(() => {
@@ -382,6 +402,7 @@ export function PriorityClassesPage() {
             <Stepper
               steps={STEPS}
               current={currentStep}
+              onSelect={handleStepSelect}
             />
           </div>
 
