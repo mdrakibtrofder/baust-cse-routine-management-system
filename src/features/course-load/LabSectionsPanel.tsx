@@ -287,10 +287,10 @@ export function LabSectionsPanel({ course, sections, open, onClose }: Props) {
   const allTeachers = [...data.teachers].sort((a, b) => a.short_name.localeCompare(b.short_name));
   const roomsForKind = data.rooms.filter((r) => roomSupportsKind(r.room_type, info.roomKind));
 
-  /** Students attending this lab section's meetings — one physical class shared by
-   *  every mapped section, so room capacity is judged against their combined size. */
-  const labStudents = (g: LabSectionDraft) =>
-    g.section_ids.reduce((sum, id) => sum + (sections.find((s) => s.id === id)?.total_students ?? 0), 0);
+  /** Students per lab section — the whole level-term cohort is split evenly
+   *  across all lab sections of this course. */
+  const cohortStudents = sections.reduce((sum, s) => sum + s.total_students, 0);
+  const labStudents = drafts.length > 0 ? Math.ceil(cohortStudents / drafts.length) : cohortStudents;
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -442,7 +442,7 @@ export function LabSectionsPanel({ course, sections, open, onClose }: Props) {
                   </SelectTrigger>
                   <SelectContent>
                     {roomsForKind.map((r) => {
-                      const capOk = r.capacity >= labStudents(g);
+                      const capOk = r.capacity >= labStudents;
                       return (
                         <SelectItem key={r.id} value={r.id}>
                           <span className="flex items-center gap-2">
@@ -544,7 +544,7 @@ export function LabSectionsPanel({ course, sections, open, onClose }: Props) {
                                   </SelectTrigger>
                                   <SelectContent>
                                     {roomsForKind.map((r) => {
-                                      const capOk = r.capacity >= labStudents(g);
+                                      const capOk = r.capacity >= labStudents;
                                       const booked = data.class_slots.some((cs) =>
                                         cs.semester_id === data.active_semester_id &&
                                         cs.day === slot.day &&

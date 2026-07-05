@@ -7,6 +7,7 @@ import { Check, ChevronDown, X, MapPin } from "lucide-react";
 import type { Course, CourseLabSection } from "@/lib/types";
 import { COURSE_TYPE_INFO } from "@/lib/types";
 import { cn, roomSupportsKind } from "@/lib/utils";
+import { HOME_DEPT_SHORT_NAME } from "@/lib/constants";
 
 /** Same room-picker UX as RoomPicker, but for a lab section's own primary_room_id
  *  instead of a course_section_teachers row — lets Room & Time Mapping assign a
@@ -17,10 +18,21 @@ export function LabSectionRoomPicker({ course, labSection }: {
   const data = useStore();
   const selected = data.rooms.find(r => r.id === labSection.primary_room_id);
 
-  // One physical class shared by every mapped section — judge capacity against their combined size
-  const labStudents = labSection.section_ids.reduce(
-    (sum, id) => sum + (data.sections.find(s => s.id === id)?.total_students ?? 0), 0,
-  );
+  // Students per lab section — the course's level-term cohort (same department,
+  // since multiple departments can run the same level-term) split evenly across
+  // all lab sections of this course
+  const homeDept = data.departments.find(d => d.short_name.trim().toUpperCase() === HOME_DEPT_SHORT_NAME);
+  const deptKey = (id: string | null | undefined) => id || homeDept?.id || "__none__";
+  const labGroupCount = data.course_lab_sections.filter(
+    g => g.course_id === course.id && g.semester_id === data.active_semester_id,
+  ).length;
+  const cohortStudents = data.sections
+    .filter(s =>
+      s.level === course.level &&
+      s.term === course.term &&
+      deptKey(s.department_id) === deptKey(course.department_id))
+    .reduce((sum, s) => sum + s.total_students, 0);
+  const labStudents = labGroupCount > 0 ? Math.ceil(cohortStudents / labGroupCount) : cohortStudents;
 
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
