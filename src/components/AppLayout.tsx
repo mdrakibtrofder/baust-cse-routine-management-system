@@ -17,6 +17,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Building2,
+  Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ConfirmProvider } from "@/components/ConfirmDialog";
@@ -25,6 +26,7 @@ import { useStore } from "@/lib/store";
 
 const nav = [
   { to: "/", label: "Course Load", icon: LayoutGrid },
+  { to: "/locked-classes", label: "Locked Classes", icon: Lock },
   { to: "/routine", label: "Routine View", icon: CalendarDays },
   {
     label: "CT Schedule",

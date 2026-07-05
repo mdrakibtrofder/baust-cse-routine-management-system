@@ -282,7 +282,7 @@ export function ClassAssignDialog({
     persist(false);
   };
 
-  /** Toggle lock status for a class */
+  /** Toggle lock status for a single class */
   const toggleLock = async (idx: number) => {
     const d = drafts[idx];
     if (!d.id) {
@@ -309,6 +309,42 @@ export function ClassAssignDialog({
         prev.map((x, i) => (i === idx ? { ...x, locked: newLocked } : x))
       );
       toast.success(`Class ${idx + 1} ${newLocked ? "locked" : "unlocked"}`);
+    } catch (err: any) {
+      toast.error("Failed to update lock status");
+    }
+  };
+
+  /** Toggle lock status for all classes */
+  const toggleLockAll = async () => {
+    // Count how many have ids (saved)
+    const savedDrafts = drafts.filter(d => d.id);
+    if (savedDrafts.length === 0) {
+      toast.error("No saved classes to lock/unlock");
+      return;
+    }
+
+    const anyLocked = savedDrafts.some(d => d.locked);
+    const allLocked = savedDrafts.every(d => d.locked);
+    const targetLocked = !allLocked;
+
+    try {
+      for (const d of savedDrafts) {
+        await data.upsertClassSlot({
+          id: d.id,
+          semester_id: data.active_semester_id,
+          course_id: course.id,
+          section_id: section.id,
+          day: d.day,
+          start: d.start,
+          end: d.end,
+          room_id: d.room_id,
+          week: d.week,
+          locked: targetLocked,
+        });
+      }
+      // Update local drafts
+      setDrafts(prev => prev.map(x => x.id ? { ...x, locked: targetLocked } : x));
+      toast.success(`All saved classes ${targetLocked ? "locked" : "unlocked"}!`);
     } catch (err: any) {
       toast.error("Failed to update lock status");
     }
@@ -931,6 +967,23 @@ export function ClassAssignDialog({
 
         <DialogFooter className="px-6 py-4 border-t bg-muted/20 flex-row justify-between sm:justify-between">
             <div className="flex gap-2">
+              {drafts.some(d => d.id) && (
+                <Button variant="ghost" size="sm" onClick={toggleLockAll} className="h-9 px-3">
+                  {(() => {
+                    const savedDrafts = drafts.filter(d => d.id);
+                    const allLocked = savedDrafts.every(d => d.locked);
+                    return allLocked ? (
+                      <>
+                        <Unlock className="h-3.5 w-3.5 mr-1.5 text-amber-600" /> Unlock all
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="h-3.5 w-3.5 mr-1.5 text-amber-600" /> Lock all
+                      </>
+                    );
+                  })()}
+                </Button>
+              )}
               {drafts.length > 1 && (
                 <Button variant="ghost" size="sm" onClick={clearAll} className="h-9 px-3">
                   <Trash2 className="h-3.5 w-3.5 mr-1.5 text-destructive" /> Clear all

@@ -17,6 +17,7 @@ import { Route as RoutineRouteImport } from './routes/routine'
 import { Route as RoomsRouteImport } from './routes/rooms'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as MappingRouteImport } from './routes/mapping'
+import { Route as LockedClassesRouteImport } from './routes/locked-classes'
 import { Route as GenerateRoutineRouteImport } from './routes/generate-routine'
 import { Route as DepartmentsRouteImport } from './routes/departments'
 import { Route as CoursesRouteImport } from './routes/courses'
@@ -66,6 +67,11 @@ const MappingRoute = MappingRouteImport.update({
   path: '/mapping',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LockedClassesRoute = LockedClassesRouteImport.update({
+  id: '/locked-classes',
+  path: '/locked-classes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GenerateRoutineRoute = GenerateRoutineRouteImport.update({
   id: '/generate-routine',
   path: '/generate-routine',
@@ -113,6 +119,7 @@ export interface FileRoutesByFullPath {
   '/courses': typeof CoursesRoute
   '/departments': typeof DepartmentsRoute
   '/generate-routine': typeof GenerateRoutineRoute
+  '/locked-classes': typeof LockedClassesRoute
   '/mapping': typeof MappingRoute
   '/reports': typeof ReportsRoute
   '/rooms': typeof RoomsRoute
@@ -131,6 +138,7 @@ export interface FileRoutesByTo {
   '/courses': typeof CoursesRoute
   '/departments': typeof DepartmentsRoute
   '/generate-routine': typeof GenerateRoutineRoute
+  '/locked-classes': typeof LockedClassesRoute
   '/mapping': typeof MappingRoute
   '/reports': typeof ReportsRoute
   '/rooms': typeof RoomsRoute
@@ -150,6 +158,7 @@ export interface FileRoutesById {
   '/courses': typeof CoursesRoute
   '/departments': typeof DepartmentsRoute
   '/generate-routine': typeof GenerateRoutineRoute
+  '/locked-classes': typeof LockedClassesRoute
   '/mapping': typeof MappingRoute
   '/reports': typeof ReportsRoute
   '/rooms': typeof RoomsRoute
@@ -170,6 +179,7 @@ export interface FileRouteTypes {
     | '/courses'
     | '/departments'
     | '/generate-routine'
+    | '/locked-classes'
     | '/mapping'
     | '/reports'
     | '/rooms'
@@ -188,6 +198,7 @@ export interface FileRouteTypes {
     | '/courses'
     | '/departments'
     | '/generate-routine'
+    | '/locked-classes'
     | '/mapping'
     | '/reports'
     | '/rooms'
@@ -206,6 +217,7 @@ export interface FileRouteTypes {
     | '/courses'
     | '/departments'
     | '/generate-routine'
+    | '/locked-classes'
     | '/mapping'
     | '/reports'
     | '/rooms'
@@ -225,6 +237,7 @@ export interface RootRouteChildren {
   CoursesRoute: typeof CoursesRoute
   DepartmentsRoute: typeof DepartmentsRoute
   GenerateRoutineRoute: typeof GenerateRoutineRoute
+  LockedClassesRoute: typeof LockedClassesRoute
   MappingRoute: typeof MappingRoute
   ReportsRoute: typeof ReportsRoute
   RoomsRoute: typeof RoomsRoute
@@ -296,6 +309,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MappingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/locked-classes': {
+      id: '/locked-classes'
+      path: '/locked-classes'
+      fullPath: '/locked-classes'
+      preLoaderRoute: typeof LockedClassesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/generate-routine': {
       id: '/generate-routine'
       path: '/generate-routine'
@@ -361,6 +381,7 @@ const rootRouteChildren: RootRouteChildren = {
   CoursesRoute: CoursesRoute,
   DepartmentsRoute: DepartmentsRoute,
   GenerateRoutineRoute: GenerateRoutineRoute,
+  LockedClassesRoute: LockedClassesRoute,
   MappingRoute: MappingRoute,
   ReportsRoute: ReportsRoute,
   RoomsRoute: RoomsRoute,

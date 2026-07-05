@@ -93,6 +93,7 @@ export function AvailabilityFinderPage() {
             end: unavail.end,
             room_id: null,
             week: "EVERY",
+            locked: false,
           },
           next: null,
         });

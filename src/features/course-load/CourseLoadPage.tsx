@@ -3,7 +3,7 @@ import { useStore } from "@/lib/store";
 import { PageHeader } from "@/components/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, AlertCircle, Check, Users, FlaskConical, GitMerge, MapPin } from "lucide-react";
+import { Calendar, AlertCircle, Check, Users, FlaskConical, GitMerge, MapPin, Lock, Unlock } from "lucide-react";
 import { cn, compareDayAndTime, fmtRange12, tagColorClasses } from "@/lib/utils";
 import type { Course, Section, Department } from "@/lib/types";
 import { COURSE_TYPE_INFO } from "@/lib/types";
@@ -326,7 +326,7 @@ function SectionCell({ course, section, sections, onAssign, onManageLabSections,
   const [combineOpen, setCombineOpen] = useState(false);
   const [uncombining, setUncombining] = useState(false);
   const data = useStore();
-  const { setCourseSectionTeachers } = useStore();
+  const { setCourseSectionTeachers, upsertClassSlot } = useStore();
   const info = COURSE_TYPE_INFO[course.course_type];
 
   // If this course has lab sections mapped to this actual section, the cell splits into
@@ -347,63 +347,126 @@ function SectionCell({ course, section, sections, onAssign, onManageLabSections,
             const gSlots = data.class_slots
               .filter((s) => s.lab_section_id === g.id)
               .sort(compareDayAndTime);
+            const lockedCount = gSlots.filter(s => s.locked).length;
             const primaryRoom = data.rooms.find((r) => r.id === g.primary_room_id);
             const complete = gSlots.length >= maxSlotsPerLab && gSlots.every((s) => s.room_id);
+            const allLocked = gSlots.length > 0 && lockedCount === gSlots.length;
+            const someLocked = lockedCount > 0 && !allLocked;
+
+            const handleToggleAll = async (lock: boolean) => {
+              for (const slot of gSlots) {
+                await upsertClassSlot({
+                  id: slot.id,
+                  semester_id: data.active_semester_id,
+                  course_id: course.id,
+                  section_id: slot.section_id,
+                  lab_section_id: g.id,
+                  day: slot.day,
+                  start: slot.start,
+                  end: slot.end,
+                  room_id: slot.room_id,
+                  week: slot.week,
+                  locked: lock,
+                });
+              }
+              toast.success(`All ${g.label} slots ${lock ? "locked" : "unlocked"}!`);
+            };
+
             return (
-              <button
+              <div
                 key={g.id}
-                onClick={onManageLabSections}
                 className={cn(
-                  "w-full text-left rounded-md border px-2 py-1.5 space-y-1 transition-colors hover:border-primary",
+                  "w-full rounded-md border px-2 py-1.5 space-y-1 transition-colors",
                   complete ? "border-success/50 bg-success/5" : "border-purple-200 bg-purple-50/40",
+                  allLocked && "border-amber-500 bg-amber-50/60",
+                  someLocked && "border-amber-300 bg-amber-50/30"
                 )}
               >
                 <div className="flex items-center justify-between gap-1">
                   <span className="flex items-center gap-1 text-[10px] font-bold text-purple-700 uppercase">
                     <FlaskConical className="h-2.5 w-2.5" /> {g.label}
                   </span>
-                  <div className="flex gap-1">
-                    {g.teacher_ids.map((tid) => {
-                      const t = data.teachers.find((x) => x.id === tid);
-                      return t ? (
-                        <Badge key={tid} variant="secondary" className="text-[9px] px-1 py-0 h-3.5">
-                          {t.short_name}
-                        </Badge>
-                      ) : null;
-                    })}
+                  <div className="flex items-center gap-1">
+                    {lockedCount > 0 && (
+                      <Badge variant="outline" className="text-[9px] px-1 py-0 h-3.5 border-amber-400 bg-amber-100 text-amber-800">
+                        <Lock className="h-2.5 w-2.5 mr-0.5" /> {lockedCount} locked
+                      </Badge>
+                    )}
+                    {gSlots.length > 0 && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-5 px-1.5 text-[9px] hover:bg-amber-50"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleAll(!allLocked);
+                        }}
+                      >
+                        {allLocked ? (
+                          <>
+                            <Unlock className="h-2.5 w-2.5 mr-0.5" /> Unlock all
+                          </>
+                        ) : (
+                          <>
+                            <Lock className="h-2.5 w-2.5 mr-0.5" /> Lock all
+                          </>
+                        )}
+                      </Button>
+                    )}
+                    <div className="flex gap-1">
+                      {g.teacher_ids.map((tid) => {
+                        const t = data.teachers.find((x) => x.id === tid);
+                        return t ? (
+                          <Badge key={tid} variant="secondary" className="text-[9px] px-1 py-0 h-3.5">
+                            {t.short_name}
+                          </Badge>
+                        ) : null;
+                      })}
+                    </div>
                   </div>
                 </div>
                 {gSlots.length === 0 ? (
-                  <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                    <Calendar className="h-3 w-3" />
-                    <span>No schedule yet</span>
-                    {primaryRoom && (
-                      <Badge variant="outline" className="text-[9px] px-1 py-0 h-3.5 gap-0.5">
-                        <MapPin className="h-2.5 w-2.5 text-orange-500" /> {primaryRoom.name}
-                      </Badge>
-                    )}
-                  </div>
+                  <button
+                    onClick={onManageLabSections}
+                    className="w-full text-left"
+                  >
+                    <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                      <Calendar className="h-3 w-3" />
+                      <span>No schedule yet</span>
+                      {primaryRoom && (
+                        <Badge variant="outline" className="text-[9px] px-1 py-0 h-3.5 gap-0.5">
+                          <MapPin className="h-2.5 w-2.5 text-orange-500" /> {primaryRoom.name}
+                        </Badge>
+                      )}
+                    </div>
+                  </button>
                 ) : (
-                  gSlots.map((slot) => {
-                    const room = data.rooms.find((r) => r.id === slot.room_id);
-                    return (
-                      <div key={slot.id} className="flex items-center gap-1 font-mono text-[10px]">
-                        <span className="font-semibold">{slot.day}</span>
-                        <span>{fmtRange12(slot.start, slot.end)}</span>
-                        {room ? <Badge variant="outline" className="text-[9px] px-1 py-0 h-3.5">{room.name}</Badge> :
-                          <span className="text-destructive">no room</span>}
-                      </div>
-                    );
-                  })
+                  <button
+                    onClick={onManageLabSections}
+                    className="w-full text-left"
+                  >
+                    {gSlots.map((slot) => {
+                      const room = data.rooms.find((r) => r.id === slot.room_id);
+                      return (
+                        <div key={slot.id} className="flex items-center gap-1.5 font-mono text-[10px]">
+                          {slot.locked && <Lock className="h-2.5 w-2.5 text-amber-600" />}
+                          <span className="font-semibold">{slot.day}</span>
+                          <span>{fmtRange12(slot.start, slot.end)}</span>
+                          {room ? <Badge variant="outline" className="text-[9px] px-1 py-0 h-3.5">{room.name}</Badge> :
+                            <span className="text-destructive">no room</span>}
+                        </div>
+                      );
+                    })}
+                    <div className="flex items-center gap-1 pt-0.5 text-[10px]">
+                      {complete ? (
+                        <span className="flex items-center gap-1 text-success"><Check className="h-3 w-3" /> Completed</span>
+                      ) : (
+                        <span className="text-warning">{gSlots.length}/{maxSlotsPerLab} classes</span>
+                      )}
+                    </div>
+                  </button>
                 )}
-                <div className="flex items-center gap-1 pt-0.5 text-[10px]">
-                  {complete ? (
-                    <span className="flex items-center gap-1 text-success"><Check className="h-3 w-3" /> Completed</span>
-                  ) : (
-                    <span className="text-warning">{gSlots.length}/{maxSlotsPerLab} classes</span>
-                  )}
-                </div>
-              </button>
+              </div>
             );
           })}
           <Button variant="outline" size="sm" className="w-full h-6 text-[10px] gap-1" onClick={onManageLabSections}>
@@ -421,6 +484,9 @@ function SectionCell({ course, section, sections, onAssign, onManageLabSections,
   const slots = data.class_slots
     .filter(s => s.semester_id === data.active_semester_id && s.course_id === course.id && s.section_id === section.id)
     .sort(compareDayAndTime);
+  const lockedCount = slots.filter(s => s.locked).length;
+  const allLocked = slots.length > 0 && lockedCount === slots.length;
+  const someLocked = lockedCount > 0 && !allLocked;
 
   // gather conflicts on existing slots
   const allConflicts = slots.flatMap(slot =>
@@ -434,6 +500,24 @@ function SectionCell({ course, section, sections, onAssign, onManageLabSections,
   const teachersOk = teacherIds.length > 0;
   const slotsOk = slots.length === info.classCount;
   const allOk = teachersOk && slotsOk && allConflicts.length === 0;
+
+  const handleToggleAll = async (lock: boolean) => {
+    for (const slot of slots) {
+      await upsertClassSlot({
+        id: slot.id,
+        semester_id: data.active_semester_id,
+        course_id: course.id,
+        section_id: section.id,
+        day: slot.day,
+        start: slot.start,
+        end: slot.end,
+        room_id: slot.room_id,
+        week: slot.week,
+        locked: lock,
+      });
+    }
+    toast.success(`All slots ${lock ? "locked" : "unlocked"}!`);
+  };
 
   const handleUncombine = async () => {
     setUncombining(true);
@@ -480,13 +564,40 @@ function SectionCell({ course, section, sections, onAssign, onManageLabSections,
           ))}
           <RoomPicker course={course} section={section} />
         </div>
+        {slots.length > 0 && (
+          <div className="flex items-center gap-1.5">
+            {lockedCount > 0 && (
+              <Badge variant="outline" className="text-[9px] px-1 py-0 h-3.5 border-amber-400 bg-amber-100 text-amber-800">
+                <Lock className="h-2.5 w-2.5 mr-0.5" /> {lockedCount} locked
+              </Badge>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-5 px-1.5 text-[9px] hover:bg-amber-50 ml-auto"
+              onClick={() => handleToggleAll(!allLocked)}
+            >
+              {allLocked ? (
+                <>
+                  <Unlock className="h-2.5 w-2.5 mr-0.5" /> Unlock all
+                </>
+              ) : (
+                <>
+                  <Lock className="h-2.5 w-2.5 mr-0.5" /> Lock all
+                </>
+              )}
+            </Button>
+          </div>
+        )}
         <button
           onClick={() => onAssign(course, section)}
           className={cn(
             "w-full text-left rounded-md border px-2 py-1.5 text-[11px] hover:border-primary transition-colors",
             allOk && "border-success/50 bg-success/5",
             allConflicts.length > 0 && "border-destructive/50 bg-destructive/5",
-            !slotsOk && allConflicts.length === 0 && "border-dashed text-muted-foreground"
+            !slotsOk && allConflicts.length === 0 && "border-dashed text-muted-foreground",
+            allLocked && "border-amber-500 bg-amber-50/60",
+            someLocked && "border-amber-300 bg-amber-50/30"
           )}
         >
           {slots.length === 0 ? (
@@ -502,6 +613,7 @@ function SectionCell({ course, section, sections, onAssign, onManageLabSections,
                 const room = data.rooms.find(r => r.id === slot.room_id);
                 return (
                   <div key={slot.id} className="flex items-center gap-1.5 font-mono">
+                    {slot.locked && <Lock className="h-3 w-3 text-amber-600" />}
                     <span className="font-semibold">{slot.day}</span>
                     <span>{fmtRange12(slot.start, slot.end)}</span>
                     {room ? <Badge variant="outline" className="text-[9px] px-1 py-0 h-3.5">{room.name}</Badge> :
