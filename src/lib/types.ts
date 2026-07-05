@@ -204,6 +204,7 @@ export interface PriorityClass {
   room_ids: string[];
   time_slots: { start: string; end: string }[] | null;
   days: string[];
+  course_type: 'Theory' | 'Sessional';
   created_at?: string;
   updated_at?: string;
   semester?: Semester;

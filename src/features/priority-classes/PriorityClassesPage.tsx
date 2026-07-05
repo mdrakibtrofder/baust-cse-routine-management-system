@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2, Edit2, Calendar, MapPin, Clock, BookOpen, Building2, AlertTriangle, ShieldCheck } from "lucide-react";
+import { Plus, Trash2, Edit2, Calendar, MapPin, Clock, BookOpen, Building2, AlertTriangle, ShieldCheck, FlaskConical } from "lucide-react";
 import { cn, fmtRange12 } from "@/lib/utils";
 import { HOME_DEPT_SHORT_NAME } from "@/lib/constants";
 import { toast } from "sonner";
@@ -21,6 +21,7 @@ import { useConfirm } from "@/components/ConfirmDialog";
 const STEPS = [
   "Department",
   "Level & Section",
+  "Course Type",
   "Courses",
   "Rooms",
   "Times",
@@ -40,6 +41,7 @@ export function PriorityClassesPage() {
   const [level, setLevel] = useState("1");
   const [term, setTerm] = useState("I");
   const [sectionId, setSectionId] = useState("");
+  const [courseType, setCourseType] = useState<'Theory' | 'Sessional'>('Theory');
   const [selectedCourseIds, setSelectedCourseIds] = useState<string[]>([]);
   const [selectedRoomIds, setSelectedRoomIds] = useState<string[]>([]);
   const [selectedPeriods, setSelectedPeriods] = useState<Period[]>([]);
@@ -71,23 +73,33 @@ export function PriorityClassesPage() {
     );
   }, [data.sections, deptId, level, term]);
 
-  // Derived courses matching selection
+  // Derived courses matching selection & Course Type selection
   const filteredCourses = useMemo(() => {
     return data.courses.filter(
       (c) =>
         c.department_id === deptId &&
         c.level === Number(level) &&
-        c.term === term
+        c.term === term &&
+        c.course_type.startsWith(courseType === 'Theory' ? 'theory_' : 'sessional_')
     );
-  }, [data.courses, deptId, level, term]);
+  }, [data.courses, deptId, level, term, courseType]);
 
-  // Partition rooms into allowed (departmental/non-departmental) and other
+  // Partition rooms into allowed (departmental/non-departmental) and other, and filtered by Course Type
   const partitionedRooms = useMemo(() => {
-    const compatible = data.rooms;
+    const compatible = data.rooms.filter(
+      (r) => r.room_type === courseType || r.room_type === "Both"
+    );
     const allowed = compatible.filter((r) => roomAllowedForHomeDept(r, data.departments));
     const other = compatible.filter((r) => !roomAllowedForHomeDept(r, data.departments));
     return { allowed, other };
-  }, [data.rooms, data.departments]);
+  }, [data.rooms, data.departments, courseType]);
+
+  // Derived periods matching Course Type
+  const filteredPeriods = useMemo(() => {
+    return data.periods.filter(
+      (p) => p.kind === courseType.toLowerCase()
+    );
+  }, [data.periods, courseType]);
 
   const activeSemesterPriorityClasses = useMemo(() => {
     return data.priority_classes.filter(
@@ -103,6 +115,7 @@ export function PriorityClassesPage() {
     setLevel("1");
     setTerm("I");
     setSectionId("");
+    setCourseType("Theory");
     setSelectedCourseIds([]);
     setSelectedRoomIds([]);
     setSelectedPeriods([]);
@@ -116,6 +129,7 @@ export function PriorityClassesPage() {
     setLevel(String(item.level));
     setTerm(item.term);
     setSectionId(item.section_id);
+    setCourseType(item.course_type || "Theory");
     setSelectedCourseIds(item.course_ids || []);
     setSelectedRoomIds(item.room_ids || []);
 
@@ -143,6 +157,10 @@ export function PriorityClassesPage() {
         return false;
       }
     }
+    if (step === 2 && !courseType) {
+      toast.error("Please select a Course Type");
+      return false;
+    }
     return true;
   };
 
@@ -159,10 +177,10 @@ export function PriorityClassesPage() {
 
   const handleSkip = () => {
     // Clear selections of current optional step
-    if (currentStep === 2) setSelectedCourseIds([]);
-    if (currentStep === 3) setSelectedRoomIds([]);
-    if (currentStep === 4) setSelectedPeriods([]);
-    if (currentStep === 5) setSelectedDays([]);
+    if (currentStep === 3) setSelectedCourseIds([]);
+    if (currentStep === 4) setSelectedRoomIds([]);
+    if (currentStep === 5) setSelectedPeriods([]);
+    if (currentStep === 6) setSelectedDays([]);
 
     setCurrentStep((prev) => Math.min(prev + 1, STEPS.length - 1));
   };
@@ -209,6 +227,7 @@ export function PriorityClassesPage() {
         level: Number(level),
         term,
         section_id: sectionId,
+        course_type: courseType,
         course_ids: selectedCourseIds,
         room_ids: selectedRoomIds,
         time_slots: selectedPeriods.map((p) => ({ start: p.start, end: p.end })),
@@ -295,11 +314,26 @@ export function PriorityClassesPage() {
                         <div className="font-semibold text-sm">
                           {dept?.short_name} Level {item.level} Term {item.term}
                         </div>
-                        {sec && (
-                          <Badge variant="secondary" className="mt-1">
-                            Section {sec.name}
-                          </Badge>
-                        )}
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {sec && (
+                            <Badge variant="secondary">
+                              Section {sec.name}
+                            </Badge>
+                          )}
+                          {item.course_type && (
+                            <Badge
+                              variant="outline"
+                              className={cn(
+                                "text-[10px]",
+                                item.course_type === "Theory"
+                                  ? "bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-50"
+                                  : "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                              )}
+                            >
+                              {item.course_type}
+                            </Badge>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="align-top">
                         {item.course_ids.length === 0 ? (
@@ -490,16 +524,66 @@ export function PriorityClassesPage() {
 
             {currentStep === 2 && (
               <div className="space-y-4">
+                <div className="rounded-lg bg-blue-50 border border-blue-200 p-3 flex gap-2 text-blue-800 text-xs">
+                  <ShieldCheck className="h-4 w-4 shrink-0 text-blue-600" />
+                  <div>
+                    <span className="font-semibold">Step 3: Course Type (Mandatory).</span> Select the category of classes.
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <button
+                    type="button"
+                    onClick={() => setCourseType("Theory")}
+                    className={cn(
+                      "flex flex-col items-center justify-center p-6 rounded-xl border-2 text-center transition-all duration-200 space-y-3 cursor-pointer",
+                      courseType === "Theory"
+                        ? "border-blue-600 bg-blue-50/50 shadow-md scale-[1.02]"
+                        : "border-border hover:border-muted-foreground hover:bg-muted/10"
+                    )}
+                  >
+                    <BookOpen className={cn("h-10 w-10", courseType === "Theory" ? "text-blue-600" : "text-muted-foreground")} />
+                    <div>
+                      <h3 className="font-semibold text-sm">Theory</h3>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Filters downstream selections to Theory courses, theory rooms, and matching time slots.
+                      </p>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setCourseType("Sessional")}
+                    className={cn(
+                      "flex flex-col items-center justify-center p-6 rounded-xl border-2 text-center transition-all duration-200 space-y-3 cursor-pointer",
+                      courseType === "Sessional"
+                        ? "border-emerald-600 bg-emerald-50/30 shadow-md scale-[1.02]"
+                        : "border-border hover:border-muted-foreground hover:bg-muted/10"
+                    )}
+                  >
+                    <FlaskConical className={cn("h-10 w-10", courseType === "Sessional" ? "text-emerald-600" : "text-muted-foreground")} />
+                    <div>
+                      <h3 className="font-semibold text-sm">Sessional</h3>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Filters downstream selections to Sessional/Lab courses, lab rooms, and sessional time slots.
+                      </p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {currentStep === 3 && (
+              <div className="space-y-4">
                 <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 flex gap-2 text-amber-800 text-xs">
                   <BookOpen className="h-4 w-4 shrink-0 text-amber-600" />
                   <div>
-                    <span className="font-semibold">Step 3: Course Selection (Optional).</span> Select specific courses in this section to apply priority, or skip to apply to all courses of this section.
+                    <span className="font-semibold">Step 4: Course Selection (Optional).</span> Select specific courses in this section to apply priority, or skip to apply to all courses of this section.
                   </div>
                 </div>
                 <Label className="block text-sm font-medium mt-2">Available Courses</Label>
                 {filteredCourses.length === 0 ? (
                   <div className="text-center py-8 text-xs text-muted-foreground border rounded-lg bg-muted/20">
-                    No courses available for selected Level/Term/Department.
+                    No courses available for selected Level/Term/Department/Type.
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-2 border rounded-lg p-3 max-h-48 overflow-y-auto">
@@ -527,12 +611,12 @@ export function PriorityClassesPage() {
               </div>
             )}
 
-            {currentStep === 3 && (
+            {currentStep === 4 && (
               <div className="space-y-4">
                 <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 flex gap-2 text-amber-800 text-xs">
                   <MapPin className="h-4 w-4 shrink-0 text-amber-600" />
                   <div>
-                    <span className="font-semibold">Step 4: Room Selection (Optional).</span> Limit the rooms allowed for these classes, or skip to allow any compatible room.
+                    <span className="font-semibold">Step 5: Room Selection (Optional).</span> Limit the rooms allowed for these classes, or skip to allow any compatible room.
                   </div>
                 </div>
                 <div className="flex items-center justify-between mt-2">
@@ -592,17 +676,17 @@ export function PriorityClassesPage() {
               </div>
             )}
 
-            {currentStep === 4 && (
+            {currentStep === 5 && (
               <div className="space-y-4">
                 <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 flex gap-2 text-amber-800 text-xs">
                   <Clock className="h-4 w-4 shrink-0 text-amber-600" />
                   <div>
-                    <span className="font-semibold">Step 5: Time Slots (Optional).</span> Select periods/time slots for these classes, or skip to allow any time slot.
+                    <span className="font-semibold">Step 6: Time Slots (Optional).</span> Select periods/time slots for these classes, or skip to allow any time slot.
                   </div>
                 </div>
                 <Label className="block text-sm font-medium mt-2">Select Periods</Label>
                 <div className="grid grid-cols-2 gap-2 border rounded-lg p-3 max-h-48 overflow-y-auto">
-                  {data.periods.map((p) => {
+                  {filteredPeriods.map((p) => {
                     const checked = selectedPeriods.some((x) => x.id === p.id);
                     return (
                       <div key={p.id} className="flex items-center space-x-2 p-1.5 hover:bg-muted/30 rounded">
@@ -625,12 +709,12 @@ export function PriorityClassesPage() {
               </div>
             )}
 
-            {currentStep === 5 && (
+            {currentStep === 6 && (
               <div className="space-y-4">
                 <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 flex gap-2 text-amber-800 text-xs">
                   <Calendar className="h-4 w-4 shrink-0 text-amber-600" />
                   <div>
-                    <span className="font-semibold">Step 6: Days of Week (Optional).</span> Select preferred days, or skip to allow any day.
+                    <span className="font-semibold">Step 7: Days of Week (Optional).</span> Select preferred days, or skip to allow any day.
                   </div>
                 </div>
                 <Label className="block text-sm font-medium mt-2">Select Days</Label>
@@ -669,7 +753,7 @@ export function PriorityClassesPage() {
               >
                 Previous
               </Button>
-              {currentStep >= 2 && (
+              {currentStep >= 3 && (
                 <Button
                   variant="ghost"
                   size="sm"
