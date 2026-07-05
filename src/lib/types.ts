@@ -97,6 +97,7 @@ export interface ClassSlot {
   week: WeekPattern;
   /** Set when this slot belongs to a lab section, not the regular section schedule */
   lab_section_id?: string | null;
+  locked: boolean;
 }
 
 /** Mapping: which teachers teach which course-section (scoped per semester) */

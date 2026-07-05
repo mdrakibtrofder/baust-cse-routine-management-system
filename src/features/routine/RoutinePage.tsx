@@ -4,8 +4,9 @@ import { PageHeader } from "@/components/PageHeader";
 import { RoutineView, type RoutineScope } from "@/components/RoutineView";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
-import { Filter, Users, DoorOpen, Boxes } from "lucide-react";
+import { Filter, Users, DoorOpen, Boxes, Eye, EyeOff } from "lucide-react";
 import { HOME_DEPT_SHORT_NAME } from "@/lib/constants";
+import { roomDeptShort } from "@/lib/room-dept";
 
 type Mode = "teacher" | "room" | "section";
 
@@ -36,6 +37,7 @@ export function RoutinePage() {
   const [teacherId, setTeacherId] = useState<string>(() => readStoredSelection().teacherId ?? "");
   const [roomId, setRoomId] = useState<string>(() => readStoredSelection().roomId ?? "");
   const [sectionId, setSectionId] = useState<string>(() => readStoredSelection().sectionId ?? "");
+  const [showOtherRooms, setShowOtherRooms] = useState(false);
 
   // Persist every change so the selection survives navigation and page refreshes.
   useEffect(() => {
@@ -55,7 +57,10 @@ export function RoutinePage() {
       setTeacherId(data.teachers[0].id);
     }
     if (data.rooms.length > 0 && (!roomId || !data.rooms.some((r) => r.id === roomId))) {
-      setRoomId(data.rooms[0].id);
+      const firstHome = data.rooms.find(
+        (r) => roomDeptShort(r, data.departments) === HOME_DEPT_SHORT_NAME,
+      );
+      setRoomId((firstHome ?? data.rooms[0]).id);
     }
     if (data.sections.length > 0 && (!sectionId || !data.sections.some((s) => s.id === sectionId))) {
       const sorted = [...data.sections].sort(
@@ -81,22 +86,44 @@ export function RoutinePage() {
     [data.teachers],
   );
 
-  const roomOptions: ComboboxOption[] = useMemo(
-    () =>
-      data.rooms.map((r) => ({
+  // Department rule: home-dept (CSE) rooms by default; other departments' rooms
+  // only behind the "show other rooms" toggle
+  const { homeRooms, otherRooms } = useMemo(() => {
+    const homeRooms: typeof data.rooms = [];
+    const otherRooms: typeof data.rooms = [];
+    for (const r of data.rooms) {
+      (roomDeptShort(r, data.departments) === HOME_DEPT_SHORT_NAME ? homeRooms : otherRooms).push(r);
+    }
+    return { homeRooms, otherRooms };
+  }, [data.rooms, data.departments]);
+
+  // A restored/deep-linked selection of an other-dept room must stay visible
+  useEffect(() => {
+    if (roomId && otherRooms.some((r) => r.id === roomId)) {
+      setShowOtherRooms(true);
+    }
+  }, [roomId, otherRooms]);
+
+  const roomOptions: ComboboxOption[] = useMemo(() => {
+    const toOption = (r: typeof data.rooms[number]): ComboboxOption => {
+      const dept = roomDeptShort(r, data.departments);
+      return {
         value: r.id,
-        label: `${r.name} ${r.room_type}`,
+        label: `${r.name} ${r.room_type} ${dept}`,
+        group: showOtherRooms ? `${dept} Rooms` : undefined,
         display: (
           <span className="flex items-center gap-2 truncate">
             <span className="font-mono">{r.name}</span>
             <span className="text-xs text-muted-foreground">
               {r.room_type} · capacity {r.capacity}
+              {dept !== HOME_DEPT_SHORT_NAME && ` · ${dept}`}
             </span>
           </span>
         ),
-      })),
-    [data.rooms],
-  );
+      };
+    };
+    return (showOtherRooms ? [...homeRooms, ...otherRooms] : homeRooms).map(toOption);
+  }, [homeRooms, otherRooms, showOtherRooms, data.departments]);
 
   const homeDept = useMemo(
     () => data.departments.find((d) => d.short_name.trim().toUpperCase() === HOME_DEPT_SHORT_NAME),

@@ -34,6 +34,8 @@ import {
   Split,
   UserPlus,
   X,
+  Lock,
+  Unlock,
 } from "lucide-react";
 import { COURSE_TYPE_INFO, type Course, type Section, type WeekPattern } from "@/lib/types";
 import {
@@ -68,6 +70,7 @@ interface DraftClass {
   end: string;
   room_id: string | null;
   week: WeekPattern;
+  locked?: boolean;
 }
 
 const EMPTY_CLASS = (info: ReturnType<typeof courseInfo>): DraftClass => ({
@@ -76,6 +79,7 @@ const EMPTY_CLASS = (info: ReturnType<typeof courseInfo>): DraftClass => ({
   end: "",
   room_id: null,
   week: info.weekPattern,
+  locked: false,
 });
 
 function courseInfo(course: Course) {
@@ -147,7 +151,7 @@ export function ClassAssignDialog({
       const e = existing[i];
       initial.push(
         e
-          ? { id: e.id, day: e.day, start: e.start, end: e.end, room_id: e.room_id, week: e.week }
+          ? { id: e.id, day: e.day, start: e.start, end: e.end, room_id: e.room_id, week: e.week, locked: e.locked }
           : { ...EMPTY_CLASS(info), room_id: cst?.primary_room_id ?? null },
       );
     }
@@ -276,6 +280,38 @@ export function ClassAssignDialog({
       return;
     }
     persist(false);
+  };
+
+  /** Toggle lock status for a class */
+  const toggleLock = async (idx: number) => {
+    const d = drafts[idx];
+    if (!d.id) {
+      toast.error("Cannot lock unsaved class");
+      return;
+    }
+    try {
+      const newLocked = !d.locked;
+      // Update backend and store
+      await data.upsertClassSlot({
+        id: d.id,
+        semester_id: data.active_semester_id,
+        course_id: course.id,
+        section_id: section.id,
+        day: d.day,
+        start: d.start,
+        end: d.end,
+        room_id: d.room_id,
+        week: d.week,
+        locked: newLocked,
+      });
+      // Update local state
+      setDrafts((prev) =>
+        prev.map((x, i) => (i === idx ? { ...x, locked: newLocked } : x))
+      );
+      toast.success(`Class ${idx + 1} ${newLocked ? "locked" : "unlocked"}`);
+    } catch (err: any) {
+      toast.error("Failed to update lock status");
+    }
   };
 
   /** Delete one class (reset its draft to empty) */
@@ -421,24 +457,42 @@ export function ClassAssignDialog({
                     className={cn(
                       "rounded-md border px-2 py-1.5 text-xs transition group",
                       isActive ? "border-primary border-2 bg-primary/5 shadow-sm" : "hover:border-primary/40",
+                      d.locked && "border-amber-500 bg-amber-50/30",
                       st.conflicts.length > 0 && "border-destructive/50",
                     )}
                   >
                     <button onClick={() => setStep(i)} className="w-full text-left">
                       <div className="flex items-center justify-between">
-                        <div className="font-semibold">Class {i + 1}</div>
-                        {(d.id || d.room_id) && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              deleteOne(i);
-                            }}
-                            className="opacity-0 group-hover:opacity-100 transition text-destructive hover:text-destructive/80"
-                            title="Delete this class"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </button>
-                        )}
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold">Class {i + 1}</span>
+                          {d.locked && <Lock className="h-3 w-3 text-amber-600" />}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {(d.id || d.room_id) && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteOne(i);
+                              }}
+                              className="opacity-0 group-hover:opacity-100 transition text-destructive hover:text-destructive/80"
+                              title="Delete this class"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          )}
+                          {d.id && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleLock(i);
+                              }}
+                              className="opacity-0 group-hover:opacity-100 transition text-amber-600 hover:text-amber-800"
+                              title={d.locked ? "Unlock this class" : "Lock this class"}
+                            >
+                              {d.locked ? <Lock className="h-3 w-3" /> : <Unlock className="h-3 w-3" />}
+                            </button>
+                          )}
+                        </div>
                       </div>
                       <div className="font-mono text-[11px]">
                         {fmtDayTitle(d.day)} {fmtRange12(d.start, d.end)}
@@ -734,6 +788,25 @@ export function ClassAssignDialog({
                   </SelectContent>
                 </Select>
               </div>
+
+              {current.id && (
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs">Locked</Label>
+                  <button
+                    type="button"
+                    onClick={() => toggleLock(safeStep)}
+                    className={cn(
+                      "flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium transition",
+                      current.locked
+                        ? "bg-amber-100 text-amber-800 border border-amber-300"
+                        : "bg-white text-muted-foreground border border-gray-200 hover:bg-gray-50"
+                    )}
+                  >
+                    {current.locked ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
+                    {current.locked ? "Locked" : "Unlocked"}
+                  </button>
+                </div>
+              )}
 
               {/* Embedded room & teacher availability table */}
               <div className="rounded-lg border overflow-hidden">
