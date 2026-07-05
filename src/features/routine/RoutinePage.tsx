@@ -242,7 +242,7 @@ export function RoutinePage() {
               />
             </TabsContent>
 
-            <TabsContent value="room" className="mt-3">
+            <TabsContent value="room" className="mt-3 space-y-2">
               <Combobox
                 options={roomOptions}
                 value={roomId}
@@ -253,6 +253,17 @@ export function RoutinePage() {
                 className="w-[420px] max-w-full"
                 contentClassName="w-[420px]"
               />
+              {otherRooms.length > 0 && (
+                <button
+                  onClick={() => setShowOtherRooms((v) => !v)}
+                  className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {showOtherRooms ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                  {showOtherRooms
+                    ? "Hide other departments' rooms"
+                    : `Show other departments' rooms (${otherRooms.length})`}
+                </button>
+              )}
             </TabsContent>
           </Tabs>
         </div>
