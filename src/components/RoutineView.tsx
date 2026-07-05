@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useStore } from "@/lib/store";
 import { cn, compareTimeValues, fmtTime12, fmtRange12, sortDays, fmtDayTitle } from "@/lib/utils";
-import { BookOpen, MapPin, Coffee, FlaskConical, FileSpreadsheet, FileText, FileType, FileJson, Image as ImageIcon, Eye, Users, Ban, Lock, Unlock } from "lucide-react";
+import { BookOpen, MapPin, Coffee, FlaskConical, FileSpreadsheet, FileText, FileType, FileJson, Image as ImageIcon, Eye, Users, Ban } from "lucide-react";
 import { COURSE_TYPE_INFO, type ClassSlot, type Section } from "@/lib/types";
 import { timesOverlap } from "@/lib/conflicts";
 import { Button } from "@/components/ui/button";
@@ -43,6 +43,9 @@ export function RoutineView({
   const [showUnavailability, setShowUnavailability] = useState(false);
   const [editTarget, setEditTarget] = useState<{ course_id: string; section_id: string } | null>(null);
 
+  const editCourse = editTarget ? data.courses.find((c) => c.id === editTarget.course_id) ?? null : null;
+  const editSection = editTarget ? data.sections.find((s) => s.id === editTarget.section_id) ?? null : null;
+
   /** Unavailable windows relevant to this scope, normalized to {day, start, end, reason}.
    *  Only populated for teacher/room scopes — sections/rooms-as-a-whole don't have a single owner. */
   const unavailabilityEntries = useMemo(() => {
@@ -60,9 +63,6 @@ export function RoutineView({
   }, [data.teacher_unavailability, data.room_unavailability, scope]);
 
   const canShowUnavailability = scope.kind === "teacher" || scope.kind === "room";
-
-  const editCourse = editTarget ? data.courses.find((c) => c.id === editTarget.course_id) ?? null : null;
-  const editSection = editTarget ? data.sections.find((s) => s.id === editTarget.section_id) ?? null : null;
 
   const isBreakPeriod = (p: { name: string; is_break?: boolean }) => p.is_break || /break/i.test(p.name);
 
@@ -381,6 +381,15 @@ export function RoutineView({
       <RoutineCourseSummary scope={scope} />
       <RoutineTeacherSummary scope={scope} />
 
+      {editCourse && editSection && (
+        <ClassAssignDialog
+          open={!!editTarget}
+          onOpenChange={(v) => !v && setEditTarget(null)}
+          course={editCourse}
+          section={editSection}
+        />
+      )}
+
       <Dialog open={showPreview} onOpenChange={setShowPreview}>
         <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-y-auto p-0">
           <div className="p-6 space-y-6 bg-white">
@@ -552,15 +561,6 @@ export function RoutineView({
           </div>
         </DialogContent>
       </Dialog>
-
-      {editCourse && editSection && (
-        <ClassAssignDialog
-          open={!!editTarget}
-          onOpenChange={(v) => !v && setEditTarget(null)}
-          course={editCourse}
-          section={editSection}
-        />
-      )}
     </div>
   );
 }
@@ -640,29 +640,21 @@ function RoutineCell({ slot, large, onEdit }: { slot: ClassSlot; large?: boolean
     .map((tid) => data.teachers.find((t) => t.id === tid))
     .filter(Boolean) as { short_name: string }[];
 
-  const toggleLock = async () => {
-    try {
-      await data.upsertClassSlot({ ...slot, locked: !slot.locked });
-    } catch (e: any) {
-      console.error(e);
-    }
-  };
-
   if (!course) return null;
   const info = COURSE_TYPE_INFO[course.course_type];
   const isSessional = info.roomKind === "sessional";
 
   return (
     <div
+      onClick={onEdit}
       className={cn(
         "rounded-lg border bg-background transition-all border-border/60 h-full flex flex-col",
         "shadow-[0_2px_6px_-1px_rgba(0,0,0,0.1),0_1px_3px_-1px_rgba(0,0,0,0.06)]",
         "hover:shadow-[0_4px_14px_-2px_rgba(0,0,0,0.15)] hover:-translate-y-px relative z-[1] hover:z-[2]",
         onEdit && "cursor-pointer hover:border-primary/50",
-        slot.locked && "border-amber-500 bg-amber-50/30",
         large ? "px-3 py-3 gap-2.5" : "px-2 py-2 gap-2",
       )}>
-      {/* Course code + teacher badges + lock */}
+      {/* Course code + teacher badges */}
       <div className="flex items-start justify-between gap-1.5">
         <div className={cn("flex items-center gap-1.5 font-bold font-mono", large ? "text-base" : "text-sm")}>
           {isSessional ? (
@@ -681,13 +673,6 @@ function RoutineCell({ slot, large, onEdit }: { slot: ClassSlot; large?: boolean
           )}
         </div>
         <div className="flex flex-col gap-1 items-end">
-          <button 
-            onClick={(e) => { e.stopPropagation(); toggleLock(); }}
-            className="p-1 rounded hover:bg-amber-100 text-amber-600"
-            title={slot.locked ? "Click to unlock this class" : "Click to lock this class"}
-          >
-            {slot.locked ? <Lock className={large ? "h-4 w-4" : "h-3.5 w-3.5"} /> : <Unlock className={large ? "h-4 w-4" : "h-3.5 w-3.5"} />}
-          </button>
           {teachers.map((t) => (
             <span key={t.short_name} className={cn(
               "rounded bg-blue-100 text-blue-800 font-bold uppercase",
