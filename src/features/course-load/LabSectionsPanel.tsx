@@ -31,6 +31,8 @@ import {
 } from "@/components/ui/dialog";
 import { FlaskConical, Plus, Trash2, Save, Users, MapPin, Calendar, Check, AlertCircle, X } from "lucide-react";
 import { cn, sortDays, fmtDayTitle, roomSupportsKind, fmtRange12 } from "@/lib/utils";
+import { partitionRoomsForCourse } from "@/lib/room-dept";
+import { Checkbox } from "@/components/ui/checkbox";
 import { roomUnavailableAt, teacherUnavailableAt, timesOverlap } from "@/lib/conflicts";
 import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -97,6 +99,7 @@ export function LabSectionsPanel({ course, sections, open, onClose }: Props) {
       : [],
   );
   const [saving, setSaving] = useState(false);
+  const [showOtherRooms, setShowOtherRooms] = useState(false);
 
   const addSection = () => {
     const nextLabel = `Lab ${String.fromCharCode(65 + drafts.length)}`;
@@ -285,7 +288,15 @@ export function LabSectionsPanel({ course, sections, open, onClose }: Props) {
   // `status` on Teacher is a role/designation label (HoD, DPC, Librarian, ...), not an
   // active/inactive flag — list every teacher, matching the normal TeacherPicker.
   const allTeachers = [...data.teachers].sort((a, b) => a.short_name.localeCompare(b.short_name));
-  const roomsForKind = data.rooms.filter((r) => roomSupportsKind(r.room_type, info.roomKind));
+
+  // Department rule: home-dept courses see home rooms; other-dept courses see
+  // home + their own department's rooms. The rest hide behind the toggle.
+  const { allowed: allowedRooms, other: otherRooms } = partitionRoomsForCourse(
+    data.rooms.filter((r) => roomSupportsKind(r.room_type, info.roomKind)),
+    course,
+    data.departments,
+  );
+  const roomsForKind = showOtherRooms ? [...allowedRooms, ...otherRooms] : allowedRooms;
 
   /** Students per lab section — the whole level-term cohort is split evenly
    *  across all lab sections of this course. */
@@ -308,6 +319,13 @@ export function LabSectionsPanel({ course, sections, open, onClose }: Props) {
           section can map to one or more actual sections — its classes will show up in every
           mapped section's routine, labeled with the lab section name.
         </div>
+
+        {otherRooms.length > 0 && (
+          <label className="flex items-center gap-2 text-xs text-muted-foreground mb-3 cursor-pointer select-none">
+            <Checkbox checked={showOtherRooms} onCheckedChange={(v) => setShowOtherRooms(v === true)} />
+            Show other departments' rooms in room lists ({otherRooms.length})
+          </label>
+        )}
 
         <div className="space-y-3">
           {drafts.map((g, i) => (

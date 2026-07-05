@@ -28,7 +28,7 @@ export function RoomTimeMappingPage() {
         <Tabs defaultValue="section-room" className="w-full">
           <TabsList className="grid w-full grid-cols-3 max-w-2xl">
             <TabsTrigger value="section-room" className="gap-2">
-              <Boxes className="h-4 w-4" /> Section vs Room
+              <Boxes className="h-4 w-4" /> Course vs Room
             </TabsTrigger>
             <TabsTrigger value="teacher-time" className="gap-2">
               <Users className="h-4 w-4" /> Teacher vs Time

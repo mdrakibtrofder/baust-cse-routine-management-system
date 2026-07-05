@@ -8,6 +8,7 @@ import {
   WeekPattern,
 } from "./types";
 import { fmtRange12, roomSupportsKind } from "./utils";
+import { roomAllowedForCourse } from "./room-dept";
 
 function toMin(t: string) {
   if (!t) return 0;
@@ -302,6 +303,7 @@ export function findAvailableRooms(
   ignoreSlotId?: string,
   teacherIds: string[] = [],
   siblingDrafts: { day: string; start: string; end: string; week: WeekPattern }[] = [],
+  includeOtherDeptRooms = false,
 ): Room[] {
   // First, check if there's any conflict that is NOT room-dependent (Teacher, Section, or Self-Duplicate)
   const baseConflicts = checkConflicts({
@@ -324,8 +326,13 @@ export function findAvailableRooms(
 
   if (fatalConflicts.length > 0) return [];
 
-  // Now check each room for capacity, type, double-booking, and room-unavailability
+  // Now check each room for capacity, type, double-booking, and room-unavailability.
+  // Department rule: home-dept courses use home rooms, other-dept courses use
+  // home + their own department's rooms — unless explicitly asked to include the rest.
   return data.rooms.filter((room) => {
+    if (!includeOtherDeptRooms && !roomAllowedForCourse(room, course, data.departments)) {
+      return false;
+    }
     const roomConflicts = checkConflicts({
       data,
       course,
@@ -353,7 +360,8 @@ export function findAllConflictFreeSlots(
   teacherIds: string[],
   ignoreSlotId?: string,
   siblingDrafts: { day: string; start: string; end: string; week: WeekPattern }[] = [],
-  week: WeekPattern = "EVERY"
+  week: WeekPattern = "EVERY",
+  includeOtherDeptRooms = false,
 ): SuggestedSlot[] {
   const suggestions: SuggestedSlot[] = [];
   const info = COURSE_TYPE_INFO[course.course_type];
@@ -372,7 +380,8 @@ export function findAllConflictFreeSlots(
         candidate,
         ignoreSlotId,
         teacherIds,
-        siblingDrafts
+        siblingDrafts,
+        includeOtherDeptRooms,
       );
 
       for (const room of rooms) {

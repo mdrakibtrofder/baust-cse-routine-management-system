@@ -58,6 +58,8 @@ import { useConfirm } from "@/components/ConfirmDialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Checkbox } from "@/components/ui/checkbox";
+import { partitionRoomsForCourse, roomAllowedForCourse } from "@/lib/room-dept";
 
 interface DraftClass {
   id?: string;
@@ -123,6 +125,7 @@ export function ClassAssignDialog({
   const [drafts, setDrafts] = useState<DraftClass[]>([]);
   const [step, setStep] = useState(0);
   const [showRoomTable, setShowRoomTable] = useState(true);
+  const [showOtherRooms, setShowOtherRooms] = useState(false);
   const [confirmSave, setConfirmSave] = useState<{ msg: string; hasConflicts: boolean } | null>(null);
   const [teacherDetailsId, setTeacherDetailsId] = useState<string | null>(null);
   const [showSectionRoutine, setShowSectionRoutine] = useState(false);
@@ -191,16 +194,16 @@ export function ClassAssignDialog({
     const siblings = drafts.filter((_, i) => i !== safeStep).map((d) => ({
       day: d.day, start: d.start, end: d.end, week: d.week,
     }));
-    return findAvailableRooms(data, course, section, current, current.id, effectiveTeacherIds, siblings);
-  }, [data, course, section, current, drafts, effectiveTeacherIds, safeStep]);
+    return findAvailableRooms(data, course, section, current, current.id, effectiveTeacherIds, siblings, showOtherRooms);
+  }, [data, course, section, current, drafts, effectiveTeacherIds, safeStep, showOtherRooms]);
 
   const globalSuggestions = useMemo(() => {
     if (!open || conflicts.length === 0) return [];
     const siblings = drafts.filter((_, i) => i !== safeStep).map((d) => ({
       day: d.day, start: d.start, end: d.end, week: d.week,
     }));
-    return findAllConflictFreeSlots(data, course, section, effectiveTeacherIds, current.id, siblings, current.week);
-  }, [data, course, section, effectiveTeacherIds, current.id, current.week, drafts, safeStep, conflicts.length, open]);
+    return findAllConflictFreeSlots(data, course, section, effectiveTeacherIds, current.id, siblings, current.week, showOtherRooms);
+  }, [data, course, section, effectiveTeacherIds, current.id, current.week, drafts, safeStep, conflicts.length, open, showOtherRooms]);
 
   /** Per-class status used for the stepper indicator */
   const draftStatuses = useMemo(
@@ -674,15 +677,31 @@ export function ClassAssignDialog({
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <Label>{info.roomKind === "sessional" ? "Sessional Room" : "Theory Room"}</Label>
-                  <span className="text-xs text-muted-foreground">{availableRooms.length} available</span>
+                  <div className="flex items-center gap-3">
+                    <label className="flex items-center gap-1.5 text-[11px] text-muted-foreground cursor-pointer select-none">
+                      <Checkbox
+                        checked={showOtherRooms}
+                        onCheckedChange={(v) => setShowOtherRooms(v === true)}
+                        className="h-3.5 w-3.5"
+                      />
+                      Show other departments' rooms
+                    </label>
+                    <span className="text-xs text-muted-foreground">{availableRooms.length} available</span>
+                  </div>
                 </div>
                 <Select value={current.room_id ?? ""} onValueChange={(v) => setCurrent({ room_id: v })}>
                   <SelectTrigger className="w-[320px]">
                     <SelectValue placeholder="Pick a room" />
                   </SelectTrigger>
                   <SelectContent>
-                    {data.rooms
-                      .filter((r) => roomSupportsKind(r.room_type, info.roomKind))
+                    {(() => {
+                      const { allowed, other } = partitionRoomsForCourse(
+                        data.rooms.filter((r) => roomSupportsKind(r.room_type, info.roomKind)),
+                        course,
+                        data.departments,
+                      );
+                      return showOtherRooms ? [...allowed, ...other] : allowed;
+                    })()
                       .map((r) => {
                         const ok = availableRooms.some((ar) => ar.id === r.id);
                         const capOk = r.capacity >= section.total_students;
@@ -749,6 +768,7 @@ export function ClassAssignDialog({
                       section={section}
                       teacherIds={effectiveTeacherIds}
                       day={current.day || "SUN"}
+                      includeOtherDeptRooms={showOtherRooms}
                       currentSlotId={current.id}
                       currentRoomId={current.room_id}
                       currentStart={current.start}
@@ -1048,6 +1068,7 @@ function RoomDayGrid({
   section,
   teacherIds,
   day,
+  includeOtherDeptRooms = false,
   currentSlotId,
   currentRoomId,
   currentStart,
@@ -1060,6 +1081,7 @@ function RoomDayGrid({
   section: Section;
   teacherIds: string[];
   day: string;
+  includeOtherDeptRooms?: boolean;
   currentSlotId?: string;
   currentRoomId?: string | null;
   currentStart?: string;
@@ -1075,6 +1097,7 @@ function RoomDayGrid({
   const rooms = data.rooms
     .filter((r) => roomSupportsKind(r.room_type, info.roomKind))
     .filter((r) => r.capacity >= section.total_students)
+    .filter((r) => includeOtherDeptRooms || roomAllowedForCourse(r, course, data.departments))
     .sort((a, b) => a.name.localeCompare(b.name));
 
   const periods = data.periods

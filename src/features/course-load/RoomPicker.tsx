@@ -3,10 +3,11 @@ import { useStore } from "@/lib/store";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Check, ChevronDown, X, MapPin } from "lucide-react";
+import { Check, ChevronDown, X, MapPin, Eye, EyeOff } from "lucide-react";
 import type { Course, Section } from "@/lib/types";
 import { COURSE_TYPE_INFO } from "@/lib/types";
 import { cn, roomSupportsKind } from "@/lib/utils";
+import { partitionRoomsForCourse } from "@/lib/room-dept";
 
 export function RoomPicker({ course, section }: {
   course: Course; section: Section;
@@ -25,13 +26,14 @@ export function RoomPicker({ course, section }: {
 
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
+  const [showOtherRooms, setShowOtherRooms] = useState(false);
 
   const info = COURSE_TYPE_INFO[course.course_type];
   const setRoom = (rid: string | null) => {
     data.setCourseSectionTeachers(course.id, section.id, teacherIds, rid);
   };
 
-  const list = data.rooms
+  const compatible = data.rooms
     .filter(r => roomSupportsKind(r.room_type, info.roomKind))
     .filter(r => {
       if (!q) return true;
@@ -39,6 +41,11 @@ export function RoomPicker({ course, section }: {
       return r.name.toLowerCase().includes(s);
     })
     .sort((a, b) => a.name.localeCompare(b.name));
+
+  // Department rule: home-dept courses see home rooms; other-dept courses see
+  // home + their own department's rooms. The rest hide behind the toggle.
+  const { allowed, other } = partitionRoomsForCourse(compatible, course, data.departments);
+  const list = showOtherRooms ? [...allowed, ...other] : allowed;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -62,8 +69,17 @@ export function RoomPicker({ course, section }: {
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-64 p-0" align="start">
-        <div className="p-2 border-b">
+        <div className="p-2 border-b space-y-1.5">
           <Input autoFocus placeholder="Search room..." value={q} onChange={(e) => setQ(e.target.value)} className="h-8" />
+          {other.length > 0 && (
+            <button
+              onClick={() => setShowOtherRooms(v => !v)}
+              className="w-full flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {showOtherRooms ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+              {showOtherRooms ? "Hide other departments' rooms" : `Show other departments' rooms (${other.length})`}
+            </button>
+          )}
         </div>
         <div className="max-h-60 overflow-auto">
           {selected && (
