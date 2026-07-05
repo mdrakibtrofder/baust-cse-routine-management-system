@@ -21,6 +21,7 @@ import { Route as LockedClassesRouteImport } from './routes/locked-classes'
 import { Route as GenerateRoutineRouteImport } from './routes/generate-routine'
 import { Route as DepartmentsRouteImport } from './routes/departments'
 import { Route as CoursesRouteImport } from './routes/courses'
+import { Route as ConflictedClassesRouteImport } from './routes/conflicted-classes'
 import { Route as AvailabilityRouteImport } from './routes/availability'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CtScheduleViewRouteImport } from './routes/ct-schedule.view'
@@ -87,6 +88,11 @@ const CoursesRoute = CoursesRouteImport.update({
   path: '/courses',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConflictedClassesRoute = ConflictedClassesRouteImport.update({
+  id: '/conflicted-classes',
+  path: '/conflicted-classes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AvailabilityRoute = AvailabilityRouteImport.update({
   id: '/availability',
   path: '/availability',
@@ -116,6 +122,7 @@ const CtScheduleConfigRoute = CtScheduleConfigRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/availability': typeof AvailabilityRoute
+  '/conflicted-classes': typeof ConflictedClassesRoute
   '/courses': typeof CoursesRoute
   '/departments': typeof DepartmentsRoute
   '/generate-routine': typeof GenerateRoutineRoute
@@ -135,6 +142,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/availability': typeof AvailabilityRoute
+  '/conflicted-classes': typeof ConflictedClassesRoute
   '/courses': typeof CoursesRoute
   '/departments': typeof DepartmentsRoute
   '/generate-routine': typeof GenerateRoutineRoute
@@ -155,6 +163,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/availability': typeof AvailabilityRoute
+  '/conflicted-classes': typeof ConflictedClassesRoute
   '/courses': typeof CoursesRoute
   '/departments': typeof DepartmentsRoute
   '/generate-routine': typeof GenerateRoutineRoute
@@ -176,6 +185,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/availability'
+    | '/conflicted-classes'
     | '/courses'
     | '/departments'
     | '/generate-routine'
@@ -195,6 +205,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/availability'
+    | '/conflicted-classes'
     | '/courses'
     | '/departments'
     | '/generate-routine'
@@ -214,6 +225,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/availability'
+    | '/conflicted-classes'
     | '/courses'
     | '/departments'
     | '/generate-routine'
@@ -234,6 +246,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AvailabilityRoute: typeof AvailabilityRoute
+  ConflictedClassesRoute: typeof ConflictedClassesRoute
   CoursesRoute: typeof CoursesRoute
   DepartmentsRoute: typeof DepartmentsRoute
   GenerateRoutineRoute: typeof GenerateRoutineRoute
@@ -337,6 +350,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CoursesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/conflicted-classes': {
+      id: '/conflicted-classes'
+      path: '/conflicted-classes'
+      fullPath: '/conflicted-classes'
+      preLoaderRoute: typeof ConflictedClassesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/availability': {
       id: '/availability'
       path: '/availability'
@@ -378,6 +398,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AvailabilityRoute: AvailabilityRoute,
+  ConflictedClassesRoute: ConflictedClassesRoute,
   CoursesRoute: CoursesRoute,
   DepartmentsRoute: DepartmentsRoute,
   GenerateRoutineRoute: GenerateRoutineRoute,
