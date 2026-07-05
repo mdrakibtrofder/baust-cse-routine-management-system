@@ -17,6 +17,11 @@ export function LabSectionRoomPicker({ course, labSection }: {
   const data = useStore();
   const selected = data.rooms.find(r => r.id === labSection.primary_room_id);
 
+  // One physical class shared by every mapped section — judge capacity against their combined size
+  const labStudents = labSection.section_ids.reduce(
+    (sum, id) => sum + (data.sections.find(s => s.id === id)?.total_students ?? 0), 0,
+  );
+
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
 
@@ -74,11 +79,15 @@ export function LabSectionRoomPicker({ course, labSection }: {
           )}
           {list.map(r => {
             const isSelected = labSection.primary_room_id === r.id;
+            const capOk = r.capacity >= labStudents;
             return (
               <button
                 key={r.id}
                 onClick={() => { setRoom(r.id); setOpen(false); }}
-                className="w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-muted text-xs"
+                className={cn(
+                  "w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-muted text-xs",
+                  !capOk && "opacity-60"
+                )}
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
@@ -88,6 +97,7 @@ export function LabSectionRoomPicker({ course, labSection }: {
                   </div>
                   <div className="text-[10px] text-muted-foreground flex items-center gap-1.5 mt-0.5">
                     <span>Capacity: {r.capacity}</span>
+                    {!capOk && <Badge variant="destructive" className="text-[8px] py-0 h-3">Small</Badge>}
                   </div>
                 </div>
                 {isSelected && <Check className="h-3.5 w-3.5 text-primary" />}

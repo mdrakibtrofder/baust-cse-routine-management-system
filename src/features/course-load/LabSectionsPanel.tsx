@@ -11,6 +11,7 @@ import { useState, useMemo } from "react";
 import { useStore } from "@/lib/store";
 import type { Course, Section, WeekPattern } from "@/lib/types";
 import { COURSE_TYPE_INFO } from "@/lib/types";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -286,6 +287,11 @@ export function LabSectionsPanel({ course, sections, open, onClose }: Props) {
   const allTeachers = [...data.teachers].sort((a, b) => a.short_name.localeCompare(b.short_name));
   const roomsForKind = data.rooms.filter((r) => roomSupportsKind(r.room_type, info.roomKind));
 
+  /** Students attending this lab section's meetings — one physical class shared by
+   *  every mapped section, so room capacity is judged against their combined size. */
+  const labStudents = (g: LabSectionDraft) =>
+    g.section_ids.reduce((sum, id) => sum + (sections.find((s) => s.id === id)?.total_students ?? 0), 0);
+
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -431,15 +437,23 @@ export function LabSectionsPanel({ course, sections, open, onClose }: Props) {
                   value={g.primary_room_id ?? ""}
                   onValueChange={(v) => updateSection(i, { primary_room_id: v || null })}
                 >
-                  <SelectTrigger className="h-8 text-sm w-[220px]">
-                    <SelectValue placeholder="Select room" />
+                  <SelectTrigger className="h-8 text-sm w-[320px]">
+                    <SelectValue placeholder="Pick a room" />
                   </SelectTrigger>
                   <SelectContent>
-                    {roomsForKind.map((r) => (
-                      <SelectItem key={r.id} value={r.id}>
-                        {r.name}
-                      </SelectItem>
-                    ))}
+                    {roomsForKind.map((r) => {
+                      const capOk = r.capacity >= labStudents(g);
+                      return (
+                        <SelectItem key={r.id} value={r.id}>
+                          <span className="flex items-center gap-2">
+                            <span className="font-mono">{r.name}</span>
+                            <span className="text-xs text-muted-foreground">Capacity {r.capacity}</span>
+                            {!capOk && <Badge variant="destructive" className="text-[10px]">small</Badge>}
+                            {capOk && <Check className="h-3 w-3 text-success" />}
+                          </span>
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>
@@ -487,10 +501,10 @@ export function LabSectionsPanel({ course, sections, open, onClose }: Props) {
                             </div>
                             <div className="grid grid-cols-3 gap-2">
                               <div>
-                                <Label className="text-[10px] text-muted-foreground">Day</Label>
+                                <Label className="text-[10px] text-muted-foreground">Sessional Day</Label>
                                 <Select value={slot.day} onValueChange={(v) => updateSlot(i, si, { day: v })}>
                                   <SelectTrigger className="h-7 text-xs">
-                                    <SelectValue placeholder="Day" />
+                                    <SelectValue placeholder="Select Day" />
                                   </SelectTrigger>
                                   <SelectContent>
                                     {orderedDays.map((d) => (
@@ -502,7 +516,7 @@ export function LabSectionsPanel({ course, sections, open, onClose }: Props) {
                                 </Select>
                               </div>
                               <div>
-                                <Label className="text-[10px] text-muted-foreground">Timeslot</Label>
+                                <Label className="text-[10px] text-muted-foreground">Sessional Timeslot</Label>
                                 <Select
                                   value={matchedPeriodId}
                                   onValueChange={(id) => {
@@ -516,24 +530,42 @@ export function LabSectionsPanel({ course, sections, open, onClose }: Props) {
                                   <SelectContent>
                                     {applicablePeriods.map((p) => (
                                       <SelectItem key={p.id} value={p.id}>
-                                        {fmtRange12(p.start, p.end)}
+                                        {fmtRange12(p.start, p.end)} ({p.duration % 60 === 0 ? `${p.duration / 60}h` : `${p.duration}m`})
                                       </SelectItem>
                                     ))}
                                   </SelectContent>
                                 </Select>
                               </div>
                               <div>
-                                <Label className="text-[10px] text-muted-foreground">Room</Label>
+                                <Label className="text-[10px] text-muted-foreground">Sessional Room</Label>
                                 <Select value={slot.room_id} onValueChange={(v) => updateSlot(i, si, { room_id: v })}>
                                   <SelectTrigger className="h-7 text-xs">
-                                    <SelectValue placeholder="Room" />
+                                    <SelectValue placeholder="Pick a room" />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    {roomsForKind.map((r) => (
-                                      <SelectItem key={r.id} value={r.id}>
-                                        {r.name}
-                                      </SelectItem>
-                                    ))}
+                                    {roomsForKind.map((r) => {
+                                      const capOk = r.capacity >= labStudents(g);
+                                      const booked = data.class_slots.some((cs) =>
+                                        cs.semester_id === data.active_semester_id &&
+                                        cs.day === slot.day &&
+                                        cs.room_id === r.id &&
+                                        !(g.id && cs.lab_section_id === g.id) &&
+                                        timesOverlap(cs.start, cs.end, slot.start, slot.end),
+                                      );
+                                      const unavail = !!roomUnavailableAt(data, r.id, { day: slot.day, start: slot.start, end: slot.end });
+                                      return (
+                                        <SelectItem key={r.id} value={r.id}>
+                                          <span className="flex items-center gap-2">
+                                            <span className="font-mono">{r.name}</span>
+                                            <span className="text-xs text-muted-foreground">Capacity {r.capacity}</span>
+                                            {!capOk && <Badge variant="destructive" className="text-[10px]">small</Badge>}
+                                            {booked && <Badge variant="destructive" className="text-[10px]">booked</Badge>}
+                                            {!booked && unavail && <Badge variant="outline" className="text-[10px]">unavailable</Badge>}
+                                            {capOk && !booked && !unavail && <Check className="h-3 w-3 text-success" />}
+                                          </span>
+                                        </SelectItem>
+                                      );
+                                    })}
                                   </SelectContent>
                                 </Select>
                               </div>

@@ -3,7 +3,7 @@ import { useStore } from "@/lib/store";
 import { PageHeader } from "@/components/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, AlertCircle, Check, Users, FlaskConical, GitMerge } from "lucide-react";
+import { Calendar, AlertCircle, Check, Users, FlaskConical, GitMerge, MapPin } from "lucide-react";
 import { cn, compareDayAndTime, fmtRange12, tagColorClasses } from "@/lib/utils";
 import type { Course, Section, Department } from "@/lib/types";
 import { COURSE_TYPE_INFO } from "@/lib/types";
@@ -338,6 +338,8 @@ function SectionCell({ course, section, sections, onAssign, onManageLabSections,
       g.section_ids.includes(section.id),
   );
   if (labSections.length > 0) {
+    // Same per-lab-section limit the LabSectionsPanel enforces
+    const maxSlotsPerLab = course.credit === 1.5 ? 1 : Math.ceil(course.credit / 3);
     return (
       <td className="px-3 py-2 border-l align-top">
         <div className="space-y-2">
@@ -345,8 +347,17 @@ function SectionCell({ course, section, sections, onAssign, onManageLabSections,
             const gSlots = data.class_slots
               .filter((s) => s.lab_section_id === g.id)
               .sort(compareDayAndTime);
+            const primaryRoom = data.rooms.find((r) => r.id === g.primary_room_id);
+            const complete = gSlots.length >= maxSlotsPerLab && gSlots.every((s) => s.room_id);
             return (
-              <div key={g.id} className="rounded-md border border-purple-200 bg-purple-50/40 px-2 py-1.5 space-y-1">
+              <button
+                key={g.id}
+                onClick={onManageLabSections}
+                className={cn(
+                  "w-full text-left rounded-md border px-2 py-1.5 space-y-1 transition-colors hover:border-primary",
+                  complete ? "border-success/50 bg-success/5" : "border-purple-200 bg-purple-50/40",
+                )}
+              >
                 <div className="flex items-center justify-between gap-1">
                   <span className="flex items-center gap-1 text-[10px] font-bold text-purple-700 uppercase">
                     <FlaskConical className="h-2.5 w-2.5" /> {g.label}
@@ -363,7 +374,15 @@ function SectionCell({ course, section, sections, onAssign, onManageLabSections,
                   </div>
                 </div>
                 {gSlots.length === 0 ? (
-                  <div className="text-[10px] text-muted-foreground">No schedule yet</div>
+                  <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                    <Calendar className="h-3 w-3" />
+                    <span>No schedule yet</span>
+                    {primaryRoom && (
+                      <Badge variant="outline" className="text-[9px] px-1 py-0 h-3.5 gap-0.5">
+                        <MapPin className="h-2.5 w-2.5 text-orange-500" /> {primaryRoom.name}
+                      </Badge>
+                    )}
+                  </div>
                 ) : (
                   gSlots.map((slot) => {
                     const room = data.rooms.find((r) => r.id === slot.room_id);
@@ -371,12 +390,20 @@ function SectionCell({ course, section, sections, onAssign, onManageLabSections,
                       <div key={slot.id} className="flex items-center gap-1 font-mono text-[10px]">
                         <span className="font-semibold">{slot.day}</span>
                         <span>{fmtRange12(slot.start, slot.end)}</span>
-                        {room && <Badge variant="outline" className="text-[9px] px-1 py-0 h-3.5">{room.name}</Badge>}
+                        {room ? <Badge variant="outline" className="text-[9px] px-1 py-0 h-3.5">{room.name}</Badge> :
+                          <span className="text-destructive">no room</span>}
                       </div>
                     );
                   })
                 )}
-              </div>
+                <div className="flex items-center gap-1 pt-0.5 text-[10px]">
+                  {complete ? (
+                    <span className="flex items-center gap-1 text-success"><Check className="h-3 w-3" /> Completed</span>
+                  ) : (
+                    <span className="text-warning">{gSlots.length}/{maxSlotsPerLab} classes</span>
+                  )}
+                </div>
+              </button>
             );
           })}
           <Button variant="outline" size="sm" className="w-full h-6 text-[10px] gap-1" onClick={onManageLabSections}>
