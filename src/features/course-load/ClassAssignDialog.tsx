@@ -668,7 +668,10 @@ export function ClassAssignDialog({
                     <SelectContent>
                       <SelectItem value="EVEN">Even weeks</SelectItem>
                       <SelectItem value="ODD">Odd weeks</SelectItem>
-                      <SelectItem value="EVERY">Every week</SelectItem>
+                      {/* Don't show "Every week" for sessional_0.75 */}
+                      {course.course_type !== "sessional_0.75" && (
+                        <SelectItem value="EVERY">Every week</SelectItem>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -1162,6 +1165,19 @@ function RoomDayGrid({
     });
   }
 
+  /** Check if there's a booking on the opposite week and return it */
+  function getOppositeWeekBooking(roomId: string, p: { start: string; end: string }) {
+    const oppositeWeek: WeekPattern = week === "EVEN" ? "ODD" : "EVEN";
+    return data.class_slots.find((slot) => {
+      if (slot.id === currentSlotId) return false;
+      if (slot.room_id !== roomId) return false;
+      if (slot.day !== day) return false;
+      if (!timesOverlap(slot.start, slot.end, p.start, p.end)) return false;
+      // Check if the slot overlaps with opposite week (i.e., slot is EVERY or opposite week)
+      return weeksOverlap(slot.week, oppositeWeek);
+    });
+  }
+
   async function handlePick(roomId: string, p: { start: string; end: string }, issues: string[]) {
     if (issues.length === 0) {
       onPick(roomId, p.start, p.end);
@@ -1187,7 +1203,8 @@ function RoomDayGrid({
     if (ok) onPick(roomId, p.start, p.end);
   }
 
-  function toneFor(n: number) {
+  function toneFor(n: number, isPartial: boolean) {
+    if (n <= 0 && isPartial) return "bg-yellow-200/70 hover:bg-yellow-300/70 border-yellow-300 text-yellow-900 dark:bg-yellow-950/40 dark:text-yellow-100";
     if (n <= 0) return "bg-success/10 hover:bg-success/25 border-success/30 text-success";
     if (n === 1) return "bg-red-200/70 hover:bg-red-300/70 border-red-300 text-red-900 dark:bg-red-950/40 dark:text-red-100";
     if (n === 2) return "bg-red-400/70 hover:bg-red-500/70 border-red-500 text-red-950 dark:text-red-50";
@@ -1244,6 +1261,7 @@ function RoomDayGrid({
                 const teacherBusy = status?.busy;
                 const teacherUnavail = status?.unavailable;
                 const booking = findBooking(r.id, p);
+                const oppositeBooking = getOppositeWeekBooking(r.id, p);
                 const dup = siblingDuplicate(p);
                 const roomUnavail = roomUnavailableAt(data, r.id, { day, start: p.start, end: p.end });
                 const isCurrent =
@@ -1271,15 +1289,29 @@ function RoomDayGrid({
                 const conflictCount =
                   (booking ? 1 : 0) + (teacherBusy ? 1 : 0) + (teacherUnavail ? 1 : 0) +
                   (roomUnavail ? 1 : 0) + (dup ? 1 : 0);
-                const tone = toneFor(conflictCount);
+                const isPartial = conflictCount === 0 && !!oppositeBooking;
+                const tone = toneFor(conflictCount, isPartial);
                 const bookedCourse = booking ? data.courses.find((c) => c.id === booking.course_id) : null;
                 const bookedSec = booking ? data.sections.find((s) => s.id === booking.section_id) : null;
+                const oppositeCourse = oppositeBooking ? data.courses.find((c) => c.id === oppositeBooking.course_id) : null;
+                const oppositeSection = oppositeBooking ? data.sections.find((s) => s.id === oppositeBooking.section_id) : null;
 
                 let inner: React.ReactNode;
                 if (conflictCount === 0) {
                   inner = (
-                    <div className={cn("w-full h-full min-h-[44px] flex items-center justify-center rounded border px-1.5 py-1.5 text-[10px] font-black transition uppercase", tone)}>
-                      Free
+                    <div className={cn("w-full h-full min-h-[44px] rounded border px-1.5 py-1.5 text-[10px] font-black transition uppercase flex flex-col items-center justify-center", tone)}>
+                      {isPartial ? (
+                        <>
+                          <div>Available on {week} Weeks</div>
+                          {oppositeCourse && oppositeSection && (
+                            <div className="text-[8px] font-normal mt-1">
+                              {oppositeCourse.code} at {oppositeSection.level}-{oppositeSection.term} Section {oppositeSection.name} on {oppositeBooking.week} Weeks
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        "Free"
+                      )}
                     </div>
                   );
                 } else {
@@ -1309,6 +1341,12 @@ function RoomDayGrid({
                   );
                 }
 
+                const buttonTitle = isPartial
+                  ? `Available on ${week} Weeks — click to select`
+                  : issues.length > 0
+                  ? issues.join(" · ")
+                  : "Free — click to select";
+
                 return (
                   <td key={p.id} className="border-r p-1 w-[180px] min-w-[180px] max-w-[180px] align-top">
                     <button
@@ -1318,7 +1356,7 @@ function RoomDayGrid({
                         "block w-full h-full text-left rounded transition-all hover:scale-[0.98]",
                         isCurrent && "ring-2 ring-primary ring-offset-1 ring-offset-background shadow-lg",
                       )}
-                      title={issues.length > 0 ? issues.join(" · ") : "Free — click to select"}
+                      title={buttonTitle}
                     >
                       {inner}
                     </button>
