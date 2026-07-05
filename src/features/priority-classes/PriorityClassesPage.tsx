@@ -9,12 +9,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2, Calendar, MapPin, Clock, BookOpen, Building2, AlertTriangle, ShieldCheck } from "lucide-react";
+import { Plus, Trash2, Edit2, Calendar, MapPin, Clock, BookOpen, Building2, AlertTriangle, ShieldCheck } from "lucide-react";
 import { cn, fmtRange12 } from "@/lib/utils";
 import { HOME_DEPT_SHORT_NAME } from "@/lib/constants";
 import { toast } from "sonner";
 import type { PriorityClass, Course, Room, Period } from "@/lib/types";
 import { roomAllowedForHomeDept } from "@/lib/room-dept";
+import { useConfirm } from "@/components/ConfirmDialog";
+
 
 const STEPS = [
   "Department",
@@ -29,6 +31,9 @@ export function PriorityClassesPage() {
   const data = useStore();
   const [isOpen, setIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  const confirm = useConfirm();
 
   // Form State
   const [deptId, setDeptId] = useState("");
@@ -91,6 +96,7 @@ export function PriorityClassesPage() {
   }, [data.priority_classes, data.active_semester_id]);
 
   const handleOpen = () => {
+    setEditingId(null);
     setIsOpen(true);
     setCurrentStep(0);
     if (cseDept) setDeptId(cseDept.id);
@@ -102,6 +108,24 @@ export function PriorityClassesPage() {
     setSelectedPeriods([]);
     setSelectedDays([]);
     setShowOtherRooms(false);
+  };
+
+  const handleEdit = (item: PriorityClass) => {
+    setEditingId(item.id);
+    setDeptId(item.department_id);
+    setLevel(String(item.level));
+    setTerm(item.term);
+    setSectionId(item.section_id);
+    setSelectedCourseIds(item.course_ids || []);
+    setSelectedRoomIds(item.room_ids || []);
+
+    const matchedPeriods = data.periods.filter((p) =>
+      item.time_slots?.some((ts) => ts.start === p.start && ts.end === p.end)
+    );
+    setSelectedPeriods(matchedPeriods);
+    setSelectedDays(item.days || []);
+    setCurrentStep(0);
+    setIsOpen(true);
   };
 
   const validateStep = () => {
@@ -171,8 +195,13 @@ export function PriorityClassesPage() {
         days: selectedDays,
       };
 
-      await data.addPriorityClass(payload);
-      toast.success("Priority Class configuration saved successfully!");
+      if (editingId) {
+        await data.updatePriorityClass(editingId, payload);
+        toast.success("Priority Class configuration updated successfully!");
+      } else {
+        await data.addPriorityClass(payload);
+        toast.success("Priority Class configuration saved successfully!");
+      }
       setIsOpen(false);
     } catch (error: any) {
       toast.error(error.message || "Failed to save Priority Class");
@@ -180,12 +209,20 @@ export function PriorityClassesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this Priority Class entry?")) {
+    const ok = await confirm({
+      title: "Delete Priority Class",
+      description: "Are you sure you want to delete this priority class?",
+      confirmLabel: "Delete",
+      cancelLabel: "Cancel",
+      destructive: true,
+    });
+
+    if (ok) {
       try {
         await data.deletePriorityClass(id);
-        toast.success("Priority Class configuration deleted.");
+        toast.success("Priority Class configuration deleted successfully.");
       } catch (error: any) {
-        toast.error(error.message || "Failed to delete");
+        toast.error(error.message || "Failed to delete Priority Class");
       }
     }
   };
@@ -303,14 +340,24 @@ export function PriorityClassesPage() {
                         )}
                       </TableCell>
                       <TableCell className="text-right align-middle">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(item.id)}
-                          className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <div className="flex justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEdit(item)}
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(item.id)}
+                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
@@ -325,7 +372,9 @@ export function PriorityClassesPage() {
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto z-50 shadow-2xl border bg-card">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Configure Priority Class Settings</DialogTitle>
+            <DialogTitle className="text-xl font-bold">
+              {editingId ? "Edit Priority Class Settings" : "Configure Priority Class Settings"}
+            </DialogTitle>
           </DialogHeader>
 
           {/* Stepper Timeline at the Top */}
