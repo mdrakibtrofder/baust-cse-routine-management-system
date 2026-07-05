@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <!-- Broken ring built from colored arc segments (cyan -> teal -> blue) -->
+  <g stroke-width="56" stroke-linecap="round" fill="none">
+    <path d="M307.3 397.0 A150 150 0 0 1 115.05 204.7" stroke="#29ABE2"/>
+    <path d="M115.05 204.7 A150 150 0 0 1 229.95 108.28" stroke="#1AA090"/>
+    <path d="M229.95 108.28 A150 150 0 0 1 385.9 181.0" stroke="#2E63C4"/>
+    <path d="M385.9 181.0 A150 150 0 0 1 405.4 269.07" stroke="#2B2F91"/>
+  </g>
+  <!-- Navy checkmark in the lower-right gap -->
+  <path d="M330 298 L354 328 L410 262" stroke="#1A237E" stroke-width="34"
+        stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>
