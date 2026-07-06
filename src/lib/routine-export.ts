@@ -242,170 +242,7 @@ export function buildRoutineMatrix(data: AppData, scope: RoutineScope) {
   return { header, rows, periods: theoryPeriods, days, slots };
 }
 
-/* =============== EXCEL =============== */
-export function exportRoutineExcel(data: AppData, scope: RoutineScope) {
-  const info = getScopeInfo(data, scope);
-  const { header, rows } = buildRoutineMatrix(data, scope);
 
-  const aoa: (string | number)[][] = [];
-  aoa.push([info.title]);
-  aoa.push([]);
-  for (const m of info.meta) aoa.push([m.label, m.value]);
-  aoa.push([]);
-  aoa.push(header);
-  for (const r of rows) {
-    aoa.push(r.map(c => c === "SKIP" ? "" : c));
-  }
-
-  // Add course summary
-  aoa.push([]);
-  aoa.push(["Course Load Summary"]);
-  aoa.push(["Course Code", "Course Title", "Theory", "Sessional", "Credit", "Classes/Week"]);
-  const summary = buildRoutineCourseSummary(data, scope);
-  for (const row of summary.rows) {
-    aoa.push([
-      row.course.code,
-      row.course.name,
-      Number(row.theory),
-      Number(row.sessional),
-      Number(row.credit),
-      row.meetings
-    ]);
-  }
-  aoa.push([
-    "TOTAL",
-    "",
-    Number(summary.totals.theory),
-    Number(summary.totals.sessional),
-    Number(summary.totals.credit),
-    summary.totals.meetings
-  ]);
-
-  // Add teacher details
-  aoa.push([]);
-  aoa.push(["Teacher Details"]);
-  aoa.push(["Short Form", "Teachers Name", "Designation"]);
-  const teacherSummary = buildRoutineTeacherSummary(data, scope);
-  for (const row of teacherSummary) {
-    aoa.push([
-      row.teacher.short_name,
-      row.teacher.name,
-      row.teacher.department ? `${row.teacher.designation}, ${row.teacher.department}` : row.teacher.designation,
-    ]);
-  }
-
-  const ws = XLSX.utils.aoa_to_sheet(aoa);
-  ws["!cols"] = header.map(() => ({ wch: 24 }));
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Routine");
-  XLSX.writeFile(wb, `${info.slug}.xlsx`);
-}
-
-/* =============== PDF =============== */
-export function exportRoutinePdf(data: AppData, scope: RoutineScope) {
-  const info = getScopeInfo(data, scope);
-  const { header, rows } = buildRoutineMatrix(data, scope);
-  const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
-
-  doc.setFontSize(16);
-  doc.setFont("helvetica", "bold");
-  doc.text(info.title, 40, 32);
-
-  // Metadata block
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  let y = 50;
-  for (const m of info.meta) {
-    doc.setFont("helvetica", "bold");
-    doc.text(`${m.label}:`, 40, y);
-    doc.setFont("helvetica", "normal");
-    doc.text(String(m.value), 140, y);
-    y += 14;
-  }
-  const startY = y + 6;
-
-  // Handle cell merging for PDF
-  const body = rows.map(r => r.map(c => ({ content: c, colSpan: 1 })));
-  for (let r = 0; r < body.length; r++) {
-    for (let c = 1; c < body[r].length; c++) {
-      if (body[r][c].content === "SKIP") {
-        let prev = c - 1;
-        while (prev >= 1 && body[r][prev].content === "SKIP") prev--;
-        body[r][prev].colSpan++;
-      }
-    }
-  }
-  const finalBody = body.map(r => r.filter(c => c.content !== "SKIP").map(c => {
-    if (c.content === "BREAK") return { content: "BREAK", styles: { fillColor: [254, 243, 199], fontStyle: "bold", halign: "center" } };
-    return c;
-  }));
-
-  autoTable(doc, {
-    head: [header],
-    body: finalBody as any,
-    startY,
-    styles: { fontSize: 7, cellPadding: 3, valign: "top", halign: "left", overflow: "linebreak" },
-    headStyles: { fillColor: [30, 58, 138], textColor: 255, fontStyle: "bold", halign: "center" },
-    columnStyles: { 0: { fontStyle: "bold", fillColor: [219, 234, 254], cellWidth: 60 } },
-    theme: "grid",
-  });
-
-  // Add Course Summary table
-  const summary = buildRoutineCourseSummary(data, scope);
-  doc.addPage();
-  doc.setFontSize(14);
-  doc.setFont("helvetica", "bold");
-  doc.text("Course Load Summary", 40, 40);
-
-  autoTable(doc, {
-    startY: 60,
-    head: [["Course Code", "Course Title", "Theory", "Sessional", "Credit", "Classes/Week"]],
-    body: [
-      ...summary.rows.map(r => [
-        r.course.code,
-        r.course.name,
-        Number(r.theory).toFixed(2),
-        Number(r.sessional).toFixed(2),
-        Number(r.credit).toFixed(2),
-        r.meetings
-      ]),
-      [
-        { content: "TOTAL", colSpan: 2, styles: { fontStyle: "bold", halign: "right" } },
-        Number(summary.totals.theory).toFixed(2),
-        Number(summary.totals.sessional).toFixed(2),
-        Number(summary.totals.credit).toFixed(2),
-        summary.totals.meetings
-      ]
-    ],
-    styles: { fontSize: 8, cellPadding: 4 },
-    headStyles: { fillColor: [30, 58, 138], textColor: 255, fontStyle: "bold" },
-    theme: "grid",
-  });
-
-  // Add Teacher Details table
-  const teacherSummary = buildRoutineTeacherSummary(data, scope);
-  if (teacherSummary.length > 0) {
-    doc.addPage();
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text("Teacher Details", 40, 40);
-
-    autoTable(doc, {
-      startY: 60,
-      head: [["Short Form", "Teachers Name", "Designation"]],
-      body: teacherSummary.map((r) => [
-        r.teacher.short_name,
-        r.teacher.name,
-        r.teacher.department ? `${r.teacher.designation}, ${r.teacher.department}` : r.teacher.designation,
-      ]),
-      styles: { fontSize: 8, cellPadding: 4 },
-      headStyles: { fillColor: [30, 58, 138], textColor: 255, fontStyle: "bold" },
-      theme: "grid",
-    });
-  }
-
-  doc.save(`${info.slug}.pdf`);
-}
 
 /* =============== DOCX =============== */
 /* =============== DOCX =============== */
@@ -860,7 +697,6 @@ export async function exportRoutineDocx(data: AppData, scope: RoutineScope) {
 export async function exportAllRoutinesDocxZip(data: AppData) {
   const zip = new JSZip();
 
-  // 1. Export all Sections
   const sectionsFolder = zip.folder("Sections");
   for (const s of data.sections) {
     const scope: RoutineScope = { kind: "section", section_id: s.id };
@@ -870,7 +706,6 @@ export async function exportAllRoutinesDocxZip(data: AppData) {
     sectionsFolder?.file(`${info.slug}.docx`, blob);
   }
 
-  // 2. Export all Teachers
   const teachersFolder = zip.folder("Teachers");
   for (const t of data.teachers) {
     const scope: RoutineScope = { kind: "teacher", teacher_id: t.id };
@@ -880,7 +715,6 @@ export async function exportAllRoutinesDocxZip(data: AppData) {
     teachersFolder?.file(`${info.slug}.docx`, blob);
   }
 
-  // 3. Export all Rooms
   const roomsFolder = zip.folder("Rooms");
   for (const r of data.rooms) {
     const scope: RoutineScope = { kind: "room", room_id: r.id };
@@ -895,7 +729,7 @@ export async function exportAllRoutinesDocxZip(data: AppData) {
 }
 
 /* =============== JSON =============== */
-export function exportRoutineJson(data: AppData, scope: RoutineScope) {
+export function getRoutineJsonPayload(data: AppData, scope: RoutineScope) {
   const info = getScopeInfo(data, scope);
   const { slots, periods, days } = buildRoutineMatrix(data, scope);
 
@@ -903,16 +737,26 @@ export function exportRoutineJson(data: AppData, scope: RoutineScope) {
     const c = data.courses.find((x) => x.id === s.course_id);
     const sec = data.sections.find((x) => x.id === s.section_id);
     const room = data.rooms.find((x) => x.id === s.room_id);
-    const cst = data.course_section_teachers.find(
-      (x) =>
-        x.semester_id === data.active_semester_id &&
-        x.course_id === s.course_id &&
-        x.section_id === s.section_id,
-    );
-    const teachers = (cst?.teacher_ids ?? [])
+    
+    let teacherIds: string[] = [];
+    if (s.lab_section_id) {
+      const ls = data.course_lab_sections.find((x) => x.id === s.lab_section_id);
+      teacherIds = ls?.teacher_ids ?? [];
+    } else {
+      const cst = data.course_section_teachers.find(
+        (x) =>
+          x.semester_id === data.active_semester_id &&
+          x.course_id === s.course_id &&
+          x.section_id === s.section_id,
+      );
+      teacherIds = cst?.teacher_ids ?? [];
+    }
+
+    const teachers = teacherIds
       .map((tid) => data.teachers.find((t) => t.id === tid))
       .filter(Boolean)
       .map((t: any) => ({ short_name: t.short_name, name: t.name, designation: t.designation }));
+
     return {
       day: s.day,
       start: s.start,
@@ -932,7 +776,7 @@ export function exportRoutineJson(data: AppData, scope: RoutineScope) {
     department: r.teacher.department,
   }));
 
-  const payload = {
+  return {
     title: info.title,
     metadata: Object.fromEntries(info.meta.map((m) => [m.label, m.value])),
     periods: periods.map((p) => ({ name: p.name, start: p.start, end: p.end, kind: p.kind })),
@@ -940,13 +784,279 @@ export function exportRoutineJson(data: AppData, scope: RoutineScope) {
     classes: detailedSlots,
     teacher_details: teacherSummary,
   };
+}
 
+export function exportRoutineJson(data: AppData, scope: RoutineScope) {
+  const info = getScopeInfo(data, scope);
+  const payload = getRoutineJsonPayload(data, scope);
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
   saveAs(blob, `${info.slug}.json`);
 }
 
+export async function exportAllRoutinesJsonZip(data: AppData) {
+  const zip = new JSZip();
+
+  const sectionsFolder = zip.folder("Sections");
+  for (const s of data.sections) {
+    const scope: RoutineScope = { kind: "section", section_id: s.id };
+    const info = getScopeInfo(data, scope);
+    const payload = getRoutineJsonPayload(data, scope);
+    sectionsFolder?.file(`${info.slug}.json`, JSON.stringify(payload, null, 2));
+  }
+
+  const teachersFolder = zip.folder("Teachers");
+  for (const t of data.teachers) {
+    const scope: RoutineScope = { kind: "teacher", teacher_id: t.id };
+    const info = getScopeInfo(data, scope);
+    const payload = getRoutineJsonPayload(data, scope);
+    teachersFolder?.file(`${info.slug}.json`, JSON.stringify(payload, null, 2));
+  }
+
+  const roomsFolder = zip.folder("Rooms");
+  for (const r of data.rooms) {
+    const scope: RoutineScope = { kind: "room", room_id: r.id };
+    const info = getScopeInfo(data, scope);
+    const payload = getRoutineJsonPayload(data, scope);
+    roomsFolder?.file(`${info.slug}.json`, JSON.stringify(payload, null, 2));
+  }
+
+  const content = await zip.generateAsync({ type: "blob" });
+  saveAs(content, "All_Routines_JSON.zip");
+}
+
+/* =============== EXCEL =============== */
+function getExcelBuffer(data: AppData, scope: RoutineScope): ArrayBuffer {
+  const { header, rows } = buildRoutineMatrix(data, scope);
+  const info = getScopeInfo(data, scope);
+  const aoa: (string | number)[][] = [];
+  aoa.push([info.title]);
+  aoa.push([]);
+  for (const m of info.meta) aoa.push([m.label, m.value]);
+  aoa.push([]);
+  aoa.push(header);
+  for (const r of rows) {
+    aoa.push(r.map(c => c === "SKIP" ? "" : c));
+  }
+
+  aoa.push([]);
+  aoa.push(["Course Load Summary"]);
+  aoa.push(["Course Code", "Course Title", "Theory", "Sessional", "Credit", "Classes/Week"]);
+  const summary = buildRoutineCourseSummary(data, scope);
+  for (const row of summary.rows) {
+    aoa.push([
+      row.course.code,
+      row.course.name,
+      Number(row.theory),
+      Number(row.sessional),
+      Number(row.credit),
+      row.meetings
+    ]);
+  }
+  aoa.push([
+    "TOTAL",
+    "",
+    Number(summary.totals.theory),
+    Number(summary.totals.sessional),
+    Number(summary.totals.credit),
+    summary.totals.meetings
+  ]);
+
+  aoa.push([]);
+  aoa.push(["Teacher Details"]);
+  aoa.push(["Short Form", "Teachers Name", "Designation"]);
+  const teacherSummary = buildRoutineTeacherSummary(data, scope);
+  for (const row of teacherSummary) {
+    aoa.push([
+      row.teacher.short_name,
+      row.teacher.name,
+      row.teacher.department ? `${row.teacher.designation}, ${row.teacher.department}` : row.teacher.designation,
+    ]);
+  }
+
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws["!cols"] = header.map(() => ({ wch: 24 }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Routine");
+  const buf = XLSX.write(wb, { type: "array", bookType: "xlsx" });
+  return buf;
+}
+
+export function exportRoutineExcel(data: AppData, scope: RoutineScope) {
+  const info = getScopeInfo(data, scope);
+  const buf = getExcelBuffer(data, scope);
+  const blob = new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  saveAs(blob, `${info.slug}.xlsx`);
+}
+
+export async function exportAllRoutinesExcelZip(data: AppData) {
+  const zip = new JSZip();
+
+  const sectionsFolder = zip.folder("Sections");
+  for (const s of data.sections) {
+    const scope: RoutineScope = { kind: "section", section_id: s.id };
+    const info = getScopeInfo(data, scope);
+    sectionsFolder?.file(`${info.slug}.xlsx`, getExcelBuffer(data, scope));
+  }
+
+  const teachersFolder = zip.folder("Teachers");
+  for (const t of data.teachers) {
+    const scope: RoutineScope = { kind: "teacher", teacher_id: t.id };
+    const info = getScopeInfo(data, scope);
+    teachersFolder?.file(`${info.slug}.xlsx`, getExcelBuffer(data, scope));
+  }
+
+  const roomsFolder = zip.folder("Rooms");
+  for (const r of data.rooms) {
+    const scope: RoutineScope = { kind: "room", room_id: r.id };
+    const info = getScopeInfo(data, scope);
+    roomsFolder?.file(`${info.slug}.xlsx`, getExcelBuffer(data, scope));
+  }
+
+  const content = await zip.generateAsync({ type: "blob" });
+  saveAs(content, "All_Routines_Excel.zip");
+}
+
+/* =============== PDF =============== */
+export function buildRoutinePdfDocument(data: AppData, scope: RoutineScope): jsPDF {
+  const info = getScopeInfo(data, scope);
+  const { header, rows } = buildRoutineMatrix(data, scope);
+  const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+
+  doc.setFontSize(16);
+  doc.setFont("helvetica", "bold");
+  doc.text(info.title, 40, 32);
+
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  let y = 50;
+  for (const m of info.meta) {
+    doc.setFont("helvetica", "bold");
+    doc.text(`${m.label}:`, 40, y);
+    doc.setFont("helvetica", "normal");
+    doc.text(String(m.value), 140, y);
+    y += 14;
+  }
+  const startY = y + 6;
+
+  const body = rows.map(r => r.map(c => ({ content: c, colSpan: 1 })));
+  for (let r = 0; r < body.length; r++) {
+    for (let c = 1; c < body[r].length; c++) {
+      if (body[r][c].content === "SKIP") {
+        let prev = c - 1;
+        while (prev >= 1 && body[r][prev].content === "SKIP") prev--;
+        body[r][prev].colSpan++;
+      }
+    }
+  }
+  const finalBody = body.map(r => r.filter(c => c.content !== "SKIP").map(c => {
+    if (c.content === "BREAK") return { content: "BREAK", styles: { fillColor: [254, 243, 199], fontStyle: "bold", halign: "center" } };
+    return c;
+  }));
+
+  autoTable(doc, {
+    head: [header],
+    body: finalBody as any,
+    startY,
+    styles: { fontSize: 7, cellPadding: 3, valign: "top", halign: "left", overflow: "linebreak" },
+    headStyles: { fillColor: [30, 58, 138], textColor: 255, fontStyle: "bold", halign: "center" },
+    columnStyles: { 0: { fontStyle: "bold", fillColor: [219, 234, 254], cellWidth: 60 } },
+    theme: "grid",
+  });
+
+  const summary = buildRoutineCourseSummary(data, scope);
+  doc.addPage();
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "bold");
+  doc.text("Course Load Summary", 40, 40);
+
+  autoTable(doc, {
+    startY: 60,
+    head: [["Course Code", "Course Title", "Theory", "Sessional", "Credit", "Classes/Week"]],
+    body: [
+      ...summary.rows.map(r => [
+        r.course.code,
+        r.course.name,
+        Number(r.theory).toFixed(2),
+        Number(r.sessional).toFixed(2),
+        Number(r.credit).toFixed(2),
+        r.meetings
+      ]),
+      [
+        { content: "TOTAL", colSpan: 2, styles: { fontStyle: "bold", halign: "right" } },
+        Number(summary.totals.theory).toFixed(2),
+        Number(summary.totals.sessional).toFixed(2),
+        Number(summary.totals.credit).toFixed(2),
+        summary.totals.meetings
+      ]
+    ],
+    styles: { fontSize: 8, cellPadding: 4 },
+    headStyles: { fillColor: [30, 58, 138], textColor: 255, fontStyle: "bold" },
+    theme: "grid",
+  });
+
+  const teacherSummary = buildRoutineTeacherSummary(data, scope);
+  if (teacherSummary.length > 0) {
+    doc.addPage();
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Teacher Details", 40, 40);
+
+    autoTable(doc, {
+      startY: 60,
+      head: [["Short Form", "Teachers Name", "Designation"]],
+      body: teacherSummary.map((r) => [
+        r.teacher.short_name,
+        r.teacher.name,
+        r.teacher.department ? `${r.teacher.designation}, ${r.teacher.department}` : r.teacher.designation,
+      ]),
+      styles: { fontSize: 8, cellPadding: 4 },
+      headStyles: { fillColor: [30, 58, 138], textColor: 255, fontStyle: "bold" },
+      theme: "grid",
+    });
+  }
+
+  return doc;
+}
+
+export function exportRoutinePdf(data: AppData, scope: RoutineScope) {
+  const info = getScopeInfo(data, scope);
+  const doc = buildRoutinePdfDocument(data, scope);
+  doc.save(`${info.slug}.pdf`);
+}
+
+export async function exportAllRoutinesPdfZip(data: AppData) {
+  const zip = new JSZip();
+
+  const sectionsFolder = zip.folder("Sections");
+  for (const s of data.sections) {
+    const scope: RoutineScope = { kind: "section", section_id: s.id };
+    const info = getScopeInfo(data, scope);
+    const doc = buildRoutinePdfDocument(data, scope);
+    sectionsFolder?.file(`${info.slug}.pdf`, doc.output("arraybuffer"));
+  }
+
+  const teachersFolder = zip.folder("Teachers");
+  for (const t of data.teachers) {
+    const scope: RoutineScope = { kind: "teacher", teacher_id: t.id };
+    const info = getScopeInfo(data, scope);
+    const doc = buildRoutinePdfDocument(data, scope);
+    teachersFolder?.file(`${info.slug}.pdf`, doc.output("arraybuffer"));
+  }
+
+  const roomsFolder = zip.folder("Rooms");
+  for (const r of data.rooms) {
+    const scope: RoutineScope = { kind: "room", room_id: r.id };
+    const info = getScopeInfo(data, scope);
+    const doc = buildRoutinePdfDocument(data, scope);
+    roomsFolder?.file(`${info.slug}.pdf`, doc.output("arraybuffer"));
+  }
+
+  const content = await zip.generateAsync({ type: "blob" });
+  saveAs(content, "All_Routines_PDF.zip");
+}
+
 /* =============== IMAGE (PNG via canvas) =============== */
-export function exportRoutineImage(data: AppData, scope: RoutineScope) {
+export function buildRoutineCanvas(data: AppData, scope: RoutineScope): HTMLCanvasElement {
   const info = getScopeInfo(data, scope);
   const { header, rows } = buildRoutineMatrix(data, scope);
   const teacherSummary = buildRoutineTeacherSummary(data, scope);
@@ -961,7 +1071,6 @@ export function exportRoutineImage(data: AppData, scope: RoutineScope) {
   const cellH = 90;
   const headerH = 44;
 
-  // Teacher Details table dimensions (rendered below the routine grid)
   const tCols = [120, 260, 320];
   const tHeaderH = 30;
   const tRowH = 26;
@@ -972,23 +1081,18 @@ export function exportRoutineImage(data: AppData, scope: RoutineScope) {
   const H = padding * 2 + titleH + metaH + headerH + rowsCount * cellH + tSectionH;
 
   const canvas = document.createElement("canvas");
-  const dpr = window.devicePixelRatio || 1;
-  canvas.width = Math.floor(W * dpr);
-  canvas.height = Math.floor(H * dpr);
+  canvas.width = W;
+  canvas.height = H;
   const ctx = canvas.getContext("2d")!;
-  ctx.scale(dpr, dpr);
 
-  // Background
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, W, H);
 
-  // Title
   ctx.fillStyle = "#0f172a";
   ctx.font = "bold 22px Arial, sans-serif";
   ctx.textBaseline = "top";
   ctx.fillText(info.title, padding, padding);
 
-  // Metadata
   let y = padding + titleH;
   ctx.font = "12px Arial, sans-serif";
   for (const m of info.meta) {
@@ -1002,7 +1106,6 @@ export function exportRoutineImage(data: AppData, scope: RoutineScope) {
   }
   if (info.meta.length) y += 16;
 
-  // Header row
   const tableX = padding;
   let tableY = y;
   ctx.fillStyle = "#2563eb";
@@ -1015,7 +1118,6 @@ export function exportRoutineImage(data: AppData, scope: RoutineScope) {
   }
   tableY += headerH;
 
-  // Body rows
   ctx.textAlign = "left";
   for (let r = 0; r < rowsCount; r++) {
     for (let c = 0; c < cols; c++) {
@@ -1033,15 +1135,12 @@ export function exportRoutineImage(data: AppData, scope: RoutineScope) {
       const yy = tableY + r * cellH;
       const currentCellW = cellW * colSpan;
 
-      // Cell background
       const isDay = c === 0;
       ctx.fillStyle = isDay ? "#dbeafe" : (content === "BREAK" ? "#fef3c7" : "#ffffff");
       ctx.fillRect(x, yy, currentCellW, cellH);
-      // Border
       ctx.strokeStyle = "#cbd5e1";
       ctx.lineWidth = 1;
       ctx.strokeRect(x + 0.5, yy + 0.5, currentCellW - 1, cellH - 1);
-      // Text
       ctx.fillStyle = "#0f172a";
       ctx.font = isDay ? "bold 13px Arial, sans-serif" : "11px Arial, sans-serif";
       const lines = String(content).split("\n");
@@ -1054,7 +1153,6 @@ export function exportRoutineImage(data: AppData, scope: RoutineScope) {
     }
   }
 
-  // Teacher Details table
   if (teacherSummary.length > 0) {
     let ty = tableY + rowsCount * cellH + 36;
     ctx.fillStyle = "#0f172a";
@@ -1063,7 +1161,6 @@ export function exportRoutineImage(data: AppData, scope: RoutineScope) {
     ctx.fillText("Teacher Details", tableX, ty);
     ty += 24;
 
-    // Header row
     ctx.fillStyle = "#2563eb";
     ctx.fillRect(tableX, ty, tTableW, tHeaderH);
     ctx.fillStyle = "#ffffff";
@@ -1099,7 +1196,69 @@ export function exportRoutineImage(data: AppData, scope: RoutineScope) {
     }
   }
 
-  canvas.toBlob((blob) => {
-    if (blob) saveAs(blob, `${info.slug}.png`);
-  }, "image/png");
+  return canvas;
+}
+
+export function exportRoutineImage(data: AppData, scope: RoutineScope) {
+  const info = getScopeInfo(data, scope);
+  const canvas = buildRoutineCanvas(data, scope);
+  const dpr = window.devicePixelRatio || 1;
+  if (dpr > 1) {
+    const W = canvas.width;
+    const H = canvas.height;
+    const highCanvas = document.createElement("canvas");
+    highCanvas.width = W * dpr;
+    highCanvas.height = H * dpr;
+    const hctx = highCanvas.getContext("2d")!;
+    hctx.scale(dpr, dpr);
+    hctx.drawImage(canvas, 0, 0);
+    highCanvas.toBlob((blob) => {
+      if (blob) saveAs(blob, `${info.slug}.png`);
+    }, "image/png");
+  } else {
+    canvas.toBlob((blob) => {
+      if (blob) saveAs(blob, `${info.slug}.png`);
+    }, "image/png");
+  }
+}
+
+export async function exportAllRoutinesImageZip(data: AppData) {
+  const zip = new JSZip();
+
+  const getCanvasBlob = (scope: RoutineScope): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      const canvas = buildRoutineCanvas(data, scope);
+      canvas.toBlob((b) => {
+        if (b) resolve(b);
+        else reject(new Error("Canvas toBlob failed"));
+      }, "image/png");
+    });
+  };
+
+  const sectionsFolder = zip.folder("Sections");
+  for (const s of data.sections) {
+    const scope: RoutineScope = { kind: "section", section_id: s.id };
+    const info = getScopeInfo(data, scope);
+    const blob = await getCanvasBlob(scope);
+    sectionsFolder?.file(`${info.slug}.png`, blob);
+  }
+
+  const teachersFolder = zip.folder("Teachers");
+  for (const t of data.teachers) {
+    const scope: RoutineScope = { kind: "teacher", teacher_id: t.id };
+    const info = getScopeInfo(data, scope);
+    const blob = await getCanvasBlob(scope);
+    teachersFolder?.file(`${info.slug}.png`, blob);
+  }
+
+  const roomsFolder = zip.folder("Rooms");
+  for (const r of data.rooms) {
+    const scope: RoutineScope = { kind: "room", room_id: r.id };
+    const info = getScopeInfo(data, scope);
+    const blob = await getCanvasBlob(scope);
+    roomsFolder?.file(`${info.slug}.png`, blob);
+  }
+
+  const content = await zip.generateAsync({ type: "blob" });
+  saveAs(content, "All_Routines_Image.zip");
 }

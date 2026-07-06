@@ -203,10 +203,7 @@ export function RoutineView({
             onClick={async () => { try { await exportRoutineDocx(data, scope); } catch (e: any) { toast.error(e.message); } }}>
             <FileType className="h-3.5 w-3.5 mr-1" /> DOCX
           </Button>
-          <Button size="sm" variant="outline" className="h-7 text-xs bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-950/20 dark:border-indigo-900/50 dark:text-indigo-400"
-            onClick={async () => { try { await exportAllRoutinesDocxZip(data); } catch (e: any) { toast.error(e.message); } }}>
-            <Archive className="h-3.5 w-3.5 mr-1" /> Export All (ZIP)
-          </Button>
+
           <Button size="sm" variant="outline" className="h-7 text-xs"
             onClick={() => { try { exportRoutineJson(data, scope); } catch (e: any) { toast.error(e.message); } }}>
             <FileJson className="h-3.5 w-3.5 mr-1" /> JSON

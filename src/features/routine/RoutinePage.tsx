@@ -4,9 +4,24 @@ import { PageHeader } from "@/components/PageHeader";
 import { RoutineView, type RoutineScope } from "@/components/RoutineView";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
-import { Filter, Users, DoorOpen, Boxes, Eye, EyeOff } from "lucide-react";
+import { Filter, Users, DoorOpen, Boxes, Eye, EyeOff, Archive, ChevronDown, FileType, FileText, FileSpreadsheet, Image as ImageIcon, FileJson } from "lucide-react";
 import { HOME_DEPT_SHORT_NAME } from "@/lib/constants";
 import { roomDeptShort } from "@/lib/room-dept";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  exportAllRoutinesDocxZip,
+  exportAllRoutinesPdfZip,
+  exportAllRoutinesExcelZip,
+  exportAllRoutinesImageZip,
+  exportAllRoutinesJsonZip,
+} from "@/lib/routine-export";
+import { toast } from "sonner";
 
 type Mode = "teacher" | "room" | "section";
 
@@ -200,8 +215,108 @@ export function RoutinePage() {
       <PageHeader title="Routine View" subtitle="Class routine grouped by teacher, room, or section" />
       <div className="p-4 sm:p-6 space-y-4">
         <div className="rounded-xl border bg-card p-4 space-y-3">
-          <div className="flex items-center gap-2 text-sm font-semibold">
-            <Filter className="h-4 w-4 text-primary" /> View by
+          <div className="flex items-center justify-between gap-2 text-sm font-semibold flex-wrap">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-primary" /> View by
+            </div>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  size="sm" 
+                  className="bg-gradient-to-r from-violet-600 via-indigo-600 to-blue-600 hover:from-violet-700 hover:via-indigo-700 hover:to-blue-700 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-300 border-none h-8 text-xs px-3.5 rounded-lg flex items-center gap-1.5 active:scale-95 cursor-pointer"
+                >
+                  <Archive className="h-3.5 w-3.5" />
+                  <span>Export All Routines</span>
+                  <ChevronDown className="h-3 w-3 opacity-80" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 p-1.5 rounded-xl border bg-card/95 backdrop-blur-md shadow-lg">
+                <div className="px-2 py-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                  Select Format (Bulk Zip)
+                </div>
+                
+                <DropdownMenuItem 
+                  className="rounded-lg gap-2 cursor-pointer text-xs py-2 hover:bg-indigo-50 hover:text-indigo-900 dark:hover:bg-indigo-950/40"
+                  onClick={async () => {
+                    const t = toast.loading("Generating DOCX zip archive...");
+                    try {
+                      await exportAllRoutinesDocxZip(data);
+                      toast.success("DOCX zip downloaded successfully", { id: t });
+                    } catch (e: any) {
+                      toast.error(e.message, { id: t });
+                    }
+                  }}
+                >
+                  <FileType className="h-3.5 w-3.5 text-blue-500" />
+                  <span>Word (.docx)</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem 
+                  className="rounded-lg gap-2 cursor-pointer text-xs py-2 hover:bg-indigo-50 hover:text-indigo-900 dark:hover:bg-indigo-950/40"
+                  onClick={async () => {
+                    const t = toast.loading("Generating PDF zip archive...");
+                    try {
+                      await exportAllRoutinesPdfZip(data);
+                      toast.success("PDF zip downloaded successfully", { id: t });
+                    } catch (e: any) {
+                      toast.error(e.message, { id: t });
+                    }
+                  }}
+                >
+                  <FileText className="h-3.5 w-3.5 text-rose-500" />
+                  <span>Adobe PDF (.pdf)</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem 
+                  className="rounded-lg gap-2 cursor-pointer text-xs py-2 hover:bg-indigo-50 hover:text-indigo-900 dark:hover:bg-indigo-950/40"
+                  onClick={async () => {
+                    const t = toast.loading("Generating Excel zip archive...");
+                    try {
+                      await exportAllRoutinesExcelZip(data);
+                      toast.success("Excel zip downloaded successfully", { id: t });
+                    } catch (e: any) {
+                      toast.error(e.message, { id: t });
+                    }
+                  }}
+                >
+                  <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-500" />
+                  <span>Excel Spreadsheet (.xlsx)</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem 
+                  className="rounded-lg gap-2 cursor-pointer text-xs py-2 hover:bg-indigo-50 hover:text-indigo-900 dark:hover:bg-indigo-950/40"
+                  onClick={async () => {
+                    const t = toast.loading("Generating Image zip archive...");
+                    try {
+                      await exportAllRoutinesImageZip(data);
+                      toast.success("Image zip downloaded successfully", { id: t });
+                    } catch (e: any) {
+                      toast.error(e.message, { id: t });
+                    }
+                  }}
+                >
+                  <ImageIcon className="h-3.5 w-3.5 text-purple-500" />
+                  <span>Images (.png)</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem 
+                  className="rounded-lg gap-2 cursor-pointer text-xs py-2 hover:bg-indigo-50 hover:text-indigo-900 dark:hover:bg-indigo-950/40"
+                  onClick={async () => {
+                    const t = toast.loading("Generating JSON zip archive...");
+                    try {
+                      await exportAllRoutinesJsonZip(data);
+                      toast.success("JSON zip downloaded successfully", { id: t });
+                    } catch (e: any) {
+                      toast.error(e.message, { id: t });
+                    }
+                  }}
+                >
+                  <FileJson className="h-3.5 w-3.5 text-amber-500" />
+                  <span>Data JSON (.json)</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
           <Tabs value={mode} onValueChange={(v) => setMode(v as Mode)}>
             <TabsList>
