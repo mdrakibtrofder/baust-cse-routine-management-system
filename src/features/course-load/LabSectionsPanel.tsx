@@ -385,8 +385,9 @@ export function LabSectionsPanel({ course, sections, open, onClose }: Props) {
   const activeCohortStudents = useMemo(() => {
     if (!activeSection) return 0;
     const cohort = sections.filter((s) => activeSection.section_ids.includes(s.id));
-    return cohort.reduce((sum, s) => sum + s.total_students, 0);
-  }, [activeSection, sections]);
+    const total = cohort.reduce((sum, s) => sum + s.total_students, 0);
+    return drafts.length > 0 ? Math.ceil(total / drafts.length) : total;
+  }, [activeSection, sections, drafts.length]);
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -737,7 +738,7 @@ export function LabSectionsPanel({ course, sections, open, onClose }: Props) {
                                   <SelectItem key={r.id} value={r.id} className="text-xs">
                                     <span className="flex items-center gap-1.5">
                                       <span className="font-mono">{r.name}</span>
-                                      <span className="text-[10px] text-muted-foreground">Cap {r.capacity}</span>
+                                      <span className="text-[10px] text-muted-foreground">Cap {r.capacity} (per-lab: {activeCohortStudents})</span>
                                       {!capOk && <Badge variant="destructive" className="text-[8px] py-0 h-3">small</Badge>}
                                       {isBooked && <Badge variant="destructive" className="text-[8px] py-0 h-3">booked</Badge>}
                                     </span>
@@ -1075,7 +1076,7 @@ function RoomDayGrid({
             <tr key={r.id} className="border-b hover:bg-muted/30 transition-colors">
               <td className={cn("sticky left-0 z-10 px-2 py-2 border-r w-[100px] min-w-[100px] max-w-[100px] bg-muted font-medium shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]", currentRoomId === r.id && "bg-primary/10")}>
                 <div className="font-mono font-semibold">{r.name}</div>
-                <div className="text-[10px] text-muted-foreground">Capacity {r.capacity}</div>
+                <div className="text-[10px] text-muted-foreground">Capacity {r.capacity} (per-lab: {totalStudents})</div>
               </td>
               {periods.map((p) => {
                 const status = teacherStatusByPeriod.get(p.id);
