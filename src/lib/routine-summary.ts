@@ -91,13 +91,25 @@ export function buildRoutineCourseSummary(
   for (const [cid, meetings] of courseMeetings.entries()) {
     const c = data.courses.find((x) => x.id === cid);
     if (!c) continue;
-    const theory = Number(c.theory || 0);
-    const sessional = Number(c.sessional || 0);
+
+    let numberOfSections = 1;
+    if (scope.kind === "teacher") {
+      const uniqueKeys = new Set<string>();
+      const courseSlots = slots.filter((s) => s.course_id === cid);
+      for (const s of courseSlots) {
+        const key = s.lab_section_id || s.section_id;
+        if (key) uniqueKeys.add(key);
+      }
+      numberOfSections = uniqueKeys.size || 1;
+    }
+
+    const theory = Number(c.theory || 0) * numberOfSections;
+    const sessional = Number(c.sessional || 0) * numberOfSections;
+
     rows.push({
       course: c,
       theory,
       sessional,
-      // Credit hours = theory hours + 2 * sessional hours
       credit: theory + 2 * sessional,
       meetings,
     });

@@ -57,7 +57,7 @@ export function getScopeInfo(data: AppData, scope: RoutineScope) {
         { label: "Short Name", value: t.short_name },
         { label: "Designation", value: t.designation },
         { label: "Department", value: t.department },
-        { label: "Total Credit", value: Number(t.assigned_credit_hours).toFixed(2) },
+        { label: "Total Credit", value: (Number(t.assigned_credit_hours) || 0).toFixed(2) },
       ],
     };
   }
@@ -305,6 +305,15 @@ function createCell(width: number, options: CellOptions): TableCell {
   });
 }
 
+function formatCredit(val: number | string | undefined | null): string {
+  const n = Number(val) || 0;
+  if (n === 0) return "";
+  if (n % 1 !== 0) {
+    return n.toFixed(2);
+  }
+  return n.toFixed(1);
+}
+
 export function buildRoutineDocxDocument(data: AppData, scope: RoutineScope): Document {
   const info = getScopeInfo(data, scope);
   const { header, rows } = buildRoutineMatrix(data, scope);
@@ -426,7 +435,7 @@ export function buildRoutineDocxDocument(data: AppData, scope: RoutineScope): Do
     const tShort = t ? t.short_name : "";
     const designation = t ? t.designation : "";
     const dept = t ? (t.department || "CSE") : "CSE";
-    const contactHours = t ? Number(t.assigned_credit_hours).toFixed(1) : "0.0";
+    const contactHours = t ? formatCredit(t.assigned_credit_hours) : "0.0";
     
     const widths0 = [1713, 7833];
     table0 = new Table({
@@ -472,7 +481,7 @@ export function buildRoutineDocxDocument(data: AppData, scope: RoutineScope): Do
       return createCell(colWidths[i], {
         text: displayHeader,
         bold: true,
-        fill: "D9D9D9",
+        fill: "F1F5F9",
         size: 24, // 12pt
       });
     }),
@@ -527,7 +536,7 @@ export function buildRoutineDocxDocument(data: AppData, scope: RoutineScope): Do
           text,
           bold,
           size,
-          fill: isDay ? "D9D9D9" : undefined,
+          fill: isDay ? "F8FAFC" : undefined,
           colSpan,
         }));
       }
@@ -552,7 +561,8 @@ export function buildRoutineDocxDocument(data: AppData, scope: RoutineScope): Do
         text: "COURSES",
         bold: true,
         size: 24, // 12pt
-        fill: "8EAADB",
+        fill: "4F46E5",
+        color: "FFFFFF",
         colSpan: 5,
       }),
     ],
@@ -560,20 +570,20 @@ export function buildRoutineDocxDocument(data: AppData, scope: RoutineScope): Do
 
   const summaryHeaderRow1 = new TableRow({
     children: [
-      createCell(widths2[0], { text: "Course No.", bold: true, fill: "D5DCE4" }),
-      createCell(widths2[1], { text: "Course Title", bold: true, fill: "D5DCE4" }),
-      createCell(widths2[2] + widths2[3], { text: "Hours/Week", bold: true, fill: "D5DCE4", colSpan: 2 }),
-      createCell(widths2[4], { text: "Credit / Hours", bold: true, fill: "D5DCE4" }),
+      createCell(widths2[0], { text: "Course No.", bold: true, fill: "E0E7FF" }),
+      createCell(widths2[1], { text: "Course Title", bold: true, fill: "E0E7FF" }),
+      createCell(widths2[2] + widths2[3], { text: "Hours/Week", bold: true, fill: "E0E7FF", colSpan: 2 }),
+      createCell(widths2[4], { text: "Credit / Hours", bold: true, fill: "E0E7FF" }),
     ],
   });
 
   const summaryHeaderRow2 = new TableRow({
     children: [
-      createCell(widths2[0], { text: "Course No.", bold: true, fill: "D5DCE4" }),
-      createCell(widths2[1], { text: "Course Title", bold: true, fill: "D5DCE4" }),
-      createCell(widths2[2], { text: "Theory", bold: true, fill: "D5DCE4" }),
-      createCell(widths2[3], { text: "Sessional", bold: true, fill: "D5DCE4" }),
-      createCell(widths2[4], { text: "Credit / Hours", bold: true, fill: "D5DCE4" }),
+      createCell(widths2[0], { text: "Course No.", bold: true, fill: "E0E7FF" }),
+      createCell(widths2[1], { text: "Course Title", bold: true, fill: "E0E7FF" }),
+      createCell(widths2[2], { text: "Theory", bold: true, fill: "E0E7FF" }),
+      createCell(widths2[3], { text: "Sessional", bold: true, fill: "E0E7FF" }),
+      createCell(widths2[4], { text: "Credit / Hours", bold: true, fill: "E0E7FF" }),
     ],
   });
 
@@ -582,9 +592,9 @@ export function buildRoutineDocxDocument(data: AppData, scope: RoutineScope): Do
       children: [
         createCell(widths2[0], { text: r.course.code, size: 18 }),
         createCell(widths2[1], { text: r.course.name, size: 18, align: AlignmentType.LEFT }),
-        createCell(widths2[2], { text: r.theory > 0 ? Number(r.theory).toFixed(1) : "", size: 18 }),
-        createCell(widths2[3], { text: r.sessional > 0 ? Number(r.sessional).toFixed(1) : "", size: 18 }),
-        createCell(widths2[4], { text: Number(r.credit).toFixed(1), size: 18 }),
+        createCell(widths2[2], { text: formatCredit(r.theory), size: 18 }),
+        createCell(widths2[3], { text: formatCredit(r.sessional), size: 18 }),
+        createCell(widths2[4], { text: formatCredit(r.credit), size: 18 }),
       ],
     });
   });
@@ -593,9 +603,9 @@ export function buildRoutineDocxDocument(data: AppData, scope: RoutineScope): Do
     children: [
       createCell(widths2[0], { text: "" }),
       createCell(widths2[1], { text: "Total:", bold: true, size: 18, align: AlignmentType.RIGHT }),
-      createCell(widths2[2], { text: Number(summary.totals.theory).toFixed(1), bold: true, size: 18 }),
-      createCell(widths2[3], { text: Number(summary.totals.sessional).toFixed(1), bold: true, size: 18 }),
-      createCell(widths2[4], { text: Number(summary.totals.credit).toFixed(1), bold: true, size: 18 }),
+      createCell(widths2[2], { text: formatCredit(summary.totals.theory), bold: true, size: 18 }),
+      createCell(widths2[3], { text: formatCredit(summary.totals.sessional), bold: true, size: 18 }),
+      createCell(widths2[4], { text: formatCredit(summary.totals.credit), bold: true, size: 18 }),
     ],
   });
 
@@ -612,9 +622,9 @@ export function buildRoutineDocxDocument(data: AppData, scope: RoutineScope): Do
 
   const teacherHeaderRow = new TableRow({
     children: [
-      createCell(widths3[0], { text: "Short Form", bold: true, size: 20, fill: "8EAADB" }),
-      createCell(widths3[1], { text: "Teachers Name", bold: true, size: 20, fill: "8EAADB" }),
-      createCell(widths3[2], { text: "Designation", bold: true, size: 20, fill: "8EAADB" }),
+      createCell(widths3[0], { text: "Short Form", bold: true, size: 20, fill: "4F46E5", color: "FFFFFF" }),
+      createCell(widths3[1], { text: "Teachers Name", bold: true, size: 20, fill: "4F46E5", color: "FFFFFF" }),
+      createCell(widths3[2], { text: "Designation", bold: true, size: 20, fill: "4F46E5", color: "FFFFFF" }),
     ],
   });
 
@@ -728,9 +738,66 @@ export async function exportAllRoutinesDocxZip(data: AppData) {
   saveAs(content, "All_Routines_Docx.zip");
 }
 
+/* =============== SYNCHRONIZATION HELPERS =============== */
+export interface RoutineHeaderAndMeta {
+  lines: string[];
+  metadata: { label: string; value: string }[];
+}
+
+export function getRoutineHeaderAndMeta(data: AppData, scope: RoutineScope): RoutineHeaderAndMeta {
+  const semName = data.semesters.find(s => s.id === data.active_semester_id)?.name || "Winter-2026";
+  const lines: string[] = [];
+  const metadata: { label: string; value: string }[] = [];
+
+  if (scope.kind === "section") {
+    const sec = data.sections.find(x => x.id === scope.section_id);
+    const levelTermStr = sec ? `${sec.level}-${sec.term}` : "";
+    const secName = sec ? sec.name : "";
+    
+    lines.push("Bangladesh Army University of Science and Technology (BAUST), Saidpur");
+    lines.push("Department of Computer Science and Engineering (CSE)");
+    lines.push(`Batchwise Class Routine, ${semName}`);
+
+    metadata.push({ label: "Level-Term", value: levelTermStr });
+    metadata.push({ label: "Section", value: secName });
+    metadata.push({ label: "Batch Advisor", value: "" });
+    metadata.push({ label: "DPC/G2", value: "Md. Zahim Hassan (01736393334)" });
+  } else if (scope.kind === "room") {
+    const r = data.rooms.find(x => x.id === scope.room_id);
+    const roomName = r ? r.name : "";
+
+    lines.push("Bangladesh Army University of Science and Technology (BAUST)");
+    lines.push("Department of Computer Science and Engineering");
+    lines.push(`Room-wise Class Routine for ${semName}`);
+
+    metadata.push({ label: "Room No", value: roomName });
+  } else if (scope.kind === "teacher") {
+    const t = data.teachers.find(x => x.id === scope.teacher_id);
+    const tName = t ? t.name : "";
+    const tShort = t ? t.short_name : "";
+    const designation = t ? t.designation : "";
+    const dept = t ? (t.department || "CSE") : "CSE";
+    const contactHours = t ? formatCredit(t.assigned_credit_hours) : "0.0";
+
+    lines.push("Bangladesh Army University of Science and Technology (BAUST)");
+    lines.push("Department of Computer Science and Engineering");
+    lines.push(`Individual Class Routine & Course Load for ${semName}`);
+
+    metadata.push({ label: "Teacher Name", value: `${tName} (${tShort})` });
+    metadata.push({ label: "Designation", value: `${designation}, ${dept}` });
+    metadata.push({ label: "Contact Hour", value: contactHours });
+  } else {
+    lines.push("Bangladesh Army University of Science and Technology (BAUST)");
+    lines.push("Department of Computer Science and Engineering");
+    lines.push(`Class Routine, ${semName}`);
+  }
+
+  return { lines, metadata };
+}
+
 /* =============== JSON =============== */
 export function getRoutineJsonPayload(data: AppData, scope: RoutineScope) {
-  const info = getScopeInfo(data, scope);
+  const sync = getRoutineHeaderAndMeta(data, scope);
   const { slots, periods, days } = buildRoutineMatrix(data, scope);
 
   const detailedSlots = slots.map((s) => {
@@ -776,12 +843,31 @@ export function getRoutineJsonPayload(data: AppData, scope: RoutineScope) {
     department: r.teacher.department,
   }));
 
+  const courseSummary = buildRoutineCourseSummary(data, scope);
+  const formattedCourses = courseSummary.rows.map((r) => ({
+    code: r.course.code,
+    title: r.course.name,
+    theory: formatCredit(r.theory),
+    sessional: formatCredit(r.sessional),
+    credit: formatCredit(r.credit),
+    meetings: r.meetings,
+  }));
+
   return {
-    title: info.title,
-    metadata: Object.fromEntries(info.meta.map((m) => [m.label, m.value])),
+    title_lines: sync.lines,
+    metadata: Object.fromEntries(sync.metadata.map((m) => [m.label, m.value])),
     periods: periods.map((p) => ({ name: p.name, start: p.start, end: p.end, kind: p.kind })),
     days: days.map((d) => d.name),
     classes: detailedSlots,
+    course_summary: {
+      rows: formattedCourses,
+      totals: {
+        theory: formatCredit(courseSummary.totals.theory),
+        sessional: formatCredit(courseSummary.totals.sessional),
+        credit: formatCredit(courseSummary.totals.credit),
+        meetings: courseSummary.totals.meetings,
+      }
+    },
     teacher_details: teacherSummary,
   };
 }
@@ -827,11 +913,16 @@ export async function exportAllRoutinesJsonZip(data: AppData) {
 /* =============== EXCEL =============== */
 function getExcelBuffer(data: AppData, scope: RoutineScope): ArrayBuffer {
   const { header, rows } = buildRoutineMatrix(data, scope);
-  const info = getScopeInfo(data, scope);
+  const sync = getRoutineHeaderAndMeta(data, scope);
   const aoa: (string | number)[][] = [];
-  aoa.push([info.title]);
+  
+  for (const line of sync.lines) {
+    aoa.push([line]);
+  }
   aoa.push([]);
-  for (const m of info.meta) aoa.push([m.label, m.value]);
+  for (const m of sync.metadata) {
+    aoa.push([m.label, m.value]);
+  }
   aoa.push([]);
   aoa.push(header);
   for (const r of rows) {
@@ -840,24 +931,24 @@ function getExcelBuffer(data: AppData, scope: RoutineScope): ArrayBuffer {
 
   aoa.push([]);
   aoa.push(["Course Load Summary"]);
-  aoa.push(["Course Code", "Course Title", "Theory", "Sessional", "Credit", "Classes/Week"]);
+  aoa.push(["Course Code", "Course Title", "Theory", "Sessional", "Credit / Hours", "Classes/Week"]);
   const summary = buildRoutineCourseSummary(data, scope);
   for (const row of summary.rows) {
     aoa.push([
       row.course.code,
       row.course.name,
-      Number(row.theory),
-      Number(row.sessional),
-      Number(row.credit),
+      formatCredit(row.theory),
+      formatCredit(row.sessional),
+      formatCredit(row.credit),
       row.meetings
     ]);
   }
   aoa.push([
     "TOTAL",
     "",
-    Number(summary.totals.theory),
-    Number(summary.totals.sessional),
-    Number(summary.totals.credit),
+    formatCredit(summary.totals.theory),
+    formatCredit(summary.totals.sessional),
+    formatCredit(summary.totals.credit),
     summary.totals.meetings
   ]);
 
@@ -918,25 +1009,30 @@ export async function exportAllRoutinesExcelZip(data: AppData) {
 
 /* =============== PDF =============== */
 export function buildRoutinePdfDocument(data: AppData, scope: RoutineScope): jsPDF {
-  const info = getScopeInfo(data, scope);
+  const sync = getRoutineHeaderAndMeta(data, scope);
   const { header, rows } = buildRoutineMatrix(data, scope);
   const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
 
-  doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
-  doc.text(info.title, 40, 32);
+  doc.setFontSize(14);
+  let currentY = 32;
+  for (const line of sync.lines) {
+    const textWidth = doc.getTextWidth(line);
+    const x = (842 - textWidth) / 2;
+    doc.text(line, x, currentY);
+    currentY += 18;
+  }
+  currentY += 8;
 
   doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  let y = 50;
-  for (const m of info.meta) {
+  for (const m of sync.metadata) {
     doc.setFont("helvetica", "bold");
-    doc.text(`${m.label}:`, 40, y);
+    doc.text(`${m.label}:`, 40, currentY);
     doc.setFont("helvetica", "normal");
-    doc.text(String(m.value), 140, y);
-    y += 14;
+    doc.text(String(m.value), 140, currentY);
+    currentY += 14;
   }
-  const startY = y + 6;
+  const startY = currentY + 6;
 
   const body = rows.map(r => r.map(c => ({ content: c, colSpan: 1 })));
   for (let r = 0; r < body.length; r++) {
@@ -971,21 +1067,21 @@ export function buildRoutinePdfDocument(data: AppData, scope: RoutineScope): jsP
 
   autoTable(doc, {
     startY: 60,
-    head: [["Course Code", "Course Title", "Theory", "Sessional", "Credit", "Classes/Week"]],
+    head: [["Course Code", "Course Title", "Theory", "Sessional", "Credit / Hours", "Classes/Week"]],
     body: [
       ...summary.rows.map(r => [
         r.course.code,
         r.course.name,
-        Number(r.theory).toFixed(2),
-        Number(r.sessional).toFixed(2),
-        Number(r.credit).toFixed(2),
+        formatCredit(r.theory),
+        formatCredit(r.sessional),
+        formatCredit(r.credit),
         r.meetings
       ]),
       [
         { content: "TOTAL", colSpan: 2, styles: { fontStyle: "bold", halign: "right" } },
-        Number(summary.totals.theory).toFixed(2),
-        Number(summary.totals.sessional).toFixed(2),
-        Number(summary.totals.credit).toFixed(2),
+        formatCredit(summary.totals.theory),
+        formatCredit(summary.totals.sessional),
+        formatCredit(summary.totals.credit),
         summary.totals.meetings
       ]
     ],
@@ -1057,16 +1153,17 @@ export async function exportAllRoutinesPdfZip(data: AppData) {
 
 /* =============== IMAGE (PNG via canvas) =============== */
 export function buildRoutineCanvas(data: AppData, scope: RoutineScope): HTMLCanvasElement {
-  const info = getScopeInfo(data, scope);
+  const sync = getRoutineHeaderAndMeta(data, scope);
   const { header, rows } = buildRoutineMatrix(data, scope);
   const teacherSummary = buildRoutineTeacherSummary(data, scope);
 
   const cols = header.length;
   const rowsCount = rows.length;
   const padding = 32;
-  const titleH = 40;
-  const metaLineH = 18;
-  const metaH = info.meta.length * metaLineH + (info.meta.length ? 16 : 0);
+  
+  const titleH = sync.lines.length * 24 + 12;
+  const metaH = sync.metadata.length * 18 + (sync.metadata.length ? 16 : 0);
+  
   const cellW = 170;
   const cellH = 90;
   const headerH = 44;
@@ -1089,25 +1186,31 @@ export function buildRoutineCanvas(data: AppData, scope: RoutineScope): HTMLCanv
   ctx.fillRect(0, 0, W, H);
 
   ctx.fillStyle = "#0f172a";
-  ctx.font = "bold 22px Arial, sans-serif";
+  ctx.font = "bold 20px Arial, sans-serif";
   ctx.textBaseline = "top";
-  ctx.fillText(info.title, padding, padding);
+  ctx.textAlign = "center";
+  
+  let currentY = padding;
+  for (const line of sync.lines) {
+    ctx.fillText(line, W / 2, currentY);
+    currentY += 24;
+  }
+  currentY += 12;
 
-  let y = padding + titleH;
-  ctx.font = "12px Arial, sans-serif";
-  for (const m of info.meta) {
+  ctx.textAlign = "left";
+  for (const m of sync.metadata) {
     ctx.fillStyle = "#475569";
     ctx.font = "bold 12px Arial, sans-serif";
-    ctx.fillText(`${m.label}:`, padding, y);
+    ctx.fillText(`${m.label}:`, padding, currentY);
     ctx.fillStyle = "#0f172a";
     ctx.font = "12px Arial, sans-serif";
-    ctx.fillText(String(m.value), padding + 110, y);
-    y += metaLineH;
+    ctx.fillText(String(m.value), padding + 110, currentY);
+    currentY += 18;
   }
-  if (info.meta.length) y += 16;
+  if (sync.metadata.length) currentY += 16;
 
   const tableX = padding;
-  let tableY = y;
+  let tableY = currentY;
   ctx.fillStyle = "#2563eb";
   ctx.fillRect(tableX, tableY, cols * cellW, headerH);
   ctx.fillStyle = "#ffffff";
