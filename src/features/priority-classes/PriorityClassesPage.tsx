@@ -383,6 +383,11 @@ export function PriorityClassesPage() {
     }
 
     try {
+      const dept = data.departments.find(d => d.id === deptId);
+      const section = data.sections.find(s => s.id === sectionId);
+      const deptShortName = dept?.short_name || "Dept";
+      const sectionName = section?.name || "Sec";
+      
       const payload = {
         semester_id: data.active_semester_id,
         department_id: deptId,
@@ -396,12 +401,14 @@ export function PriorityClassesPage() {
         days: selectedDays,
       };
 
+      const messageBase = `Priority Class for ${deptShortName} Level ${level} Term ${term} Section ${sectionName}`;
+
       if (editingId) {
         await data.updatePriorityClass(editingId, payload);
-        toast.success("Priority Class configuration updated successfully!");
+        toast.success(`${messageBase} updated successfully!`);
       } else {
         await data.addPriorityClass(payload);
-        toast.success("Priority Class configuration saved successfully!");
+        toast.success(`${messageBase} saved successfully!`);
       }
       setIsOpen(false);
     } catch (error: any) {
