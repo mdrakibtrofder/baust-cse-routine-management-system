@@ -138,9 +138,11 @@ export function checkConflicts(input: ConflictCheckInput): Conflict[] {
       const otherCourse = data.courses.find((c) => c.id === slot.course_id);
       const otherSec = data.sections.find((s) => s.id === slot.section_id);
       const room = data.rooms.find((r) => r.id === candidate.room_id);
+      const courseLabel = otherCourse ? `${otherCourse.code} - ${otherCourse.name}` : "Sessional";
+      const sectionLabel = otherSec ? `Level ${otherSec.level} Term ${otherSec.term} Sec ${otherSec.name}` : "Lab";
       conflicts.push({
         type: "room_double",
-        message: `Room ${room?.name} already booked ${slot.day} ${fmtRange12(slot.start, slot.end)} by ${otherCourse?.code} (Sec ${otherSec?.name}).`,
+        message: `Room ${room?.name} already booked ${slot.day} ${fmtRange12(slot.start, slot.end)} by ${courseLabel} (${sectionLabel}).`,
       });
     }
   }
@@ -159,9 +161,11 @@ export function checkConflicts(input: ConflictCheckInput): Conflict[] {
       const t = data.teachers.find((x) => x.id === tid);
       const otherCourse = data.courses.find((c) => c.id === slot.course_id);
       const otherSec = data.sections.find((s) => s.id === slot.section_id);
+      const courseLabel = otherCourse ? `${otherCourse.code} - ${otherCourse.name}` : "Sessional";
+      const sectionLabel = otherSec ? `Level ${otherSec.level} Term ${otherSec.term} Sec ${otherSec.name}` : "Lab";
       conflicts.push({
         type: "teacher_double",
-        message: `Teacher ${t?.short_name} already teaches ${otherCourse?.code} (Sec ${otherSec?.name}) on ${slot.day} ${fmtRange12(slot.start, slot.end)}.`,
+        message: `Teacher ${t?.short_name} already teaches ${courseLabel} (${sectionLabel}) on ${slot.day} ${fmtRange12(slot.start, slot.end)}.`,
       });
     }
   }
@@ -197,9 +201,12 @@ export function checkConflicts(input: ConflictCheckInput): Conflict[] {
     if (!weeksOverlap(slot.week, candidate.week)) continue;
     if (slot.course_id === course.id) continue;
     const otherCourse = data.courses.find((c) => c.id === slot.course_id);
+    const otherSec = data.sections.find((s) => s.id === slot.section_id);
+    const courseLabel = otherCourse ? `${otherCourse.code} - ${otherCourse.name}` : "Sessional";
+    const sectionLabel = otherSec ? `Level ${otherSec.level} Term ${otherSec.term} Sec ${otherSec.name}` : "Lab";
     conflicts.push({
       type: "section_double",
-      message: `Section ${section.name} already has ${otherCourse?.code} on ${slot.day} ${fmtRange12(slot.start, slot.end)}.`,
+      message: `Section ${sectionLabel} already has ${courseLabel} on ${slot.day} ${fmtRange12(slot.start, slot.end)}.`,
     });
   }
 
