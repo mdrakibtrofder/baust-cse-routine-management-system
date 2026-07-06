@@ -974,11 +974,11 @@ export function ClassAssignDialog({
                     const allLocked = savedDrafts.every(d => d.locked);
                     return allLocked ? (
                       <>
-                        <Unlock className="h-3.5 w-3.5 mr-1.5 text-amber-600" /> Unlock all
+                        <Unlock className="h-3.5 w-3.5 mr-1.5 text-amber-600" /> Unlock class
                       </>
                     ) : (
                       <>
-                        <Lock className="h-3.5 w-3.5 mr-1.5 text-amber-600" /> Lock all
+                        <Lock className="h-3.5 w-3.5 mr-1.5 text-amber-600" /> Lock class
                       </>
                     );
                   })()}

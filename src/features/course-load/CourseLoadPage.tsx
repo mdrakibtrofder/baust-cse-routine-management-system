@@ -562,11 +562,11 @@ function SectionCell({ course, section, sections, onAssign, onManageLabSections,
             >
               {allLocked ? (
                 <>
-                  <Unlock className="h-2.5 w-2.5 mr-0.5" /> Unlock all
+                  <Unlock className="h-2.5 w-2.5 mr-0.5" /> Unlock class
                 </>
               ) : (
                 <>
-                  <Lock className="h-2.5 w-2.5 mr-0.5" /> Lock all
+                  <Lock className="h-2.5 w-2.5 mr-0.5" /> Lock class
                 </>
               )}
             </Button>
