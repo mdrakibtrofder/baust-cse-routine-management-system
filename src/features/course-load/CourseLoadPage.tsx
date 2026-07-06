@@ -357,15 +357,6 @@ function SectionCell({ course, section, sections, onAssign, onManageLabSections,
               for (const slot of gSlots) {
                 await upsertClassSlot({
                   id: slot.id,
-                  semester_id: data.active_semester_id,
-                  course_id: course.id,
-                  section_id: slot.section_id,
-                  lab_section_id: g.id,
-                  day: slot.day,
-                  start: slot.start,
-                  end: slot.end,
-                  room_id: slot.room_id,
-                  week: slot.week,
                   locked: lock,
                 });
               }
@@ -505,14 +496,6 @@ function SectionCell({ course, section, sections, onAssign, onManageLabSections,
     for (const slot of slots) {
       await upsertClassSlot({
         id: slot.id,
-        semester_id: data.active_semester_id,
-        course_id: course.id,
-        section_id: section.id,
-        day: slot.day,
-        start: slot.start,
-        end: slot.end,
-        room_id: slot.room_id,
-        week: slot.week,
         locked: lock,
       });
     }

@@ -102,7 +102,7 @@ interface StoreState extends AppData {
   updateLabSection: (id: string, patch: { primary_room_id?: string | null; teacher_ids?: string[] }) => Promise<void>;
   
   // class slots
-  upsertClassSlot: (slot: Omit<ClassSlot, "id" | "semester_id"> & { id?: string; semester_id?: string }) => Promise<string>;
+  upsertClassSlot: (slot: Partial<ClassSlot> & { id?: string; semester_id?: string }) => Promise<string>;
   deleteClassSlot: (id: string) => Promise<void>;
   deleteClassSlotsForCourseSection: (course_id: string, section_id: string) => Promise<void>;
   batchReplaceClassSlots: (course_id: string, section_id: string, slots: Array<{ day: string; start: string; end: string; room_id: string; week: string }>, force?: boolean) => Promise<void>;

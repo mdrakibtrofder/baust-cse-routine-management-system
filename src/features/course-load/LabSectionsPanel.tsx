@@ -235,15 +235,6 @@ export function LabSectionsPanel({ course, sections, open, onClose }: Props) {
       const newLocked = !d.locked;
       await upsertClassSlot({
         id: d.id,
-        semester_id: data.active_semester_id,
-        course_id: course.id,
-        section_id: null,
-        lab_section_id: g.id,
-        day: d.day,
-        start: d.start,
-        end: d.end,
-        room_id: d.room_id,
-        week: d.week,
         locked: newLocked,
       });
       updateSlot(sectionIdx, slotIdx, { locked: newLocked });
