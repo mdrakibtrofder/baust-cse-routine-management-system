@@ -20,64 +20,7 @@ export function buildRoutineCourseSummary(
   data: AppData,
   scope: RoutineScope,
 ): { rows: CourseSummaryRow[]; totals: { theory: number; sessional: number; credit: number; meetings: number } } {
-  const slots = data.class_slots.filter((s) => {
-    if (s.semester_id !== data.active_semester_id) return false;
-    if (scope.kind === "all") return true;
-    if (scope.kind === "room") return s.room_id === scope.room_id;
-    if (scope.kind === "section") {
-      if (s.section_id === scope.section_id) return true;
-      if (s.lab_section_id) {
-        const ls = data.course_lab_sections.find((g) => g.id === s.lab_section_id);
-        return !!ls && ls.section_ids.includes(scope.section_id);
-      }
-      const primaryCst = data.course_section_teachers.find(
-        (x) =>
-          x.semester_id === data.active_semester_id &&
-          x.course_id === s.course_id &&
-          x.section_id === s.section_id &&
-          x.combined_section_ids?.includes(scope.section_id),
-      );
-      if (primaryCst) return true;
-      return false;
-    }
-    // For teacher scope, we need to check if the slot is taught by this teacher
-    if (scope.kind === "teacher") {
-      if (s.lab_section_id) {
-        const lg = data.course_lab_sections.find((g) => g.id === s.lab_section_id);
-        return !!lg && lg.teacher_ids.includes(scope.teacher_id);
-      }
-      const cst = data.course_section_teachers.find(
-        (x) =>
-          x.semester_id === data.active_semester_id &&
-          x.course_id === s.course_id &&
-          x.section_id === s.section_id,
-      );
-      if (!cst) return false;
-      // Check slot_teacher_ids if present (sessional_3.0 split mode)
-      if (cst.slot_teacher_ids?.length) {
-        const days = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
-        const siblings = data.class_slots
-          .filter(
-            (x) =>
-              x.semester_id === data.active_semester_id &&
-              x.course_id === s.course_id &&
-              x.section_id === s.section_id &&
-              !x.lab_section_id,
-          )
-          .sort((a, b) => {
-            const da = days.indexOf(a.day), db = days.indexOf(b.day);
-            if (da !== db) return da - db;
-            return a.start.localeCompare(b.start);
-          });
-        const idx = siblings.findIndex((x) => x.id === s.id);
-        if (idx >= 0 && cst.slot_teacher_ids[idx]?.length) {
-          return cst.slot_teacher_ids[idx].includes(scope.teacher_id);
-        }
-      }
-      return cst.teacher_ids.includes(scope.teacher_id);
-    }
-    return false;
-  });
+  const slots = filterScopeSlots(data, scope);
 
   // For course summary, we want to count each distinct course once,
   // regardless of how many sections the teacher teaches it in
@@ -129,12 +72,10 @@ export function buildRoutineCourseSummary(
   return { rows, totals };
 }
 
-/** Build the de-duplicated list of teachers who teach within the given routine scope.
- *  Resolves split-mode (per-slot teacher overrides for sessional_3.0) and lab-group
- *  teachers, not just the assignment's base teacher_ids — matching what's actually
- *  shown in each routine cell. Sorted by short_name. */
-export function buildRoutineTeacherSummary(data: AppData, scope: RoutineScope): TeacherSummaryRow[] {
-  const slots = data.class_slots.filter((s) => {
+/** Helper to filter slots that are in the given scope's routine matrix
+ *  (same logic used in `routine-export.ts` `buildRoutineMatrix`). */
+function filterScopeSlots(data: AppData, scope: RoutineScope) {
+  return data.class_slots.filter((s) => {
     if (s.semester_id !== data.active_semester_id) return false;
     if (scope.kind === "all") return true;
     if (scope.kind === "room") return s.room_id === scope.room_id;
@@ -154,56 +95,96 @@ export function buildRoutineTeacherSummary(data: AppData, scope: RoutineScope): 
       if (primaryCst) return true;
       return false;
     }
-    return true; // teacher scope: filter by resolved teacher ids below instead
+    if (scope.kind === "teacher") {
+      if (s.lab_section_id) {
+        const lg = data.course_lab_sections.find((g) => g.id === s.lab_section_id);
+        return !!lg && lg.teacher_ids.includes(scope.teacher_id);
+      }
+      const cst = data.course_section_teachers.find(
+        (x) =>
+          x.semester_id === data.active_semester_id &&
+          x.course_id === s.course_id &&
+          x.section_id === s.section_id,
+      );
+      if (!cst) return false;
+      if (cst.slot_teacher_ids?.length) {
+        const days = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+        const siblings = data.class_slots
+          .filter(
+            (x) =>
+              x.semester_id === data.active_semester_id &&
+              x.course_id === s.course_id &&
+              x.section_id === s.section_id &&
+              !x.lab_section_id,
+          )
+          .sort((a, b) => {
+            const da = days.indexOf(a.day), db = days.indexOf(b.day);
+            if (da !== db) return da - db;
+            return a.start.localeCompare(b.start);
+          });
+        const idx = siblings.findIndex((x) => x.id === s.id);
+        if (idx >= 0 && cst.slot_teacher_ids[idx]?.length) {
+          return cst.slot_teacher_ids[idx].includes(scope.teacher_id);
+        }
+      }
+      return cst.teacher_ids.includes(scope.teacher_id);
+    }
+    return false;
   });
+}
 
+/** Build the de-duplicated list of teachers who teach within the given routine scope.
+ *  Resolves split-mode (per-slot teacher overrides for sessional_3.0) and lab-group
+ *  teachers, not just the assignment's base teacher_ids — matching what's actually
+ *  shown in each routine cell. For teacher scope, scoped teacher is first. */
+export function buildRoutineTeacherSummary(data: AppData, scope: RoutineScope): TeacherSummaryRow[] {
+  const slots = filterScopeSlots(data, scope);
   const teacherIds = new Set<string>();
   const days = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
   for (const s of slots) {
+    let slotTeacherIds: string[] = [];
     if (s.lab_section_id) {
       const lg = data.course_lab_sections.find((g) => g.id === s.lab_section_id);
-      if (lg) lg.teacher_ids.forEach((id) => teacherIds.add(id));
-      continue;
-    }
-    const cst = data.course_section_teachers.find(
-      (x) =>
-        x.semester_id === data.active_semester_id &&
-        x.course_id === s.course_id &&
-        x.section_id === s.section_id,
-    );
-    if (!cst) continue;
-    if (cst.slot_teacher_ids?.length) {
-      const siblings = data.class_slots
-        .filter(
-          (x) =>
-            x.semester_id === data.active_semester_id &&
-            x.course_id === s.course_id &&
-            x.section_id === s.section_id &&
-            !x.lab_section_id,
-        )
-        .sort((a, b) => {
-          const da = days.indexOf(a.day), db = days.indexOf(b.day);
-          if (da !== db) return da - db;
-          return a.start.localeCompare(b.start);
-        });
-      const idx = siblings.findIndex((x) => x.id === s.id);
-      if (idx >= 0 && cst.slot_teacher_ids[idx]?.length) {
-        cst.slot_teacher_ids[idx].forEach((id) => teacherIds.add(id));
-        continue;
+      if (lg) slotTeacherIds = lg.teacher_ids;
+    } else {
+      const cst = data.course_section_teachers.find(
+        (x) =>
+          x.semester_id === data.active_semester_id &&
+          x.course_id === s.course_id &&
+          x.section_id === s.section_id,
+      );
+      if (cst) {
+        if (cst.slot_teacher_ids?.length) {
+          const siblings = data.class_slots
+            .filter(
+              (x) =>
+                x.semester_id === data.active_semester_id &&
+                x.course_id === s.course_id &&
+                x.section_id === s.section_id &&
+                !x.lab_section_id,
+            )
+            .sort((a, b) => {
+              const da = days.indexOf(a.day), db = days.indexOf(b.day);
+              if (da !== db) return da - db;
+              return a.start.localeCompare(b.start);
+            });
+          const idx = siblings.findIndex((x) => x.id === s.id);
+          if (idx >= 0 && cst.slot_teacher_ids[idx]?.length) {
+            slotTeacherIds = cst.slot_teacher_ids[idx];
+          } else {
+            slotTeacherIds = cst.teacher_ids;
+          }
+        } else {
+          slotTeacherIds = cst.teacher_ids;
+        }
       }
     }
-    cst.teacher_ids.forEach((id) => teacherIds.add(id));
+    slotTeacherIds.forEach((id) => teacherIds.add(id));
   }
 
   if (scope.kind === "teacher" && !teacherIds.has(scope.teacher_id)) {
     teacherIds.add(scope.teacher_id);
-  }
-  if (scope.kind === "teacher") {
-    // Narrow to just the scoped teacher for a teacher-specific routine view
-    teacherIds.forEach((id) => {
-      if (id !== scope.teacher_id) teacherIds.delete(id);
-    });
   }
 
   const rows: TeacherSummaryRow[] = [];
@@ -211,6 +192,14 @@ export function buildRoutineTeacherSummary(data: AppData, scope: RoutineScope): 
     const teacher = data.teachers.find((t) => t.id === id);
     if (teacher) rows.push({ teacher });
   }
-  rows.sort((a, b) => a.teacher.short_name.localeCompare(b.teacher.short_name));
+
+  rows.sort((a, b) => {
+    if (scope.kind === "teacher") {
+      if (a.teacher.id === scope.teacher_id) return -1;
+      if (b.teacher.id === scope.teacher_id) return 1;
+    }
+    return a.teacher.short_name.localeCompare(b.teacher.short_name);
+  });
+
   return rows;
 }

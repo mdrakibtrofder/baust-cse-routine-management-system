@@ -276,18 +276,55 @@ export function LabSectionsPanel({ course, sections, open, onClose }: Props) {
       list.push({ type: 'sibling_clash', message: 'Duplicate meeting at this day/time/room' });
     }
 
-    // 4. Overlap against other class slots on the routine
+    // 4. Check for conflicts with OTHER DRAFT LAB SECTIONS of same course
+    for (let i = 0; i < drafts.length; i++) {
+      if (i === activeSectionIdx) continue; // Skip active lab section itself
+      const otherDraft = drafts[i];
+      for (const otherSlot of otherDraft.slots) {
+        if (!otherSlot.day || !otherSlot.start || !otherSlot.end) continue;
+        if (otherSlot.day !== slot.day) continue;
+        if (!timesOverlap(otherSlot.start, otherSlot.end, slot.start, slot.end)) continue;
+        if (!weeksOverlap(otherSlot.week, slot.week)) continue;
+
+        // Check room conflict
+        if (slot.room_id && otherSlot.room_id === slot.room_id) {
+          const room = data.rooms.find((r) => r.id === slot.room_id);
+          list.push({
+            type: 'room_conflict',
+            message: `Room ${room?.name} is already booked by ${otherDraft.label} at this time`,
+          });
+        }
+
+        // Check teacher conflict
+        const clashingTeacherId = activeSection.teacher_ids.find((tid) => otherDraft.teacher_ids.includes(tid));
+        if (clashingTeacherId) {
+          const t = data.teachers.find((x) => x.id === clashingTeacherId);
+          list.push({
+            type: 'teacher_conflict',
+            message: `Teacher ${t?.short_name} is already assigned to ${otherDraft.label} at this time`,
+          });
+        }
+      }
+    }
+
+    // 5. Overlap against other class slots on the routine (including other lab sections of same course)
     for (const cs of data.class_slots) {
       if (cs.semester_id !== data.active_semester_id) continue;
       if (cs.day !== slot.day) continue;
       if (!timesOverlap(cs.start, cs.end, slot.start, slot.end)) continue;
-      if (activeSection.id && cs.lab_section_id === activeSection.id) continue;
+      if (!weeksOverlap(cs.week, slot.week)) continue;
+      if (activeSection.id && cs.lab_section_id === activeSection.id) continue; // Only skip slots from this EXACT lab section
       
-      if (cs.room_id === slot.room_id) {
+      if (slot.room_id && cs.room_id === slot.room_id) {
         const otherCourse = data.courses.find((x) => x.id === cs.course_id);
         const otherSection = data.sections.find((x) => x.id === cs.section_id);
+        const otherLabSection = cs.lab_section_id 
+          ? data.course_lab_sections.find((ls) => ls.id === cs.lab_section_id)
+          : null;
         const courseLabel = otherCourse ? `${otherCourse.code} - ${otherCourse.name}` : "Sessional";
-        const sectionLabel = otherSection ? `Level ${otherSection.level} Term ${otherSection.term} Sec ${otherSection.name}` : "Lab";
+        const sectionLabel = otherLabSection 
+          ? otherLabSection.label 
+          : otherSection ? `Level ${otherSection.level} Term ${otherSection.term} Sec ${otherSection.name}` : "Lab";
         list.push({
           type: 'room_conflict',
           message: `Room is already booked at this time by ${courseLabel} (${sectionLabel})`,
@@ -309,9 +346,15 @@ export function LabSectionsPanel({ course, sections, open, onClose }: Props) {
       if (clashingTeacherId) {
         const t = data.teachers.find((x) => x.id === clashingTeacherId);
         const otherCourse = data.courses.find((x) => x.id === cs.course_id);
+        const otherLabSection = cs.lab_section_id 
+          ? data.course_lab_sections.find((ls) => ls.id === cs.lab_section_id)
+          : null;
+        const sectionLabel = otherLabSection 
+          ? otherLabSection.label 
+          : "Routine";
         list.push({
           type: 'teacher_conflict',
-          message: `Teacher ${t?.short_name || "Assigned"} already has a class at this time in ${otherCourse?.code || "Routine"}`,
+          message: `Teacher ${t?.short_name || "Assigned"} already has a class at this time in ${otherCourse?.code || "Routine"} (${sectionLabel})`,
         });
       }
     }
@@ -831,6 +874,8 @@ export function LabSectionsPanel({ course, sections, open, onClose }: Props) {
                                 })
                               }
                               totalStudents={activeCohortStudents}
+                              activeLabSectionId={activeSection.id}
+                              allDrafts={drafts}
                             />
                             {otherRooms.length > 0 && (
                               <label className="flex items-center gap-2 text-[10px] text-muted-foreground mt-1 cursor-pointer select-none">
@@ -876,6 +921,8 @@ function RoomDayGrid({
   week,
   onPick,
   totalStudents,
+  activeLabSectionId,
+  allDrafts,
 }: {
   course: Course;
   teacherIds: string[];
@@ -889,6 +936,8 @@ function RoomDayGrid({
   week: WeekPattern;
   onPick: (roomId: string, start: string, end: string) => void;
   totalStudents: number;
+  activeLabSectionId?: string;
+  allDrafts: LabSectionDraft[];
 }) {
   const data = useStore();
   const info = COURSE_TYPE_INFO[course.course_type];
@@ -915,47 +964,77 @@ function RoomDayGrid({
     for (const p of periods) {
       const entry: any = {};
       
-      const busy = data.class_slots.find((cs) => {
-        if (cs.semester_id !== data.active_semester_id) return false;
-        if (cs.day !== day) return false;
-        if (currentSlotId && cs.id === currentSlotId) return false;
-        if (!timesOverlap(cs.start, cs.end, p.start, p.end)) return false;
-        if (!weeksOverlap(cs.week, week)) return false;
-
-        let slotTeacherIds: string[] = [];
-        if (cs.lab_section_id) {
-          const other = data.course_lab_sections.find((x) => x.id === cs.lab_section_id);
-          slotTeacherIds = other?.teacher_ids ?? [];
-        } else {
-          const cst = data.course_section_teachers.find(
-            (x) =>
-              x.semester_id === data.active_semester_id &&
-              x.course_id === cs.course_id &&
-              x.section_id === cs.section_id,
-          );
-          slotTeacherIds = cst?.teacher_ids ?? [];
+      // First check other draft lab sections for teacher conflicts
+      for (const draft of allDrafts) {
+        if (draft.id === activeLabSectionId) continue; // Skip active lab section
+        for (const slot of draft.slots) {
+          if (slot.day !== day) continue;
+          if (!timesOverlap(slot.start, slot.end, p.start, p.end)) continue;
+          if (!weeksOverlap(slot.week, week)) continue;
+          const clashingTid = draft.teacher_ids.find((tid) => teacherIds.includes(tid));
+          if (clashingTid) {
+            const t = data.teachers.find((x) => x.id === clashingTid);
+            entry.busy = {
+              teacherId: clashingTid,
+              teacherShort: t?.short_name,
+              teacherName: t?.name,
+              courseCode: course.code,
+              sectionName: draft.label,
+            };
+            break;
+          }
         }
+        if (entry.busy) break;
+      }
 
-        const clashingTid = slotTeacherIds.find((tid) => teacherIds.includes(tid));
-        if (clashingTid) {
-          (cs as any).clashingTid = clashingTid;
-          return true;
+      // Then check existing class slots (including other lab sections)
+      if (!entry.busy) {
+        const busy = data.class_slots.find((cs) => {
+          if (cs.semester_id !== data.active_semester_id) return false;
+          if (cs.day !== day) return false;
+          if (currentSlotId && cs.id === currentSlotId) return false;
+          if (activeLabSectionId && cs.lab_section_id === activeLabSectionId) return false; // Only skip active lab section's own slots
+          if (!timesOverlap(cs.start, cs.end, p.start, p.end)) return false;
+          if (!weeksOverlap(cs.week, week)) return false;
+
+          let slotTeacherIds: string[] = [];
+          if (cs.lab_section_id) {
+            const other = data.course_lab_sections.find((x) => x.id === cs.lab_section_id);
+            slotTeacherIds = other?.teacher_ids ?? [];
+          } else {
+            const cst = data.course_section_teachers.find(
+              (x) =>
+                x.semester_id === data.active_semester_id &&
+                x.course_id === cs.course_id &&
+                x.section_id === cs.section_id,
+            );
+            slotTeacherIds = cst?.teacher_ids ?? [];
+          }
+
+          const clashingTid = slotTeacherIds.find((tid) => teacherIds.includes(tid));
+          if (clashingTid) {
+            (cs as any).clashingTid = clashingTid;
+            return true;
+          }
+          return false;
+        });
+
+        if (busy) {
+          const c = data.courses.find((x) => x.id === busy.course_id);
+          const s = data.sections.find((x) => x.id === busy.section_id);
+          const otherLabSection = busy.lab_section_id 
+            ? data.course_lab_sections.find((ls) => ls.id === busy.lab_section_id)
+            : null;
+          const clashingTid = (busy as any).clashingTid;
+          const t = data.teachers.find((x) => x.id === clashingTid);
+          entry.busy = {
+            teacherId: clashingTid,
+            teacherShort: t?.short_name,
+            teacherName: t?.name,
+            courseCode: c?.code,
+            sectionName: otherLabSection?.label || s?.name || "Lab",
+          };
         }
-        return false;
-      });
-
-      if (busy) {
-        const c = data.courses.find((x) => x.id === busy.course_id);
-        const s = data.sections.find((x) => x.id === busy.section_id);
-        const clashingTid = (busy as any).clashingTid;
-        const t = data.teachers.find((x) => x.id === clashingTid);
-        entry.busy = {
-          teacherId: clashingTid,
-          teacherShort: t?.short_name,
-          teacherName: t?.name,
-          courseCode: c?.code,
-          sectionName: s?.name || "Lab",
-        };
       }
 
       for (const tid of teacherIds) {
@@ -979,8 +1058,27 @@ function RoomDayGrid({
   }
 
   function findBooking(roomId: string, p: { start: string; end: string }) {
+    // First check other draft lab sections
+    for (const draft of allDrafts) {
+      if (draft.id === activeLabSectionId) continue;
+      for (const slot of draft.slots) {
+        if (!slot.day || !slot.start || !slot.end || !slot.room_id) continue;
+        if (slot.day !== day) continue;
+        if (slot.room_id !== roomId) continue;
+        if (!timesOverlap(slot.start, slot.end, p.start, p.end)) continue;
+        if (!weeksOverlap(slot.week, week)) continue;
+        return {
+          ...slot,
+          course_id: course.id,
+          isDraft: true,
+          draftLabel: draft.label,
+        };
+      }
+    }
+    // Then check existing class slots (don't skip other lab sections of same course)
     return data.class_slots.find((slot) => {
       if (slot.id === currentSlotId) return false;
+      if (activeLabSectionId && slot.lab_section_id === activeLabSectionId) return false;
       if (slot.room_id !== roomId) return false;
       if (slot.day !== day) return false;
       if (!timesOverlap(slot.start, slot.end, p.start, p.end)) return false;
@@ -993,6 +1091,7 @@ function RoomDayGrid({
     const oppositeWeek: WeekPattern = week === "EVEN" ? "ODD" : "EVEN";
     return data.class_slots.find((slot) => {
       if (slot.id === currentSlotId) return false;
+      if (activeLabSectionId && slot.lab_section_id === activeLabSectionId) return false;
       if (slot.room_id !== roomId) return false;
       if (slot.day !== day) return false;
       if (!timesOverlap(slot.start, slot.end, p.start, p.end)) return false;
@@ -1091,11 +1190,21 @@ function RoomDayGrid({
 
                 const issues: string[] = [];
                 if (booking) {
-                  const c = data.courses.find((c) => c.id === booking.course_id);
-                  const s = data.sections.find((s) => s.id === booking.section_id);
-                  const courseLabel = c ? `${c.code} - ${c.name}` : "Sessional";
-                  const sectionLabel = s ? `Level ${s.level} Term ${s.term} Sec ${s.name}` : "Lab";
-                  issues.push(`Room ${r.name} is already booked by ${courseLabel} (${sectionLabel}) ${fmtRange12(booking.start, booking.end)}.`);
+                  if ('isDraft' in booking && booking.isDraft) {
+                    issues.push(`Room ${r.name} is already booked by ${booking.draftLabel} ${fmtRange12(booking.start, booking.end)}.`);
+                  } else {
+                    // It's a real ClassSlot
+                    const c = data.courses.find((c) => c.id === (booking as any).course_id);
+                    const s = data.sections.find((s) => s.id === (booking as any).section_id);
+                    const otherLabSection = (booking as any).lab_section_id 
+                      ? data.course_lab_sections.find((ls) => ls.id === (booking as any).lab_section_id)
+                      : null;
+                    const courseLabel = c ? `${c.code} - ${c.name}` : "Sessional";
+                    const sectionLabel = otherLabSection 
+                      ? otherLabSection.label 
+                      : s ? `Level ${s.level} Term ${s.term} Sec ${s.name}` : "Lab";
+                    issues.push(`Room ${r.name} is already booked by ${courseLabel} (${sectionLabel}) ${fmtRange12(booking.start, booking.end)}.`);
+                  }
                 }
                 if (teacherBusy) {
                   issues.push(`${teacherBusy.teacherShort} (${teacherBusy.teacherName}) already assigned in ${teacherBusy.courseCode} (Sec ${teacherBusy.sectionName}) at this time.`);
