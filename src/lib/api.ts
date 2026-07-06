@@ -11,12 +11,19 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     headers,
   });
 
+  const text = await response.text();
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'An unknown error occurred' }));
-    throw new Error(error.message || 'Request failed');
+    let message = 'Request failed';
+    try {
+      if (text) {
+        const error = JSON.parse(text);
+        message = error.message || message;
+      }
+    } catch (_) {}
+    throw new Error(message);
   }
 
-  return response.json();
+  return text ? JSON.parse(text) : ({} as T);
 }
 
 export const api = {

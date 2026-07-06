@@ -1,27 +1,41 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useStore } from "@/lib/store";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Check, ChevronDown, X, MapPin, Eye, EyeOff } from "lucide-react";
-import type { Course, Section } from "@/lib/types";
+import type { Course, Section, CourseLabSection } from "@/lib/types";
 import { COURSE_TYPE_INFO } from "@/lib/types";
 import { cn, roomSupportsKind } from "@/lib/utils";
 import { partitionRoomsForCourse } from "@/lib/room-dept";
+import { HOME_DEPT_SHORT_NAME } from "@/lib/constants";
 
-export function RoomPicker({ course, section }: {
-  course: Course; section: Section;
+export function RoomPicker({ 
+  course, 
+  section, 
+  labSection, 
+  value, 
+  onSelect 
+}: {
+  course: Course; 
+  section?: Section;
+  labSection?: CourseLabSection;
+  value?: string | null;
+  onSelect?: (rid: string | null) => void;
 }) {
   const data = useStore();
-  const cst = data.course_section_teachers.find(
+
+  const isGeneric = value !== undefined || onSelect !== undefined;
+
+  const cst = !isGeneric && section ? data.course_section_teachers.find(
     (x) =>
       x.semester_id === data.active_semester_id &&
       x.course_id === course.id &&
       x.section_id === section.id,
-  );
+  ) : null;
   
   const teacherIds = cst?.teacher_ids ?? [];
-  const primaryRoomId = cst?.primary_room_id;
+  const primaryRoomId = isGeneric ? value : cst?.primary_room_id;
   const selected = data.rooms.find(r => r.id === primaryRoomId);
 
   const [open, setOpen] = useState(false);
@@ -29,9 +43,33 @@ export function RoomPicker({ course, section }: {
   const [showOtherRooms, setShowOtherRooms] = useState(false);
 
   const info = COURSE_TYPE_INFO[course.course_type];
+  
   const setRoom = (rid: string | null) => {
-    data.setCourseSectionTeachers(course.id, section.id, teacherIds, rid);
+    if (isGeneric && onSelect) {
+      onSelect(rid);
+    } else if (section) {
+      data.setCourseSectionTeachers(course.id, section.id, teacherIds, rid);
+    }
   };
+
+  const totalStudents = useMemo(() => {
+    if (section) return section.total_students;
+    if (labSection) {
+      const homeDept = data.departments.find(d => d.short_name.trim().toUpperCase() === HOME_DEPT_SHORT_NAME);
+      const deptKey = (id: string | null | undefined) => id || homeDept?.id || "__none__";
+      const labGroupCount = data.course_lab_sections.filter(
+        g => g.course_id === course.id && g.semester_id === data.active_semester_id,
+      ).length;
+      const cohortStudents = data.sections
+        .filter(s =>
+          s.level === course.level &&
+          s.term === course.term &&
+          deptKey(s.department_id) === deptKey(course.department_id))
+        .reduce((sum, s) => sum + s.total_students, 0);
+      return labGroupCount > 0 ? Math.ceil(cohortStudents / labGroupCount) : cohortStudents;
+    }
+    return 0;
+  }, [section, labSection, course, data]);
 
   const compatible = data.rooms
     .filter(r => roomSupportsKind(r.room_type, info.roomKind))
@@ -42,8 +80,6 @@ export function RoomPicker({ course, section }: {
     })
     .sort((a, b) => a.name.localeCompare(b.name));
 
-  // Department rule: home-dept courses see home rooms; other-dept courses see
-  // home + their own department's rooms. The rest hide behind the toggle.
   const { allowed, other } = partitionRoomsForCourse(compatible, course, data.departments);
   const list = showOtherRooms ? [...allowed, ...other] : allowed;
 
@@ -97,7 +133,7 @@ export function RoomPicker({ course, section }: {
           )}
           {list.map(r => {
             const isSelected = primaryRoomId === r.id;
-            const capOk = r.capacity >= section.total_students;
+            const capOk = r.capacity >= totalStudents;
             return (
               <button
                 key={r.id}

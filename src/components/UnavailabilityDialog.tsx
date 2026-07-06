@@ -67,7 +67,7 @@ export function UnavailabilityDialog({
       if (editingId && u.id === editingId) return false;
       const sameDay =
         mode === "teacher"
-          ? (u as any).day === day
+          ? days.includes((u as any).day)
           : ((u as any).days as string[]).some((dd) => days.includes(dd));
       if (!sameDay) return false;
       return timesOverlap(u.start, u.end, start, end);
@@ -84,7 +84,7 @@ export function UnavailabilityDialog({
       toast.error("Reason is required");
       return;
     }
-    if (mode === "room" && days.length === 0) {
+    if (days.length === 0) {
       toast.error("Pick at least one day");
       return;
     }
@@ -98,9 +98,11 @@ export function UnavailabilityDialog({
 
     if (mode === "teacher") {
       if (editingId) {
-        await data.updateTeacherUnavailability(editingId, { day, start, end, reason: reason.trim() });
+        await data.updateTeacherUnavailability(editingId, { day: days[0] || "SUN", start, end, reason: reason.trim() });
       } else {
-        await data.addTeacherUnavailability({ teacher_id: entityId, day, start, end, reason: reason.trim() });
+        for (const d of days) {
+          await data.addTeacherUnavailability({ teacher_id: entityId, day: d, start, end, reason: reason.trim() });
+        }
       }
     } else {
       if (editingId) {
@@ -120,7 +122,7 @@ export function UnavailabilityDialog({
     setEnd(u.end);
     setReason(u.reason || "");
     if (mode === "teacher") {
-      setDay(u.day);
+      setDays([u.day]);
     } else {
       setDays(u.days);
     }
@@ -189,47 +191,29 @@ export function UnavailabilityDialog({
             <div className="text-[11px] font-semibold uppercase text-muted-foreground">
               {editingId ? "Edit unavailability" : "Add new"}
             </div>
-            {mode === "teacher" ? (
-              <div>
-                <Label className="text-xs">Day</Label>
-                <Select value={day} onValueChange={setDay}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {orderedDays.map((d) => (
-                      <SelectItem key={d.id} value={d.name}>
-                        {fmtDayTitle(d.name)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            <div>
+              <Label className="text-xs">Days</Label>
+              <div className="flex flex-wrap gap-1.5 mt-1">
+                {orderedDays.map((d) => {
+                  const active = days.includes(d.name);
+                  return (
+                    <button
+                      key={d.id}
+                      type="button"
+                      onClick={() => toggleDay(d.name)}
+                      className={cn(
+                        "px-2.5 py-1 text-[11px] font-semibold rounded-md border transition",
+                        active
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-card hover:bg-muted border-border text-muted-foreground",
+                      )}
+                    >
+                      {fmtDayTitle(d.name)}
+                    </button>
+                  );
+                })}
               </div>
-            ) : (
-              <div>
-                <Label className="text-xs">Days</Label>
-                <div className="flex flex-wrap gap-1.5 mt-1">
-                  {orderedDays.map((d) => {
-                    const active = days.includes(d.name);
-                    return (
-                      <button
-                        key={d.id}
-                        type="button"
-                        onClick={() => toggleDay(d.name)}
-                        className={cn(
-                          "px-2.5 py-1 text-[11px] font-semibold rounded-md border transition",
-                          active
-                            ? "bg-primary text-primary-foreground border-primary"
-                            : "bg-card hover:bg-muted border-border text-muted-foreground",
-                        )}
-                      >
-                        {fmtDayTitle(d.name)}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
+            </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <Label className="text-xs">Start</Label>
