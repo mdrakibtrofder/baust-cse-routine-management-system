@@ -113,10 +113,41 @@ export function PriorityClassesPage() {
   }, [data.periods, courseType]);
 
   const activeSemesterPriorityClasses = useMemo(() => {
-    return data.priority_classes.filter(
+    const filtered = data.priority_classes.filter(
       (pc) => pc.semester_id === data.active_semester_id
     );
-  }, [data.priority_classes, data.active_semester_id]);
+
+    return [...filtered].sort((a, b) => {
+      const deptA = data.departments.find((d) => d.id === a.department_id);
+      const deptB = data.departments.find((d) => d.id === b.department_id);
+      const nameA = deptA?.short_name.trim().toUpperCase() || "";
+      const nameB = deptB?.short_name.trim().toUpperCase() || "";
+
+      // 1. Department: CSE first, then alphabetical
+      if (nameA !== nameB) {
+        if (nameA === HOME_DEPT_SHORT_NAME) return -1;
+        if (nameB === HOME_DEPT_SHORT_NAME) return 1;
+        return nameA.localeCompare(nameB);
+      }
+
+      // 2. Level: numeric ascending
+      if (a.level !== b.level) {
+        return a.level - b.level;
+      }
+
+      // 3. Term: ascending ("I" before "II", or localeCompare)
+      if (a.term !== b.term) {
+        return a.term.localeCompare(b.term);
+      }
+
+      // 4. Section: alphabetical ascending
+      const secA = data.sections.find((s) => s.id === a.section_id);
+      const secB = data.sections.find((s) => s.id === b.section_id);
+      const secNameA = secA?.name || "";
+      const secNameB = secB?.name || "";
+      return secNameA.localeCompare(secNameB);
+    });
+  }, [data.priority_classes, data.active_semester_id, data.departments, data.sections]);
 
   const handleOpen = () => {
     setEditingId(null);
