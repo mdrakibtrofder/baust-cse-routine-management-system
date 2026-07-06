@@ -1397,7 +1397,9 @@ function RoomDayGrid({
                 if (booking) {
                   const c = data.courses.find((c) => c.id === booking.course_id);
                   const s = data.sections.find((s) => s.id === booking.section_id);
-                  issues.push(`Room ${r.name} is already booked by ${c?.code} (Sec ${s?.name}) ${fmtRange12(booking.start, booking.end)}.`);
+                  const courseLabel = c ? `${c.code} - ${c.name}` : "Course";
+                  const sectionLabel = s ? `Level ${s.level} Term ${s.term} Sec ${s.name}` : "Section";
+                  issues.push(`Room ${r.name} is already booked by ${courseLabel} (${sectionLabel}) ${fmtRange12(booking.start, booking.end)}.`);
                 }
                 if (teacherBusy) {
                   issues.push(`${teacherBusy.teacherShort} (${teacherBusy.teacherName}) already assigned in ${teacherBusy.courseCode} (Sec ${teacherBusy.sectionName}) at this time.`);

@@ -286,9 +286,11 @@ export function LabSectionsPanel({ course, sections, open, onClose }: Props) {
       if (cs.room_id === slot.room_id) {
         const otherCourse = data.courses.find((x) => x.id === cs.course_id);
         const otherSection = data.sections.find((x) => x.id === cs.section_id);
+        const courseLabel = otherCourse ? `${otherCourse.code} - ${otherCourse.name}` : "Sessional";
+        const sectionLabel = otherSection ? `Level ${otherSection.level} Term ${otherSection.term} Sec ${otherSection.name}` : "Lab";
         list.push({
           type: 'room_conflict',
-          message: `Room is already booked at this time by ${otherCourse?.code || "Sessional"} (Sec ${otherSection?.name || "Lab"})`,
+          message: `Room is already booked at this time by ${courseLabel} (${sectionLabel})`,
         });
       }
 
@@ -1090,7 +1092,9 @@ function RoomDayGrid({
                 if (booking) {
                   const c = data.courses.find((c) => c.id === booking.course_id);
                   const s = data.sections.find((s) => s.id === booking.section_id);
-                  issues.push(`Room ${r.name} is already booked by ${c?.code || "Sessional"} (Sec ${s?.name || "Lab"}) ${fmtRange12(booking.start, booking.end)}.`);
+                  const courseLabel = c ? `${c.code} - ${c.name}` : "Sessional";
+                  const sectionLabel = s ? `Level ${s.level} Term ${s.term} Sec ${s.name}` : "Lab";
+                  issues.push(`Room ${r.name} is already booked by ${courseLabel} (${sectionLabel}) ${fmtRange12(booking.start, booking.end)}.`);
                 }
                 if (teacherBusy) {
                   issues.push(`${teacherBusy.teacherShort} (${teacherBusy.teacherName}) already assigned in ${teacherBusy.courseCode} (Sec ${teacherBusy.sectionName}) at this time.`);
