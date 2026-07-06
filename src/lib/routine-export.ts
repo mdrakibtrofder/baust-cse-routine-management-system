@@ -4,7 +4,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import {
   Document, Packer, Paragraph, Table, TableCell, TableRow,
-  TextRun, WidthType, HeadingLevel, AlignmentType,
+  TextRun, WidthType, HeadingLevel, AlignmentType, BorderStyle,
 } from "docx";
 import type { AppData, ClassSlot } from "@/lib/types";
 import { timesOverlap } from "@/lib/conflicts";
@@ -108,35 +108,102 @@ export function buildRoutineMatrix(data: AppData, scope: RoutineScope) {
     if (s.semester_id !== data.active_semester_id) return false;
     if (scope.kind === "all") return true;
     if (scope.kind === "room") return s.room_id === scope.room_id;
-    if (scope.kind === "section") return s.section_id === scope.section_id;
-    const cst = data.course_section_teachers.find(
-      (x) =>
-        x.semester_id === data.active_semester_id &&
-        x.course_id === s.course_id &&
-        x.section_id === s.section_id,
-    );
-    return !!cst && cst.teacher_ids.includes(scope.teacher_id);
+    
+    if (scope.kind === "section") {
+      if (s.section_id === scope.section_id) return true;
+      if (s.lab_section_id) {
+        const ls = data.course_lab_sections.find((x) => x.id === s.lab_section_id);
+        return !!ls && ls.section_ids.includes(scope.section_id);
+      }
+      return false;
+    }
+
+    if (scope.kind === "teacher") {
+      let teacherIds: string[] = [];
+      if (s.lab_section_id) {
+        const ls = data.course_lab_sections.find((x) => x.id === s.lab_section_id);
+        teacherIds = ls?.teacher_ids ?? [];
+      } else {
+        const cst = data.course_section_teachers.find(
+          (x) =>
+            x.semester_id === data.active_semester_id &&
+            x.course_id === s.course_id &&
+            x.section_id === s.section_id,
+        );
+        teacherIds = cst?.teacher_ids ?? [];
+      }
+      return teacherIds.includes(scope.teacher_id);
+    }
+    return false;
   });
 
   const cellText = (slot: ClassSlot) => {
     const c = data.courses.find((x) => x.id === slot.course_id);
-    const sec = data.sections.find((x) => x.id === slot.section_id);
     const room = data.rooms.find((x) => x.id === slot.room_id);
-    const cst = data.course_section_teachers.find(
-      (x) =>
-        x.semester_id === data.active_semester_id &&
-        x.course_id === slot.course_id &&
-        x.section_id === slot.section_id,
-    );
-    const teachers = (cst?.teacher_ids ?? [])
+    
+    let teacherIds: string[] = [];
+    let sectionList: any[] = [];
+    let labLabel = "";
+    if (slot.lab_section_id) {
+      const ls = data.course_lab_sections.find((x) => x.id === slot.lab_section_id);
+      if (ls) {
+        teacherIds = ls.teacher_ids;
+        sectionList = data.sections.filter((s) => ls.section_ids.includes(s.id));
+        labLabel = ls.label;
+      }
+    } else {
+      if (slot.section_id) {
+        const s = data.sections.find((x) => x.id === slot.section_id);
+        if (s) sectionList = [s];
+      }
+      const cst = data.course_section_teachers.find(
+        (x) =>
+          x.semester_id === data.active_semester_id &&
+          x.course_id === slot.course_id &&
+          x.section_id === slot.section_id,
+      );
+      teacherIds = cst?.teacher_ids ?? [];
+    }
+
+    const teacherShorts = teacherIds
       .map((tid) => data.teachers.find((t) => t.id === tid)?.short_name)
       .filter(Boolean)
       .join(", ");
-    const sectionDept = sec?.department_id
-      ? data.departments.find((d) => d.id === sec.department_id)?.short_name ?? DEFAULT_DEPT
-      : DEFAULT_DEPT;
-    const sectionTag = sec && c ? `${sectionDept} L${sec.level}T${sec.term} ${sec.name}` : "";
-    return [c?.code ?? "", teachers, room?.name ?? "", sectionTag].filter(Boolean).join("\n");
+
+    const weekText = slot.week !== "EVERY" ? ` #${slot.week}#` : "";
+    const courseCodeWithLab = labLabel && c ? `${c.code}(${labLabel})` : c?.code || "";
+
+    if (scope.kind === "section") {
+      const teachersPart = teacherShorts ? ` (${teacherShorts})` : "";
+      const roomPart = room ? ` [${room.name}]` : "";
+      return `${courseCodeWithLab}${teachersPart}${weekText}${roomPart}`;
+    }
+
+    if (scope.kind === "room") {
+      const sectionTags = sectionList.map((sec) => {
+        return `${sec.level}/${sec.term} - ${sec.name}`;
+      }).join(", ");
+      
+      const teachersPart = teacherShorts ? `(${teacherShorts})` : "";
+      const roomPart = room ? ` [${room.name}]` : "";
+      const sectionPart = sectionTags ? `{${sectionTags}}` : "";
+      return `${courseCodeWithLab}${teachersPart}${weekText}${roomPart}${sectionPart}`;
+    }
+
+    if (scope.kind === "teacher") {
+      const sectionTags = sectionList.map((sec) => {
+        return `${sec.level}-${sec.term}  ${sec.name}`;
+      }).join(", ");
+
+      const teachersPart = teacherShorts ? ` (${teacherShorts})` : "";
+      const roomPart = room ? ` [${room.name}]` : "";
+      const sectionPart = sectionTags ? ` {${sectionTags}}` : "";
+      return `${courseCodeWithLab}${teachersPart}${weekText}${roomPart}${sectionPart}`;
+    }
+
+    const teachersPart = teacherShorts ? ` (${teacherShorts})` : "";
+    const roomPart = room ? ` [${room.name}]` : "";
+    return `${courseCodeWithLab}${teachersPart}${weekText}${roomPart}`;
   };
 
   const header = ["Day", ...theoryPeriods.map((p) => fmtRange12(p.start, p.end))];
@@ -145,7 +212,7 @@ export function buildRoutineMatrix(data: AppData, scope: RoutineScope) {
     let skipCount = 0;
     for (const p of theoryPeriods) {
       if (skipCount > 0) {
-        row.push("SKIP"); // Indicator for merging
+        row.push("SKIP");
         skipCount--;
         continue;
       }
@@ -166,7 +233,7 @@ export function buildRoutineMatrix(data: AppData, scope: RoutineScope) {
           return theoryPeriods.filter(tp => timesOverlap(s.start, s.end, tp.start, tp.end)).length;
         }));
         skipCount = colSpan - 1;
-        row.push(starting.map(cellText).join("\n---\n"));
+        row.push(starting.map(cellText).join("  /  "));
       }
     }
     return row;
@@ -342,27 +409,238 @@ export function exportRoutinePdf(data: AppData, scope: RoutineScope) {
 
 /* =============== DOCX =============== */
 /* =============== DOCX =============== */
+interface CellOptions {
+  text: string;
+  bold?: boolean;
+  size?: number;
+  fill?: string;
+  align?: any;
+  colSpan?: number;
+  rowSpan?: number;
+  color?: string;
+  italic?: boolean;
+}
+
+function createCell(width: number, options: CellOptions): TableCell {
+  const {
+    text,
+    bold = false,
+    size = 24,
+    fill,
+    align = AlignmentType.CENTER,
+    colSpan,
+    rowSpan,
+    color,
+    italic = false,
+  } = options;
+
+  const lines = text.split("\n");
+  const paragraphs = lines.map((line) => {
+    return new Paragraph({
+      alignment: align,
+      spacing: { before: 0, after: 0, line: 240 },
+      children: [
+        new TextRun({
+          text: line,
+          bold,
+          italics: italic,
+          font: "Times New Roman",
+          size,
+          color,
+        }),
+      ],
+    });
+  });
+
+  return new TableCell({
+    width: { size: width, type: WidthType.DXA },
+    shading: fill ? { fill } : undefined,
+    columnSpan: colSpan && colSpan > 1 ? colSpan : undefined,
+    rowSpan: rowSpan && rowSpan > 1 ? rowSpan : undefined,
+    margins: { top: 60, bottom: 60, left: 60, right: 60 },
+    borders: {
+      top: { style: BorderStyle.SINGLE, size: 4, color: "A0A0A0" },
+      bottom: { style: BorderStyle.SINGLE, size: 4, color: "A0A0A0" },
+      left: { style: BorderStyle.SINGLE, size: 4, color: "A0A0A0" },
+      right: { style: BorderStyle.SINGLE, size: 4, color: "A0A0A0" },
+    },
+    children: paragraphs.length > 0 ? paragraphs : [new Paragraph({})],
+  });
+}
+
 export function buildRoutineDocxDocument(data: AppData, scope: RoutineScope): Document {
   const info = getScopeInfo(data, scope);
   const { header, rows } = buildRoutineMatrix(data, scope);
 
-  const headerRow = new TableRow({
-    children: header.map(
-      (h) =>
-        new TableCell({
-          width: { size: Math.floor(9000 / header.length), type: WidthType.DXA },
-          shading: { fill: "2563eb" }, // Blue
-          children: [
-            new Paragraph({
-              alignment: AlignmentType.CENTER,
-              children: [new TextRun({ text: h, bold: true, color: "FFFFFF" })],
-            }),
-          ],
-        }),
-    ),
+  const title1 = new Paragraph({
+    alignment: AlignmentType.CENTER,
+    spacing: { before: 0, after: 0 },
+    children: [
+      new TextRun({
+        text: scope.kind === "section"
+          ? "Bangladesh Army University of Science and Technology (BAUST), Saidpur"
+          : "Bangladesh Army University of Science and Technology (BAUST)",
+        bold: true,
+        font: "Times New Roman",
+        size: scope.kind === "section" ? 32 : 36, // 16pt / 18pt
+      }),
+    ],
   });
 
-  // Process body rows with cell merging and styling
+  const title2 = new Paragraph({
+    alignment: AlignmentType.CENTER,
+    spacing: { before: 0, after: 0 },
+    children: [
+      new TextRun({
+        text: scope.kind === "section"
+          ? "Department of Computer Science and Engineering (CSE)"
+          : "Department of Computer Science and Engineering",
+        bold: true,
+        font: "Times New Roman",
+        size: scope.kind === "section" ? 28 : 34, // 14pt / 17pt
+      }),
+    ],
+  });
+
+  const semName = data.semesters.find(s => s.id === data.active_semester_id)?.name || "Winter-2026";
+  let subtitleText = "";
+  if (scope.kind === "section") {
+    subtitleText = `Batchwise Class Routine, ${semName}`;
+  } else if (scope.kind === "room") {
+    subtitleText = `Room-wise Class Routine for ${semName}`;
+  } else {
+    subtitleText = `Individual Class Routine & Course Load for ${semName}`;
+  }
+
+  const title3 = new Paragraph({
+    alignment: AlignmentType.CENTER,
+    spacing: { before: 0, after: 0 },
+    children: [
+      new TextRun({
+        text: subtitleText,
+        font: "Times New Roman",
+        size: 26, // 13pt
+      }),
+    ],
+  });
+
+  // Table 0: Metadata Table
+  let table0: Table | null = null;
+  if (scope.kind === "section") {
+    const sec = data.sections.find(x => x.id === scope.section_id);
+    const levelTermStr = sec ? `${sec.level}-${sec.term}` : "";
+    const secName = sec ? sec.name : "";
+    const dpcName = "Md. Zahim Hassan";
+    const dpcPhone = "01736393334";
+    
+    const widths0 = [2232, 3571, 2908, 3772, 2318];
+    table0 = new Table({
+      width: { size: 14801, type: WidthType.DXA },
+      columnWidths: widths0,
+      rows: [
+        new TableRow({
+          children: [
+            createCell(widths0[0], { text: "Level-Term:", bold: true, align: AlignmentType.LEFT }),
+            createCell(widths0[1], { text: levelTermStr, bold: true, align: AlignmentType.LEFT }),
+            createCell(widths0[2], { text: "Batch Advisor:", bold: true, align: AlignmentType.LEFT }),
+            createCell(widths0[3], { text: "", align: AlignmentType.LEFT }),
+            createCell(widths0[4], { text: "", align: AlignmentType.LEFT }),
+          ],
+        }),
+        new TableRow({
+          children: [
+            createCell(widths0[0], { text: "Section:", bold: true, align: AlignmentType.LEFT }),
+            createCell(widths0[1], { text: secName, bold: true, align: AlignmentType.LEFT }),
+            createCell(widths0[2], { text: "Batch Advisor:", bold: true, align: AlignmentType.LEFT }),
+            createCell(widths0[3], { text: "", align: AlignmentType.LEFT }),
+            createCell(widths0[4], { text: "", align: AlignmentType.LEFT }),
+          ],
+        }),
+        new TableRow({
+          children: [
+            createCell(widths0[0], { text: "", align: AlignmentType.LEFT }),
+            createCell(widths0[1], { text: "", align: AlignmentType.LEFT }),
+            createCell(widths0[2], { text: "DPC/G2:", bold: true, align: AlignmentType.LEFT }),
+            createCell(widths0[3], { text: dpcName, bold: true, align: AlignmentType.LEFT }),
+            createCell(widths0[4], { text: dpcPhone, bold: true, align: AlignmentType.LEFT }),
+          ],
+        }),
+      ],
+    });
+  } else if (scope.kind === "room") {
+    const r = data.rooms.find(x => x.id === scope.room_id);
+    const roomName = r ? r.name : "";
+    const widths0 = [2600, 2700];
+    table0 = new Table({
+      width: { size: 5300, type: WidthType.DXA },
+      columnWidths: widths0,
+      rows: [
+        new TableRow({
+          children: [
+            createCell(widths0[0], { text: "Room No:", bold: true, size: 36, align: AlignmentType.RIGHT }),
+            createCell(widths0[1], { text: roomName, bold: true, size: 36, align: AlignmentType.LEFT }),
+          ],
+        }),
+      ],
+    });
+  } else if (scope.kind === "teacher") {
+    const t = data.teachers.find(x => x.id === scope.teacher_id);
+    const tName = t ? t.name : "";
+    const tShort = t ? t.short_name : "";
+    const designation = t ? t.designation : "";
+    const dept = t ? (t.department || "CSE") : "CSE";
+    const contactHours = t ? Number(t.assigned_credit_hours).toFixed(1) : "0.0";
+    
+    const widths0 = [1713, 7833];
+    table0 = new Table({
+      width: { size: 9546, type: WidthType.DXA },
+      columnWidths: widths0,
+      rows: [
+        new TableRow({
+          children: [
+            createCell(widths0[0], { text: "Teacher Name:", bold: true, align: AlignmentType.LEFT }),
+            createCell(widths0[1], { text: `${tName} (${tShort})`, bold: true, align: AlignmentType.LEFT }),
+          ],
+        }),
+        new TableRow({
+          children: [
+            createCell(widths0[0], { text: "Designation:", bold: true, align: AlignmentType.LEFT }),
+            createCell(widths0[1], { text: `${designation}, ${dept}`, bold: true, align: AlignmentType.LEFT }),
+          ],
+        }),
+        new TableRow({
+          children: [
+            createCell(widths0[0], { text: "Contact Hour:", bold: true, align: AlignmentType.LEFT }),
+            createCell(widths0[1], { text: contactHours, bold: true, align: AlignmentType.LEFT }),
+          ],
+        }),
+      ],
+    });
+  }
+
+  // Table 1: Routine Matrix Table
+  let colWidths: number[];
+  if (scope.kind === "section") {
+    colWidths = [780, 1670, 1526, 1526, 360, 1612, 1713, 1612, 1483, 1454, 1368];
+  } else if (scope.kind === "room") {
+    colWidths = [780, 1612, 1612, 1612, 504, 1656, 1656, 1656, 1641, 1641, 1641];
+  } else { // teacher
+    colWidths = [820, 1540, 1540, 1540, 532, 1584, 1584, 1584, 1584, 1584, 1584];
+  }
+  const totalTable1Width = colWidths.reduce((sum, w) => sum + w, 0);
+
+  const headerRow = new TableRow({
+    children: header.map((h, i) => {
+      const displayHeader = h.includes(":") ? h.replace(/:/g, ".") : h;
+      return createCell(colWidths[i], {
+        text: displayHeader,
+        bold: true,
+        fill: "D9D9D9",
+        size: 24, // 12pt
+      });
+    }),
+  });
+
   const bodyRows: TableRow[] = [];
   for (const r of rows) {
     const rowCells: TableCell[] = [];
@@ -374,7 +652,6 @@ export function buildRoutineDocxDocument(data: AppData, scope: RoutineScope): Do
         continue;
       }
 
-      // Calculate column span
       let colSpan = 1;
       if (cell !== "" && cell !== "BREAK" && cell !== "SKIP") {
         let j = i + 1;
@@ -385,155 +662,189 @@ export function buildRoutineDocxDocument(data: AppData, scope: RoutineScope): Do
         skipCount = colSpan - 1;
       }
 
-      const cellWidth = Math.floor(9000 / header.length) * colSpan;
-      
-      // Determine cell styling
+      const cellWidth = colWidths.slice(i, i + colSpan).reduce((sum, w) => sum + w, 0);
+
       const isDay = i === 0;
       const isBreak = cell === "BREAK";
 
-      const cellParagraphs: Paragraph[] = [];
-      if (cell !== "SKIP") {
-        if (cell === "BREAK") {
-          cellParagraphs.push(new Paragraph({
-            alignment: AlignmentType.CENTER,
-            children: [new TextRun({ text: "BREAK", bold: true })]
-          }));
+      let text = cell;
+      let size = scope.kind === "section" ? 18 : 24; // 9pt for section, 12pt for teacher/room
+      let bold = false;
+
+      if (isDay) {
+        size = 24; // 12pt
+      } else if (isBreak) {
+        if (scope.kind === "section") {
+          text = "BREAK (10.50- 11.30)";
+          size = 16; // 8pt
         } else {
-          const lines = String(cell).split("\n");
-          for (const line of lines) {
-            if (line.trim() === "---") {
-              cellParagraphs.push(new Paragraph({
-                border: {
-                  top: { color: "auto", space: 1, style: "single", size: 6 },
-                },
-                children: [new TextRun(" ")]
-              }));
-            } else {
-              cellParagraphs.push(new Paragraph({
-                children: [new TextRun({ text: line, bold: isDay })]
-              }));
-            }
-          }
+          text = "BREAK";
+          size = 24; // 12pt
         }
+      } else if (cell !== "" && cell !== "SKIP") {
+        bold = scope.kind === "section"; // bold only in section routine class cells
       }
 
-      rowCells.push(new TableCell({
-        width: { size: cellWidth, type: WidthType.DXA },
-        columnSpan: colSpan > 1 ? colSpan : undefined,
-        shading: { fill: isDay ? "dbeafe" : isBreak ? "fef3c7" : "FFFFFF" }, // Light blue for day, light yellow for break
-        children: cellParagraphs.length > 0 ? cellParagraphs : [new Paragraph({})],
-      }));
+      if (cell !== "SKIP") {
+        rowCells.push(createCell(cellWidth, {
+          text,
+          bold,
+          size,
+          fill: isDay ? "D9D9D9" : undefined,
+          colSpan,
+        }));
+      }
     }
     bodyRows.push(new TableRow({ children: rowCells }));
   }
 
-  const metaParas: Paragraph[] = info.meta.map(
-    (m) =>
-      new Paragraph({
-        children: [
-          new TextRun({ text: `${m.label}: `, bold: true }),
-          new TextRun({ text: String(m.value) }),
-        ],
-      }),
-  );
-
-  const summary = buildRoutineCourseSummary(data, scope);
-  const summaryHeaderRow = new TableRow({
-    children: ["Course Code", "Course Title", "Theory", "Sessional", "Credit", "Classes/Week"].map((h, i) => 
-      new TableCell({
-        width: { size: [1200, 3800, 1000, 1000, 1000, 1000][i], type: WidthType.DXA },
-        shading: { fill: "2563eb" },
-        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: h, bold: true, color: "FFFFFF" })] })]
-      })
-    )
+  const routineGridTable = new Table({
+    width: { size: totalTable1Width, type: WidthType.DXA },
+    columnWidths: colWidths,
+    rows: [headerRow, ...bodyRows],
   });
 
-  const summaryBodyRows = summary.rows.map(r => 
-    new TableRow({
+  // Table 2: Course Load Summary Table
+  const summary = buildRoutineCourseSummary(data, scope);
+  const widths2 = [1500, 6000, 1000, 1000, 1500];
+  const totalTable2Width = widths2.reduce((sum, w) => sum + w, 0);
+
+  const summaryHeaderRow0 = new TableRow({
+    children: [
+      createCell(totalTable2Width, {
+        text: "COURSES",
+        bold: true,
+        size: 24, // 12pt
+        fill: "8EAADB",
+        colSpan: 5,
+      }),
+    ],
+  });
+
+  const summaryHeaderRow1 = new TableRow({
+    children: [
+      createCell(widths2[0], { text: "Course No.", bold: true, fill: "D5DCE4" }),
+      createCell(widths2[1], { text: "Course Title", bold: true, fill: "D5DCE4" }),
+      createCell(widths2[2] + widths2[3], { text: "Hours/Week", bold: true, fill: "D5DCE4", colSpan: 2 }),
+      createCell(widths2[4], { text: "Credit / Hours", bold: true, fill: "D5DCE4" }),
+    ],
+  });
+
+  const summaryHeaderRow2 = new TableRow({
+    children: [
+      createCell(widths2[0], { text: "Course No.", bold: true, fill: "D5DCE4" }),
+      createCell(widths2[1], { text: "Course Title", bold: true, fill: "D5DCE4" }),
+      createCell(widths2[2], { text: "Theory", bold: true, fill: "D5DCE4" }),
+      createCell(widths2[3], { text: "Sessional", bold: true, fill: "D5DCE4" }),
+      createCell(widths2[4], { text: "Credit / Hours", bold: true, fill: "D5DCE4" }),
+    ],
+  });
+
+  const summaryBodyRows = summary.rows.map((r) => {
+    return new TableRow({
       children: [
-        r.course.code,
-        r.course.name,
-        Number(r.theory).toFixed(2),
-        Number(r.sessional).toFixed(2),
-        Number(r.credit).toFixed(2),
-        r.meetings.toString()
-      ].map((v, i) => 
-        new TableCell({
-          width: { size: [1200, 3800, 1000, 1000, 1000, 1000][i], type: WidthType.DXA },
-          children: [new Paragraph({ alignment: i > 1 ? AlignmentType.CENTER : AlignmentType.LEFT, children: [new TextRun(v)] })]
-        })
-      )
-    })
-  );
+        createCell(widths2[0], { text: r.course.code, size: 18 }),
+        createCell(widths2[1], { text: r.course.name, size: 18, align: AlignmentType.LEFT }),
+        createCell(widths2[2], { text: r.theory > 0 ? Number(r.theory).toFixed(1) : "", size: 18 }),
+        createCell(widths2[3], { text: r.sessional > 0 ? Number(r.sessional).toFixed(1) : "", size: 18 }),
+        createCell(widths2[4], { text: Number(r.credit).toFixed(1), size: 18 }),
+      ],
+    });
+  });
 
   const summaryTotalRow = new TableRow({
     children: [
-      new TableCell({ columnSpan: 2, shading: { fill: "dbeafe" }, children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: "TOTAL", bold: true })] })] }),
-      new TableCell({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun(Number(summary.totals.theory).toFixed(2))] })] }),
-      new TableCell({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun(Number(summary.totals.sessional).toFixed(2))] })] }),
-      new TableCell({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun(Number(summary.totals.credit).toFixed(2))] })] }),
-      new TableCell({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun(summary.totals.meetings.toString())] })] }),
-    ]
+      createCell(widths2[0], { text: "" }),
+      createCell(widths2[1], { text: "Total:", bold: true, size: 18, align: AlignmentType.RIGHT }),
+      createCell(widths2[2], { text: Number(summary.totals.theory).toFixed(1), bold: true, size: 18 }),
+      createCell(widths2[3], { text: Number(summary.totals.sessional).toFixed(1), bold: true, size: 18 }),
+      createCell(widths2[4], { text: Number(summary.totals.credit).toFixed(1), bold: true, size: 18 }),
+    ],
   });
 
+  const summaryTable = new Table({
+    width: { size: totalTable2Width, type: WidthType.DXA },
+    columnWidths: widths2,
+    rows: [summaryHeaderRow0, summaryHeaderRow1, summaryHeaderRow2, ...summaryBodyRows, summaryTotalRow],
+  });
+
+  // Table 3: Teacher Details Table
   const teacherSummary = buildRoutineTeacherSummary(data, scope);
+  const widths3 = [1500, 4500, 4000];
+  const totalTable3Width = widths3.reduce((sum, w) => sum + w, 0);
+
   const teacherHeaderRow = new TableRow({
-    children: ["Short Form", "Teachers Name", "Designation"].map((h, i) =>
-      new TableCell({
-        width: { size: [1500, 4000, 3500][i], type: WidthType.DXA },
-        shading: { fill: "2563eb" },
-        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: h, bold: true, color: "FFFFFF" })] })]
-      })
-    )
+    children: [
+      createCell(widths3[0], { text: "Short Form", bold: true, size: 20, fill: "8EAADB" }),
+      createCell(widths3[1], { text: "Teachers Name", bold: true, size: 20, fill: "8EAADB" }),
+      createCell(widths3[2], { text: "Designation", bold: true, size: 20, fill: "8EAADB" }),
+    ],
   });
 
-  const teacherBodyRows = teacherSummary.map((r) =>
-    new TableRow({
+  const teacherBodyRows = teacherSummary.map((r) => {
+    return new TableRow({
       children: [
-        r.teacher.short_name,
-        r.teacher.name,
-        r.teacher.department ? `${r.teacher.designation}, ${r.teacher.department}` : r.teacher.designation,
-      ].map((v, i) =>
-        new TableCell({
-          width: { size: [1500, 4000, 3500][i], type: WidthType.DXA },
-          children: [new Paragraph({ children: [new TextRun(v)] })]
-        })
-      )
-    })
-  );
+        createCell(widths3[0], { text: r.teacher.short_name, size: 18 }),
+        createCell(widths3[1], { text: r.teacher.name, size: 18 }),
+        createCell(widths3[2], {
+          text: r.teacher.department 
+            ? `${r.teacher.designation} ,${r.teacher.department}` 
+            : r.teacher.designation,
+          size: 18,
+        }),
+      ],
+    });
+  });
+
+  const teacherFooterRow = new TableRow({
+    children: [
+      createCell(totalTable3Width, {
+        text: "**Names are arranged randomly",
+        italic: true,
+        size: 18,
+        align: AlignmentType.LEFT,
+        colSpan: 3,
+      }),
+    ],
+  });
+
+  const teacherTable = new Table({
+    width: { size: totalTable3Width, type: WidthType.DXA },
+    columnWidths: widths3,
+    rows: [teacherHeaderRow, ...teacherBodyRows, teacherFooterRow],
+  });
+
+  const docChildren: any[] = [
+    title1,
+    title2,
+    title3,
+    new Paragraph({ spacing: { before: 120, after: 120 }, children: [new TextRun(" ")] }),
+  ];
+
+  if (table0) {
+    docChildren.push(table0);
+    docChildren.push(new Paragraph({ spacing: { before: 120, after: 120 }, children: [new TextRun(" ")] }));
+  }
+
+  docChildren.push(routineGridTable);
+  docChildren.push(new Paragraph({ spacing: { before: 120, after: 120 }, children: [new TextRun(" ")] }));
+  docChildren.push(summaryTable);
+
+  if (teacherSummary.length > 0) {
+    docChildren.push(new Paragraph({ spacing: { before: 120, after: 120 }, children: [new TextRun(" ")] }));
+    docChildren.push(teacherTable);
+  }
 
   return new Document({
     sections: [
       {
-        properties: { page: { size: { width: 15840, height: 12240, orientation: "landscape" as any } } },
-        children: [
-          new Paragraph({ heading: HeadingLevel.HEADING_1, children: [new TextRun(info.title)] }),
-          ...metaParas,
-          new Paragraph({ children: [new TextRun(" ")] }),
-          new Table({
-            width: { size: 9000, type: WidthType.DXA },
-            columnWidths: header.map(() => Math.floor(9000 / header.length)),
-            rows: [headerRow, ...bodyRows],
-          }),
-          new Paragraph({ children: [new TextRun(" ")] }),
-          new Paragraph({ heading: HeadingLevel.HEADING_2, children: [new TextRun("Course Load Summary")] }),
-          new Table({
-            width: { size: 9000, type: WidthType.DXA },
-            columnWidths: [1200, 3800, 1000, 1000, 1000, 1000],
-            rows: [summaryHeaderRow, ...summaryBodyRows, summaryTotalRow],
-          }),
-          ...(teacherSummary.length > 0
-            ? [
-                new Paragraph({ children: [new TextRun(" ")] }),
-                new Paragraph({ heading: HeadingLevel.HEADING_2, children: [new TextRun("Teacher Details")] }),
-                new Table({
-                  width: { size: 9000, type: WidthType.DXA },
-                  columnWidths: [1500, 4000, 3500],
-                  rows: [teacherHeaderRow, ...teacherBodyRows],
-                }),
-              ]
-            : []),
-        ],
+        properties: {
+          page: {
+            size: { width: 16838, height: 11906, orientation: "landscape" as any },
+            margin: { top: 432, bottom: 432, left: 288, right: 576 },
+          },
+        },
+        children: docChildren,
       },
     ],
   });
