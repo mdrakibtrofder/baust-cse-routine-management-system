@@ -9,8 +9,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2, Edit2, Calendar, MapPin, Clock, BookOpen, Building2, AlertTriangle, ShieldCheck, FlaskConical } from "lucide-react";
-import { cn, fmtRange12 } from "@/lib/utils";
+import { Plus, Trash2, Edit2, Calendar, MapPin, Clock, BookOpen, Building2, ShieldCheck, FlaskConical, Copy, ListChecks } from "lucide-react";
+import { cn, fmtRange12, fmtDayTitle } from "@/lib/utils";
 import { HOME_DEPT_SHORT_NAME } from "@/lib/constants";
 import { toast } from "sonner";
 import type { PriorityClass, Course, Room, Period } from "@/lib/types";
@@ -72,6 +72,17 @@ export function PriorityClassesPage() {
         s.term === term
     );
   }, [data.sections, deptId, level, term]);
+
+  // Auto-select first available section when Level/Term/Dept changes (or on dialog open)
+  useEffect(() => {
+    if (filteredSections.length > 0) {
+      const exists = filteredSections.some((s) => s.id === sectionId);
+      if (!exists) setSectionId(filteredSections[0].id);
+    } else if (sectionId) {
+      setSectionId("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filteredSections]);
 
   // Derived courses matching selection & Course Type selection
   const filteredCourses = useMemo(() => {
@@ -140,6 +151,26 @@ export function PriorityClassesPage() {
     setSelectedDays(item.days || []);
     setCurrentStep(0);
     setIsOpen(true);
+  };
+
+  const handleDuplicate = (item: PriorityClass) => {
+    setEditingId(null);
+    setDeptId(item.department_id);
+    setLevel(String(item.level));
+    setTerm(item.term);
+    setSectionId(item.section_id);
+    setCourseType(item.course_type || "Theory");
+    setSelectedCourseIds(item.course_ids || []);
+    setSelectedRoomIds(item.room_ids || []);
+
+    const matchedPeriods = data.periods.filter((p) =>
+      item.time_slots?.some((ts) => ts.start === p.start && ts.end === p.end)
+    );
+    setSelectedPeriods(matchedPeriods);
+    setSelectedDays(item.days || []);
+    setCurrentStep(0);
+    setIsOpen(true);
+    toast.success("Duplicated priority class - ready to save as new!");
   };
 
   const validateStepAt = (step: number) => {
@@ -265,6 +296,40 @@ export function PriorityClassesPage() {
       }
     }
   };
+
+
+
+  // Select-all helpers for optional multi-select steps
+  const allCourseIds = useMemo(() => filteredCourses.map((c) => c.id), [filteredCourses]);
+  const allPeriodIds = useMemo(() => filteredPeriods.map((p) => p.id), [filteredPeriods]);
+  const allDayNames = useMemo(() => data.days.map((d) => d.name), [data.days]);
+
+  const toggleSelectAll = (
+    allIds: string[],
+    selected: string[],
+    setter: (next: string[]) => void,
+    label: string,
+  ) => {
+    if (selected.length === allIds.length && allIds.length > 0) {
+      setter([]);
+      toast.message(`Cleared all ${label}.`);
+    } else {
+      setter([...allIds]);
+      toast.success(`Selected all ${allIds.length} ${label}.`);
+    }
+  };
+
+  const toggleAllCourses = () =>
+    toggleSelectAll(allCourseIds, selectedCourseIds, setSelectedCourseIds, "courses");
+  const toggleAllPeriods = () =>
+    toggleSelectAll(allPeriodIds, selectedPeriods.map((p) => p.id), (ids) => {
+      setSelectedPeriods(filteredPeriods.filter((p) => ids.includes(p.id)));
+    }, "periods");
+  const toggleAllDays = () => toggleSelectAll(allDayNames, selectedDays, setSelectedDays, "days");
+
+  const isAllCourses = allCourseIds.length > 0 && selectedCourseIds.length === allCourseIds.length;
+  const isAllPeriods = allPeriodIds.length > 0 && selectedPeriods.length === allPeriodIds.length;
+  const isAllDays = allDayNames.length > 0 && selectedDays.length === allDayNames.length;
 
   return (
     <div>
@@ -395,6 +460,14 @@ export function PriorityClassesPage() {
                       </TableCell>
                       <TableCell className="text-right align-middle">
                         <div className="flex justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDuplicate(item)}
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted"
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
                           <Button
                             variant="ghost"
                             size="icon"
@@ -580,7 +653,24 @@ export function PriorityClassesPage() {
                     <span className="font-semibold">Step 4: Course Selection (Optional).</span> Select specific courses in this section to apply priority, or skip to apply to all courses of this section.
                   </div>
                 </div>
-                <Label className="block text-sm font-medium mt-2">Available Courses</Label>
+                <div className="flex items-center justify-between mt-2">
+                  <Label className="text-sm font-medium">Available Courses</Label>
+                  {filteredCourses.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={toggleAllCourses}
+                      className={cn(
+                        "inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold transition",
+                        isAllCourses
+                          ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                          : "text-primary bg-primary/10 hover:bg-primary/20"
+                      )}
+                    >
+                      <ListChecks className="h-3 w-3" />
+                      {isAllCourses ? "Unselect all" : "Select all"}
+                    </button>
+                  )}
+                </div>
                 {filteredCourses.length === 0 ? (
                   <div className="text-center py-8 text-xs text-muted-foreground border rounded-lg bg-muted/20">
                     No courses available for selected Level/Term/Department/Type.
@@ -684,7 +774,24 @@ export function PriorityClassesPage() {
                     <span className="font-semibold">Step 6: Time Slots (Optional).</span> Select periods/time slots for these classes, or skip to allow any time slot.
                   </div>
                 </div>
-                <Label className="block text-sm font-medium mt-2">Select Periods</Label>
+                <div className="flex items-center justify-between mt-2">
+                  <Label className="text-sm font-medium">Select Periods</Label>
+                  {filteredPeriods.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={toggleAllPeriods}
+                      className={cn(
+                        "inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold transition",
+                        isAllPeriods
+                          ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                          : "text-primary bg-primary/10 hover:bg-primary/20"
+                      )}
+                    >
+                      <ListChecks className="h-3 w-3" />
+                      {isAllPeriods ? "Unselect all" : "Select all"}
+                    </button>
+                  )}
+                </div>
                 <div className="flex flex-col gap-2 border rounded-lg p-3 max-h-48 overflow-y-auto">
                   {filteredPeriods.map((p) => {
                     const checked = selectedPeriods.some((x) => x.id === p.id);
@@ -717,7 +824,24 @@ export function PriorityClassesPage() {
                     <span className="font-semibold">Step 7: Days of Week (Optional).</span> Select preferred days, or skip to allow any day.
                   </div>
                 </div>
-                <Label className="block text-sm font-medium mt-2">Select Days</Label>
+                <div className="flex items-center justify-between mt-2">
+                  <Label className="text-sm font-medium">Select Days</Label>
+                  {data.days.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={toggleAllDays}
+                      className={cn(
+                        "inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold transition",
+                        isAllDays
+                          ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                          : "text-primary bg-primary/10 hover:bg-primary/20"
+                      )}
+                    >
+                      <ListChecks className="h-3 w-3" />
+                      {isAllDays ? "Unselect all" : "Select all"}
+                    </button>
+                  )}
+                </div>
                 <div className="flex flex-col gap-2 border rounded-lg p-3 max-h-48 overflow-y-auto">
                   {data.days.map((d) => {
                     const checked = selectedDays.includes(d.name);
