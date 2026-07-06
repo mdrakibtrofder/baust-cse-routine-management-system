@@ -50,6 +50,34 @@ export function PriorityClassesPage() {
   // Room view option
   const [showOtherRooms, setShowOtherRooms] = useState(false);
 
+  // Filters State
+  const [filterDeptId, setFilterDeptId] = useState("ALL");
+  const [filterSectionId, setFilterSectionId] = useState("ALL");
+  const [filterCourseId, setFilterCourseId] = useState("ALL");
+  const [filterRoomId, setFilterRoomId] = useState("ALL");
+  const [filterPeriodId, setFilterPeriodId] = useState("ALL");
+  const [filterDay, setFilterDay] = useState("ALL");
+
+  const hasActiveFilters = useMemo(() => {
+    return (
+      filterDeptId !== "ALL" ||
+      filterSectionId !== "ALL" ||
+      filterCourseId !== "ALL" ||
+      filterRoomId !== "ALL" ||
+      filterPeriodId !== "ALL" ||
+      filterDay !== "ALL"
+    );
+  }, [filterDeptId, filterSectionId, filterCourseId, filterRoomId, filterPeriodId, filterDay]);
+
+  const handleResetFilters = () => {
+    setFilterDeptId("ALL");
+    setFilterSectionId("ALL");
+    setFilterCourseId("ALL");
+    setFilterRoomId("ALL");
+    setFilterPeriodId("ALL");
+    setFilterDay("ALL");
+  };
+
   // Set default department (CSE) on load
   const cseDept = useMemo(() => {
     return data.departments.find(
@@ -113,9 +141,34 @@ export function PriorityClassesPage() {
   }, [data.periods, courseType]);
 
   const activeSemesterPriorityClasses = useMemo(() => {
-    const filtered = data.priority_classes.filter(
+    let filtered = data.priority_classes.filter(
       (pc) => pc.semester_id === data.active_semester_id
     );
+
+    // Apply filters
+    if (filterDeptId !== "ALL") {
+      filtered = filtered.filter((pc) => pc.department_id === filterDeptId);
+    }
+    if (filterSectionId !== "ALL") {
+      filtered = filtered.filter((pc) => pc.section_id === filterSectionId);
+    }
+    if (filterCourseId !== "ALL") {
+      filtered = filtered.filter((pc) => pc.course_ids && pc.course_ids.includes(filterCourseId));
+    }
+    if (filterRoomId !== "ALL") {
+      filtered = filtered.filter((pc) => pc.room_ids && pc.room_ids.includes(filterRoomId));
+    }
+    if (filterPeriodId !== "ALL") {
+      const targetPeriod = data.periods.find((p) => p.id === filterPeriodId);
+      if (targetPeriod) {
+        filtered = filtered.filter((pc) => 
+          pc.time_slots && pc.time_slots.some((ts) => ts.start === targetPeriod.start && ts.end === targetPeriod.end)
+        );
+      }
+    }
+    if (filterDay !== "ALL") {
+      filtered = filtered.filter((pc) => pc.days && pc.days.includes(filterDay));
+    }
 
     return [...filtered].sort((a, b) => {
       const deptA = data.departments.find((d) => d.id === a.department_id);
@@ -147,7 +200,25 @@ export function PriorityClassesPage() {
       const secNameB = secB?.name || "";
       return secNameA.localeCompare(secNameB);
     });
-  }, [data.priority_classes, data.active_semester_id, data.departments, data.sections]);
+  }, [
+    data.priority_classes, 
+    data.active_semester_id, 
+    data.departments, 
+    data.sections, 
+    data.periods,
+    filterDeptId,
+    filterSectionId,
+    filterCourseId,
+    filterRoomId,
+    filterPeriodId,
+    filterDay
+  ]);
+
+  const activeSemesterPriorityClassesRaw = useMemo(() => {
+    return data.priority_classes.filter(
+      (pc) => pc.semester_id === data.active_semester_id
+    );
+  }, [data.priority_classes, data.active_semester_id]);
 
   const handleOpen = () => {
     setEditingId(null);
@@ -375,7 +446,7 @@ export function PriorityClassesPage() {
       />
 
       <div className="p-4 sm:p-6 space-y-6">
-        {activeSemesterPriorityClasses.length === 0 ? (
+        {activeSemesterPriorityClassesRaw.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center bg-card rounded-xl border border-dashed p-8 shadow-sm">
             <ShieldCheck className="h-12 w-12 text-muted-foreground opacity-50 mb-4" />
             <h3 className="text-lg font-medium text-muted-foreground">No priority classes defined</h3>
@@ -387,7 +458,145 @@ export function PriorityClassesPage() {
             </Button>
           </div>
         ) : (
-          <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+          <div className="space-y-6">
+            {/* Filters Bar */}
+            <div className="bg-card border rounded-xl p-4 shadow-sm space-y-4">
+              <div className="flex items-center justify-between border-b pb-2 border-border/60">
+                <h4 className="text-sm font-semibold flex items-center gap-1.5 text-foreground/80">
+                  Filter Priority Rules
+                </h4>
+                {hasActiveFilters && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleResetFilters}
+                    className="h-7 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+                  >
+                    Clear Filters
+                  </Button>
+                )}
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-[10px] text-muted-foreground uppercase font-semibold">Department</Label>
+                  <Select value={filterDeptId} onValueChange={setFilterDeptId}>
+                    <SelectTrigger className="h-9 text-xs">
+                      <SelectValue placeholder="All Departments" />
+                    </SelectTrigger>
+                    <SelectContent className="text-xs">
+                      <SelectItem value="ALL">All Departments</SelectItem>
+                      {data.departments.map((d) => (
+                        <SelectItem key={d.id} value={d.id} className="text-xs">
+                          {d.short_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-[10px] text-muted-foreground uppercase font-semibold">Section</Label>
+                  <Select value={filterSectionId} onValueChange={setFilterSectionId}>
+                    <SelectTrigger className="h-9 text-xs">
+                      <SelectValue placeholder="All Sections" />
+                    </SelectTrigger>
+                    <SelectContent className="text-xs">
+                      <SelectItem value="ALL">All Sections</SelectItem>
+                      {data.sections.map((s) => {
+                        const dept = data.departments.find((d) => d.id === s.department_id);
+                        return (
+                          <SelectItem key={s.id} value={s.id} className="text-xs">
+                            {dept?.short_name || "CSE"} L{s.level}T{s.term} {s.name}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-[10px] text-muted-foreground uppercase font-semibold">Course</Label>
+                  <Select value={filterCourseId} onValueChange={setFilterCourseId}>
+                    <SelectTrigger className="h-9 text-xs">
+                      <SelectValue placeholder="All Courses" />
+                    </SelectTrigger>
+                    <SelectContent className="text-xs">
+                      <SelectItem value="ALL">All Courses</SelectItem>
+                      {data.courses.map((c) => (
+                        <SelectItem key={c.id} value={c.id} className="text-xs">
+                          {c.code}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-[10px] text-muted-foreground uppercase font-semibold">Room</Label>
+                  <Select value={filterRoomId} onValueChange={setFilterRoomId}>
+                    <SelectTrigger className="h-9 text-xs">
+                      <SelectValue placeholder="All Rooms" />
+                    </SelectTrigger>
+                    <SelectContent className="text-xs">
+                      <SelectItem value="ALL">All Rooms</SelectItem>
+                      {data.rooms.map((r) => (
+                        <SelectItem key={r.id} value={r.id} className="text-xs">
+                          {r.name} ({r.room_type})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-[10px] text-muted-foreground uppercase font-semibold">Time Slot</Label>
+                  <Select value={filterPeriodId} onValueChange={setFilterPeriodId}>
+                    <SelectTrigger className="h-9 text-xs">
+                      <SelectValue placeholder="All Time Slots" />
+                    </SelectTrigger>
+                    <SelectContent className="text-xs">
+                      <SelectItem value="ALL">All Time Slots</SelectItem>
+                      {data.periods.filter(p => !p.is_break).map((p) => (
+                        <SelectItem key={p.id} value={p.id} className="text-xs">
+                          {p.name} ({fmtRange12(p.start, p.end)})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-[10px] text-muted-foreground uppercase font-semibold">Day</Label>
+                  <Select value={filterDay} onValueChange={setFilterDay}>
+                    <SelectTrigger className="h-9 text-xs">
+                      <SelectValue placeholder="All Days" />
+                    </SelectTrigger>
+                    <SelectContent className="text-xs">
+                      <SelectItem value="ALL">All Days</SelectItem>
+                      {data.days.map((d) => (
+                        <SelectItem key={d.id} value={d.name} className="text-xs">
+                          {d.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
+            {activeSemesterPriorityClasses.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center bg-card rounded-xl border border-dashed p-8 shadow-sm">
+                <ShieldCheck className="h-10 w-10 text-muted-foreground opacity-40 mb-3" />
+                <h4 className="text-md font-medium text-muted-foreground">No matching priority rules found</h4>
+                <p className="text-xs text-muted-foreground mt-1 max-w-sm">
+                  Try adjusting or clearing your filters to see the full list of priority class configurations.
+                </p>
+                <Button onClick={handleResetFilters} className="mt-4 text-xs" variant="outline" size="sm">
+                  Clear Filters
+                </Button>
+              </div>
+            ) : (
+              <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/40">
@@ -522,6 +731,8 @@ export function PriorityClassesPage() {
                 })}
               </TableBody>
             </Table>
+          </div>
+        )}
           </div>
         )}
       </div>
