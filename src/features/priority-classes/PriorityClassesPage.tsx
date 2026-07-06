@@ -7,6 +7,7 @@ import { Stepper } from "@/components/Stepper";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
 import { Plus, Trash2, Edit2, Calendar, MapPin, Clock, BookOpen, Building2, ShieldCheck, FlaskConical, Copy, ListChecks } from "lucide-react";
@@ -111,6 +112,34 @@ export function PriorityClassesPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filteredSections]);
+
+  const filteredFilterSectionsOptions = useMemo(() => {
+    let secs = [...data.sections];
+    if (filterDeptId !== "ALL") {
+      secs = secs.filter((s) => s.department_id === filterDeptId);
+    }
+    // Sort sections: department first (CSE first, then alphabetical), then level, then term, then section name
+    return secs.sort((a, b) => {
+      const deptA = data.departments.find((d) => d.id === a.department_id);
+      const deptB = data.departments.find((d) => d.id === b.department_id);
+      const nameA = deptA?.short_name.trim().toUpperCase() || "";
+      const nameB = deptB?.short_name.trim().toUpperCase() || "";
+
+      if (nameA !== nameB) {
+        if (nameA === HOME_DEPT_SHORT_NAME) return -1;
+        if (nameB === HOME_DEPT_SHORT_NAME) return 1;
+        return nameA.localeCompare(nameB);
+      }
+
+      if (a.level !== b.level) {
+        return a.level - b.level;
+      }
+      if (a.term !== b.term) {
+        return a.term.localeCompare(b.term);
+      }
+      return a.name.localeCompare(b.name);
+    });
+  }, [data.sections, data.departments, filterDeptId]);
 
   // Derived courses matching selection & Course Type selection
   const filteredCourses = useMemo(() => {
@@ -479,107 +508,102 @@ export function PriorityClassesPage() {
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-[10px] text-muted-foreground uppercase font-semibold">Department</Label>
-                  <Select value={filterDeptId} onValueChange={setFilterDeptId}>
-                    <SelectTrigger className="h-9 text-xs">
-                      <SelectValue placeholder="All Departments" />
-                    </SelectTrigger>
-                    <SelectContent className="text-xs">
-                      <SelectItem value="ALL">All Departments</SelectItem>
-                      {data.departments.map((d) => (
-                        <SelectItem key={d.id} value={d.id} className="text-xs">
-                          {d.short_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Combobox
+                    options={[
+                      { value: "ALL", label: "All Departments" },
+                      ...data.departments.map((d) => ({ value: d.id, label: d.short_name })),
+                    ]}
+                    value={filterDeptId}
+                    onValueChange={(val) => {
+                      setFilterDeptId(val);
+                      if (val !== "ALL") {
+                        const sec = data.sections.find((s) => s.id === filterSectionId);
+                        if (sec && sec.department_id !== val) {
+                          setFilterSectionId("ALL");
+                        }
+                      }
+                    }}
+                    placeholder="All Departments"
+                    className="h-9 text-xs w-full bg-background"
+                  />
                 </div>
 
                 <div className="space-y-1.5">
                   <Label className="text-[10px] text-muted-foreground uppercase font-semibold">Section</Label>
-                  <Select value={filterSectionId} onValueChange={setFilterSectionId}>
-                    <SelectTrigger className="h-9 text-xs">
-                      <SelectValue placeholder="All Sections" />
-                    </SelectTrigger>
-                    <SelectContent className="text-xs">
-                      <SelectItem value="ALL">All Sections</SelectItem>
-                      {data.sections.map((s) => {
+                  <Combobox
+                    options={[
+                      { value: "ALL", label: "All Sections" },
+                      ...filteredFilterSectionsOptions.map((s) => {
                         const dept = data.departments.find((d) => d.id === s.department_id);
-                        return (
-                          <SelectItem key={s.id} value={s.id} className="text-xs">
-                            {dept?.short_name || "CSE"} L{s.level}T{s.term} {s.name}
-                          </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
+                        const deptLabel = dept?.short_name || "CSE";
+                        return {
+                          value: s.id,
+                          label: `${deptLabel} L${s.level}T${s.term} ${s.name}`,
+                          group: deptLabel,
+                        };
+                      }),
+                    ]}
+                    value={filterSectionId}
+                    onValueChange={setFilterSectionId}
+                    placeholder="All Sections"
+                    className="h-9 text-xs w-full bg-background"
+                  />
                 </div>
 
                 <div className="space-y-1.5">
                   <Label className="text-[10px] text-muted-foreground uppercase font-semibold">Course</Label>
-                  <Select value={filterCourseId} onValueChange={setFilterCourseId}>
-                    <SelectTrigger className="h-9 text-xs">
-                      <SelectValue placeholder="All Courses" />
-                    </SelectTrigger>
-                    <SelectContent className="text-xs">
-                      <SelectItem value="ALL">All Courses</SelectItem>
-                      {data.courses.map((c) => (
-                        <SelectItem key={c.id} value={c.id} className="text-xs">
-                          {c.code}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Combobox
+                    options={[
+                      { value: "ALL", label: "All Courses" },
+                      ...data.courses.map((c) => ({ value: c.id, label: `${c.code} - ${c.name}` })),
+                    ]}
+                    value={filterCourseId}
+                    onValueChange={setFilterCourseId}
+                    placeholder="All Courses"
+                    className="h-9 text-xs w-full bg-background"
+                  />
                 </div>
 
                 <div className="space-y-1.5">
                   <Label className="text-[10px] text-muted-foreground uppercase font-semibold">Room</Label>
-                  <Select value={filterRoomId} onValueChange={setFilterRoomId}>
-                    <SelectTrigger className="h-9 text-xs">
-                      <SelectValue placeholder="All Rooms" />
-                    </SelectTrigger>
-                    <SelectContent className="text-xs">
-                      <SelectItem value="ALL">All Rooms</SelectItem>
-                      {data.rooms.map((r) => (
-                        <SelectItem key={r.id} value={r.id} className="text-xs">
-                          {r.name} ({r.room_type})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Combobox
+                    options={[
+                      { value: "ALL", label: "All Rooms" },
+                      ...data.rooms.map((r) => ({ value: r.id, label: `${r.name} (${r.room_type})` })),
+                    ]}
+                    value={filterRoomId}
+                    onValueChange={setFilterRoomId}
+                    placeholder="All Rooms"
+                    className="h-9 text-xs w-full bg-background"
+                  />
                 </div>
 
                 <div className="space-y-1.5">
                   <Label className="text-[10px] text-muted-foreground uppercase font-semibold">Time Slot</Label>
-                  <Select value={filterPeriodId} onValueChange={setFilterPeriodId}>
-                    <SelectTrigger className="h-9 text-xs">
-                      <SelectValue placeholder="All Time Slots" />
-                    </SelectTrigger>
-                    <SelectContent className="text-xs">
-                      <SelectItem value="ALL">All Time Slots</SelectItem>
-                      {data.periods.filter(p => !p.is_break).map((p) => (
-                        <SelectItem key={p.id} value={p.id} className="text-xs">
-                          {p.name} ({fmtRange12(p.start, p.end)})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Combobox
+                    options={[
+                      { value: "ALL", label: "All Time Slots" },
+                      ...data.periods.filter(p => !p.is_break).map((p) => ({ value: p.id, label: `${p.name} (${fmtRange12(p.start, p.end)})` })),
+                    ]}
+                    value={filterPeriodId}
+                    onValueChange={setFilterPeriodId}
+                    placeholder="All Time Slots"
+                    className="h-9 text-xs w-full bg-background"
+                  />
                 </div>
 
                 <div className="space-y-1.5">
                   <Label className="text-[10px] text-muted-foreground uppercase font-semibold">Day</Label>
-                  <Select value={filterDay} onValueChange={setFilterDay}>
-                    <SelectTrigger className="h-9 text-xs">
-                      <SelectValue placeholder="All Days" />
-                    </SelectTrigger>
-                    <SelectContent className="text-xs">
-                      <SelectItem value="ALL">All Days</SelectItem>
-                      {data.days.map((d) => (
-                        <SelectItem key={d.id} value={d.name} className="text-xs">
-                          {d.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Combobox
+                    options={[
+                      { value: "ALL", label: "All Days" },
+                      ...data.days.map((d) => ({ value: d.name, label: d.name })),
+                    ]}
+                    value={filterDay}
+                    onValueChange={setFilterDay}
+                    placeholder="All Days"
+                    className="h-9 text-xs w-full bg-background"
+                  />
                 </div>
               </div>
             </div>
@@ -767,18 +791,13 @@ export function PriorityClassesPage() {
                 </div>
                 <div className="space-y-2 mt-4">
                   <Label htmlFor="department">Select Department</Label>
-                  <Select value={deptId} onValueChange={setDeptId}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Choose department..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {data.departments.map((d) => (
-                        <SelectItem key={d.id} value={d.id}>
-                          {d.full_name} ({d.short_name})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Combobox
+                    options={data.departments.map((d) => ({ value: d.id, label: `${d.full_name} (${d.short_name})` }))}
+                    value={deptId}
+                    onValueChange={setDeptId}
+                    placeholder="Choose department..."
+                    className="w-full bg-background"
+                  />
                 </div>
               </div>
             )}
@@ -794,45 +813,35 @@ export function PriorityClassesPage() {
                 <div className="grid grid-cols-2 gap-4 mt-2">
                   <div className="space-y-2">
                     <Label htmlFor="level">Level</Label>
-                    <Select value={level} onValueChange={(v) => { setLevel(v); setSectionId(""); }}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {["1", "2", "3", "4"].map((l) => (
-                          <SelectItem key={l} value={l}>Level {l}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Combobox
+                      options={["1", "2", "3", "4"].map((l) => ({ value: l, label: `Level ${l}` }))}
+                      value={level}
+                      onValueChange={(v) => { setLevel(v); setSectionId(""); }}
+                      placeholder="Select Level..."
+                      className="w-full bg-background"
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="term">Term</Label>
-                    <Select value={term} onValueChange={(v) => { setTerm(v); setSectionId(""); }}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {["I", "II"].map((t) => (
-                          <SelectItem key={t} value={t}>Term {t}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Combobox
+                      options={["I", "II"].map((t) => ({ value: t, label: `Term ${t}` }))}
+                      value={term}
+                      onValueChange={(v) => { setTerm(v); setSectionId(""); }}
+                      placeholder="Select Term..."
+                      className="w-full bg-background"
+                    />
                   </div>
                 </div>
                 <div className="space-y-2 mt-2">
                   <Label htmlFor="section">Section</Label>
-                  <Select value={sectionId} onValueChange={setSectionId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={filteredSections.length === 0 ? "No sections available" : "Select Section..."} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {filteredSections.map((s) => (
-                        <SelectItem key={s.id} value={s.id}>
-                          Section {s.name} ({s.total_students} students)
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Combobox
+                    options={filteredSections.map((s) => ({ value: s.id, label: `Section ${s.name} (${s.total_students} students)` }))}
+                    value={sectionId}
+                    onValueChange={setSectionId}
+                    placeholder={filteredSections.length === 0 ? "No sections available" : "Select Section..."}
+                    disabled={filteredSections.length === 0}
+                    className="w-full bg-background"
+                  />
                 </div>
               </div>
             )}
