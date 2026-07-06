@@ -11,6 +11,7 @@ import { timesOverlap } from "@/lib/conflicts";
 import { compareTimeValues, fmtRange12, sortDays, fmtDayTitle } from "@/lib/utils";
 import type { RoutineScope } from "@/components/RoutineView";
 import { buildRoutineCourseSummary, buildRoutineTeacherSummary } from "./routine-summary";
+import JSZip from "jszip";
 
 const DEFAULT_DEPT = "CSE";
 
@@ -340,7 +341,8 @@ export function exportRoutinePdf(data: AppData, scope: RoutineScope) {
 }
 
 /* =============== DOCX =============== */
-export async function exportRoutineDocx(data: AppData, scope: RoutineScope) {
+/* =============== DOCX =============== */
+export function buildRoutineDocxDocument(data: AppData, scope: RoutineScope): Document {
   const info = getScopeInfo(data, scope);
   const { header, rows } = buildRoutineMatrix(data, scope);
 
@@ -500,7 +502,7 @@ export async function exportRoutineDocx(data: AppData, scope: RoutineScope) {
     })
   );
 
-  const doc = new Document({
+  return new Document({
     sections: [
       {
         properties: { page: { size: { width: 15840, height: 12240, orientation: "landscape" as any } } },
@@ -535,8 +537,50 @@ export async function exportRoutineDocx(data: AppData, scope: RoutineScope) {
       },
     ],
   });
+}
+
+export async function exportRoutineDocx(data: AppData, scope: RoutineScope) {
+  const info = getScopeInfo(data, scope);
+  const doc = buildRoutineDocxDocument(data, scope);
   const blob = await Packer.toBlob(doc);
   saveAs(blob, `${info.slug}.docx`);
+}
+
+export async function exportAllRoutinesDocxZip(data: AppData) {
+  const zip = new JSZip();
+
+  // 1. Export all Sections
+  const sectionsFolder = zip.folder("Sections");
+  for (const s of data.sections) {
+    const scope: RoutineScope = { kind: "section", section_id: s.id };
+    const info = getScopeInfo(data, scope);
+    const doc = buildRoutineDocxDocument(data, scope);
+    const blob = await Packer.toBlob(doc);
+    sectionsFolder?.file(`${info.slug}.docx`, blob);
+  }
+
+  // 2. Export all Teachers
+  const teachersFolder = zip.folder("Teachers");
+  for (const t of data.teachers) {
+    const scope: RoutineScope = { kind: "teacher", teacher_id: t.id };
+    const info = getScopeInfo(data, scope);
+    const doc = buildRoutineDocxDocument(data, scope);
+    const blob = await Packer.toBlob(doc);
+    teachersFolder?.file(`${info.slug}.docx`, blob);
+  }
+
+  // 3. Export all Rooms
+  const roomsFolder = zip.folder("Rooms");
+  for (const r of data.rooms) {
+    const scope: RoutineScope = { kind: "room", room_id: r.id };
+    const info = getScopeInfo(data, scope);
+    const doc = buildRoutineDocxDocument(data, scope);
+    const blob = await Packer.toBlob(doc);
+    roomsFolder?.file(`${info.slug}.docx`, blob);
+  }
+
+  const content = await zip.generateAsync({ type: "blob" });
+  saveAs(content, "All_Routines_Docx.zip");
 }
 
 /* =============== JSON =============== */

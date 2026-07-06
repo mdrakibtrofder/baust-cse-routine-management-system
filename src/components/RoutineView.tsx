@@ -1,13 +1,13 @@
 import { useMemo, useState } from "react";
 import { useStore } from "@/lib/store";
 import { cn, compareTimeValues, fmtTime12, fmtRange12, sortDays, fmtDayTitle } from "@/lib/utils";
-import { BookOpen, MapPin, Coffee, FlaskConical, FileSpreadsheet, FileText, FileType, FileJson, Image as ImageIcon, Eye, Users, Ban } from "lucide-react";
+import { BookOpen, MapPin, Coffee, FlaskConical, FileSpreadsheet, FileText, FileType, FileJson, Image as ImageIcon, Eye, Users, Ban, Archive } from "lucide-react";
 import { COURSE_TYPE_INFO, type ClassSlot, type Section } from "@/lib/types";
 import { timesOverlap } from "@/lib/conflicts";
 import { Button } from "@/components/ui/button";
 import {
   exportRoutineExcel, exportRoutinePdf, exportRoutineDocx,
-  exportRoutineJson, exportRoutineImage,
+  exportRoutineJson, exportRoutineImage, exportAllRoutinesDocxZip,
 } from "@/lib/routine-export";
 import { toast } from "sonner";
 import { RoutineCourseSummary } from "@/components/RoutineCourseSummary";
@@ -202,6 +202,10 @@ export function RoutineView({
           <Button size="sm" variant="outline" className="h-7 text-xs"
             onClick={async () => { try { await exportRoutineDocx(data, scope); } catch (e: any) { toast.error(e.message); } }}>
             <FileType className="h-3.5 w-3.5 mr-1" /> DOCX
+          </Button>
+          <Button size="sm" variant="outline" className="h-7 text-xs bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-950/20 dark:border-indigo-900/50 dark:text-indigo-400"
+            onClick={async () => { try { await exportAllRoutinesDocxZip(data); } catch (e: any) { toast.error(e.message); } }}>
+            <Archive className="h-3.5 w-3.5 mr-1" /> Export All (ZIP)
           </Button>
           <Button size="sm" variant="outline" className="h-7 text-xs"
             onClick={() => { try { exportRoutineJson(data, scope); } catch (e: any) { toast.error(e.message); } }}>
