@@ -349,32 +349,81 @@ export async function exportRoutineDocx(data: AppData, scope: RoutineScope) {
       (h) =>
         new TableCell({
           width: { size: Math.floor(9000 / header.length), type: WidthType.DXA },
+          shading: { fill: "2563eb" }, // Blue
           children: [
             new Paragraph({
               alignment: AlignmentType.CENTER,
-              children: [new TextRun({ text: h, bold: true })],
+              children: [new TextRun({ text: h, bold: true, color: "FFFFFF" })],
             }),
           ],
         }),
     ),
   });
-  const bodyRows = rows.map(
-    (r) =>
-      new TableRow({
-        children: r.map(
-          (cell, i) =>
-            new TableCell({
-              width: { size: Math.floor(9000 / header.length), type: WidthType.DXA },
-              children: cell.split("\n").map(
-                (line) =>
-                  new Paragraph({
-                    children: [new TextRun({ text: line, bold: i === 0 })],
-                  }),
-              ),
-            }),
-        ),
-      }),
-  );
+
+  // Process body rows with cell merging and styling
+  const bodyRows: TableRow[] = [];
+  for (const r of rows) {
+    const rowCells: TableCell[] = [];
+    let skipCount = 0;
+    for (let i = 0; i < r.length; i++) {
+      const cell = r[i];
+      if (skipCount > 0) {
+        skipCount--;
+        continue;
+      }
+
+      // Calculate column span
+      let colSpan = 1;
+      if (cell !== "" && cell !== "BREAK" && cell !== "SKIP") {
+        let j = i + 1;
+        while (j < r.length && r[j] === "SKIP") {
+          colSpan++;
+          j++;
+        }
+        skipCount = colSpan - 1;
+      }
+
+      const cellWidth = Math.floor(9000 / header.length) * colSpan;
+      
+      // Determine cell styling
+      const isDay = i === 0;
+      const isBreak = cell === "BREAK";
+
+      const cellParagraphs: Paragraph[] = [];
+      if (cell !== "SKIP") {
+        if (cell === "BREAK") {
+          cellParagraphs.push(new Paragraph({
+            alignment: AlignmentType.CENTER,
+            children: [new TextRun({ text: "BREAK", bold: true })]
+          }));
+        } else {
+          const lines = String(cell).split("\n");
+          for (const line of lines) {
+            if (line.trim() === "---") {
+              cellParagraphs.push(new Paragraph({
+                border: {
+                  top: { color: "auto", space: 1, style: "single", size: 6 },
+                },
+                children: [new TextRun(" ")]
+              }));
+            } else {
+              cellParagraphs.push(new Paragraph({
+                children: [new TextRun({ text: line, bold: isDay })]
+              }));
+            }
+          }
+        }
+      }
+
+      rowCells.push(new TableCell({
+        width: { size: cellWidth, type: WidthType.DXA },
+        columnSpan: colSpan > 1 ? colSpan : undefined,
+        shading: { fill: isDay ? "dbeafe" : isBreak ? "fef3c7" : "FFFFFF" }, // Light blue for day, light yellow for break
+        children: cellParagraphs.length > 0 ? cellParagraphs : [new Paragraph({})],
+      }));
+    }
+    bodyRows.push(new TableRow({ children: rowCells }));
+  }
 
   const metaParas: Paragraph[] = info.meta.map(
     (m) =>
@@ -391,7 +440,8 @@ export async function exportRoutineDocx(data: AppData, scope: RoutineScope) {
     children: ["Course Code", "Course Title", "Theory", "Sessional", "Credit", "Classes/Week"].map((h, i) => 
       new TableCell({
         width: { size: [1200, 3800, 1000, 1000, 1000, 1000][i], type: WidthType.DXA },
-        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: h, bold: true })] })]
+        shading: { fill: "2563eb" },
+        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: h, bold: true, color: "FFFFFF" })] })]
       })
     )
   });
@@ -416,7 +466,7 @@ export async function exportRoutineDocx(data: AppData, scope: RoutineScope) {
 
   const summaryTotalRow = new TableRow({
     children: [
-      new TableCell({ columnSpan: 2, children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: "TOTAL", bold: true })] })] }),
+      new TableCell({ columnSpan: 2, shading: { fill: "dbeafe" }, children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: "TOTAL", bold: true })] })] }),
       new TableCell({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun(Number(summary.totals.theory).toFixed(2))] })] }),
       new TableCell({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun(Number(summary.totals.sessional).toFixed(2))] })] }),
       new TableCell({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun(Number(summary.totals.credit).toFixed(2))] })] }),
@@ -429,7 +479,8 @@ export async function exportRoutineDocx(data: AppData, scope: RoutineScope) {
     children: ["Short Form", "Teachers Name", "Designation"].map((h, i) =>
       new TableCell({
         width: { size: [1500, 4000, 3500][i], type: WidthType.DXA },
-        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: h, bold: true })] })]
+        shading: { fill: "2563eb" },
+        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: h, bold: true, color: "FFFFFF" })] })]
       })
     )
   });

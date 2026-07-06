@@ -199,10 +199,10 @@ export function RoutineView({
             onClick={() => { try { exportRoutineExcel(data, scope); } catch (e: any) { toast.error(e.message); } }}>
             <FileSpreadsheet className="h-3.5 w-3.5 mr-1" /> Excel
           </Button>
-          {/* <Button size="sm" variant="outline" className="h-7 text-xs"
+          <Button size="sm" variant="outline" className="h-7 text-xs"
             onClick={async () => { try { await exportRoutineDocx(data, scope); } catch (e: any) { toast.error(e.message); } }}>
             <FileType className="h-3.5 w-3.5 mr-1" /> DOCX
-          </Button> */}
+          </Button>
           <Button size="sm" variant="outline" className="h-7 text-xs"
             onClick={() => { try { exportRoutineJson(data, scope); } catch (e: any) { toast.error(e.message); } }}>
             <FileJson className="h-3.5 w-3.5 mr-1" /> JSON
