@@ -21,13 +21,16 @@ export function RoutineCourseSummary({ scope }: { scope: RoutineScope }) {
       </div>
       <div className="overflow-auto">
         <table className="w-full text-xs">
-          <thead className="bg-muted/40 text-muted-foreground">
+          <thead className="bg-muted/40 text-muted-foreground border-b text-[11px]">
             <tr>
-              <th className="text-left px-3 py-2 font-semibold">Course Code</th>
-              <th className="text-left px-3 py-2 font-semibold">Course Name</th>
-              <th className="text-center px-3 py-2 font-semibold">Theory</th>
-              <th className="text-center px-3 py-2 font-semibold">Sessional</th>
-              <th className="text-center px-3 py-2 font-semibold">Credit Hours</th>
+              <th rowSpan={2} className="text-left px-3 py-2 font-semibold align-middle border-r">Course Code</th>
+              <th rowSpan={2} className="text-left px-3 py-2 font-semibold align-middle border-r">Course Name</th>
+              <th colSpan={2} className="text-center px-3 py-1.5 font-semibold border-r border-b">Hours/Week</th>
+              <th rowSpan={2} className="text-center px-3 py-2 font-semibold align-middle">Credit Hours</th>
+            </tr>
+            <tr className="border-b">
+              <th className="text-center px-3 py-1.5 font-semibold border-r">Theory</th>
+              <th className="text-center px-3 py-1.5 font-semibold border-r">Sessional</th>
             </tr>
           </thead>
           <tbody>

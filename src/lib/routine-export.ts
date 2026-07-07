@@ -564,20 +564,17 @@ export function buildRoutineDocxDocument(data: AppData, scope: RoutineScope, log
 
   const summaryHeaderRow1 = new TableRow({
     children: [
-      createCell(widths2[0], { text: "Course No.", bold: true, fill: "E0E7FF" }),
-      createCell(widths2[1], { text: "Course Title", bold: true, fill: "E0E7FF" }),
+      createCell(widths2[0], { text: "Course No.", bold: true, fill: "E0E7FF", rowSpan: 2 }),
+      createCell(widths2[1], { text: "Course Title", bold: true, fill: "E0E7FF", rowSpan: 2 }),
       createCell(widths2[2] + widths2[3], { text: "Hours/Week", bold: true, fill: "E0E7FF", colSpan: 2 }),
-      createCell(widths2[4], { text: "Credit / Hours", bold: true, fill: "E0E7FF" }),
+      createCell(widths2[4], { text: "Credit Hours", bold: true, fill: "E0E7FF", rowSpan: 2 }),
     ],
   });
 
   const summaryHeaderRow2 = new TableRow({
     children: [
-      createCell(widths2[0], { text: "Course No.", bold: true, fill: "E0E7FF" }),
-      createCell(widths2[1], { text: "Course Title", bold: true, fill: "E0E7FF" }),
       createCell(widths2[2], { text: "Theory", bold: true, fill: "E0E7FF" }),
       createCell(widths2[3], { text: "Sessional", bold: true, fill: "E0E7FF" }),
-      createCell(widths2[4], { text: "Credit / Hours", bold: true, fill: "E0E7FF" }),
     ],
   });
 
@@ -993,7 +990,7 @@ function getExcelBuffer(data: AppData, scope: RoutineScope): ArrayBuffer {
 
   aoa.push([]);
   aoa.push(["Course Load Summary"]);
-  aoa.push(["Course Code", "Course Title", "Theory", "Sessional", "Credit / Hours", "Classes/Week"]);
+  aoa.push(["Course Code", "Course Title", "Theory", "Sessional", "Credit Hours", "Classes/Week"]);
   const summary = buildRoutineCourseSummary(data, scope);
   for (const row of summary.rows) {
     aoa.push([
@@ -1150,7 +1147,19 @@ export function buildRoutinePdfDocument(data: AppData, scope: RoutineScope, logo
 
   autoTable(doc, {
     startY: 60,
-    head: [["Course Code", "Course Title", "Theory", "Sessional", "Credit / Hours", "Classes/Week"]],
+    head: [
+      [
+        { content: "Course No.", rowSpan: 2, styles: { halign: "center", valign: "middle" } },
+        { content: "Course Title", rowSpan: 2, styles: { halign: "center", valign: "middle" } },
+        { content: "Hours/Week", colSpan: 2, styles: { halign: "center" } },
+        { content: "Credit Hours", rowSpan: 2, styles: { halign: "center", valign: "middle" } },
+        { content: "Classes/Week", rowSpan: 2, styles: { halign: "center", valign: "middle" } }
+      ],
+      [
+        "Theory",
+        "Sessional"
+      ]
+    ],
     body: [
       ...summary.rows.map(r => [
         r.course.code,
