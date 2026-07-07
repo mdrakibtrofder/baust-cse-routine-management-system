@@ -51,7 +51,7 @@ export function getScopeInfo(data: AppData, scope: RoutineScope) {
     if (!t) return { title: "Teacher", slug: "Teacher-Routine", meta: [] as { label: string; value: string }[] };
     return {
       title: `Routine of ${t.name}`,
-      slug: `${sentenceCaseDashed(t.name)}-Routine`,
+      slug: `${t.department || DEFAULT_DEPT}-${sentenceCaseDashed(t.name)}-Routine`,
       meta: [
         { label: "Teacher Name", value: t.name },
         { label: "Short Name", value: t.short_name },
@@ -83,7 +83,7 @@ export function getScopeInfo(data: AppData, scope: RoutineScope) {
       : DEFAULT_DEPT;
     return {
       title: `Routine of Level ${s.level} Term ${termRoman} Section ${s.name}`,
-      slug: `Level-${s.level}-Term-${termRoman}-Section-${sentenceCaseDashed(s.name)}-Routine`,
+      slug: `${sectionDept}-Level-${s.level}-Term-${termRoman}-Section-${sentenceCaseDashed(s.name)}-Routine`,
       meta: [
         { label: "Department", value: sectionDept },
         { label: "Level", value: String(s.level) },
@@ -643,22 +643,10 @@ export function buildRoutineDocxDocument(data: AppData, scope: RoutineScope): Do
     });
   });
 
-  const teacherFooterRow = new TableRow({
-    children: [
-      createCell(totalTable3Width, {
-        text: "**Names are arranged randomly",
-        italic: true,
-        size: 18,
-        align: AlignmentType.LEFT,
-        colSpan: 3,
-      }),
-    ],
-  });
-
   const teacherTable = new Table({
     width: { size: totalTable3Width, type: WidthType.DXA },
     columnWidths: widths3,
-    rows: [teacherHeaderRow, ...teacherBodyRows, teacherFooterRow],
+    rows: [teacherHeaderRow, ...teacherBodyRows],
   });
 
   const docChildren: any[] = [
