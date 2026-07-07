@@ -219,19 +219,22 @@ export function RoutineView({
         <div className="overflow-auto">
           <table className="w-full border-collapse text-xs [&_th]:border [&_td]:border [&_th]:border-border [&_td]:border-border">
             <thead>
-              <tr style={{ background: "var(--gradient-primary)", color: "var(--primary-foreground)" }}>
-                <th className="text-left px-3 py-3 font-semibold sticky left-0 z-10 border-r-2 border-primary-foreground/20" style={{ background: "var(--primary)" }}>
+              <tr style={{ background: "linear-gradient(135deg, oklch(0.65 0.16 155), oklch(0.52 0.15 180))", color: "var(--primary-foreground)" }}>
+                <th className="text-left px-3 py-3 font-semibold sticky left-0 z-10 border-r-2 border-primary-foreground/20 text-white" style={{ background: "var(--gradient-primary)" }}>
                   Day
                 </th>
                 {theoryPeriods.map((p) => (
                   <th
                     key={p.id}
                     className={cn(
-                      "px-2 py-3 text-center font-semibold whitespace-nowrap border-l border-primary-foreground/20",
+                      "px-2 py-3 text-center font-semibold whitespace-nowrap border-l border-primary-foreground/20 text-white",
                       isBreak(p.id) && "bg-amber-400/90 text-amber-950",
                       isExtended ? "text-xs" : "text-sm",
                     )}
-                    style={{ minWidth: colMinWidth }}
+                    style={{ 
+                      minWidth: colMinWidth,
+                      background: isBreak(p.id) ? undefined : "linear-gradient(135deg, oklch(0.65 0.16 155), oklch(0.52 0.15 180))"
+                    }}
                   >
                     <div>{fmtTime12(p.start)}</div>
                     <div className="opacity-70 text-[10px]">to</div>
@@ -248,7 +251,7 @@ export function RoutineView({
                   <tr key={d.id} className="border-t" style={{ height: isExtended ? 120 : 150 }}>
                     <td
                       className="px-3 font-bold text-primary-foreground align-middle sticky left-0 z-10"
-                      style={{ background: "var(--primary)", minWidth: 90 }}
+                      style={{ background: "var(--gradient-primary)", minWidth: 90 }}
                     >
                       <div className="text-sm uppercase">{fmtDayTitle(d.name)}</div>
                       <div className="text-[10px] font-normal opacity-80">{dayLong(d.name)}</div>
@@ -403,10 +406,19 @@ export function RoutineView({
             <div className="overflow-x-auto border rounded-lg shadow-sm">
               <table className="w-full border-collapse text-[10px] leading-tight [&_th]:border [&_td]:border [&_th]:border-slate-300 [&_td]:border-slate-300">
                 <thead>
-                  <tr className="bg-slate-800 text-white">
-                    <th className="px-3 py-4 font-bold text-center uppercase tracking-wider w-20">Day</th>
+                  <tr style={{ background: "linear-gradient(135deg, oklch(0.65 0.16 155), oklch(0.52 0.15 180))", color: "white" }}>
+                    <th className="px-3 py-4 font-bold text-center uppercase tracking-wider w-20 text-white" style={{ background: "var(--gradient-primary)" }}>Day</th>
                     {theoryPeriods.map((p) => (
-                      <th key={p.id} className="px-2 py-4 text-center font-bold min-w-[120px]">
+                      <th 
+                        key={p.id} 
+                        className={cn(
+                          "px-2 py-4 text-center font-bold min-w-[120px] text-white",
+                          isBreak(p.id) && "bg-amber-100 text-amber-900"
+                        )}
+                        style={{
+                          background: isBreak(p.id) ? undefined : "linear-gradient(135deg, oklch(0.65 0.16 155), oklch(0.52 0.15 180))"
+                        }}
+                      >
                         <div className="text-[11px] mb-1">{fmtTime12(p.start)} - {fmtTime12(p.end)}</div>
                       </th>
                     ))}
@@ -418,9 +430,9 @@ export function RoutineView({
                     let skipUnavail = 0;
                     return (
                       <tr key={d.id}>
-                        <td className="bg-slate-100 px-3 py-4 font-bold text-center border-r-2 border-slate-300">
+                        <td className="px-3 py-4 font-bold text-center border-r-2 border-slate-300 text-white" style={{ background: "var(--gradient-primary)" }}>
                           <div className="text-sm">{fmtDayTitle(d.name)}</div>
-                          <div className="text-[8px] font-normal opacity-60 uppercase">{dayLong(d.name)}</div>
+                          <div className="text-[8px] font-normal opacity-80 uppercase">{dayLong(d.name)}</div>
                         </td>
                         {theoryPeriods.map((p) => {
                           if (skipCount > 0) { skipCount--; return null; }

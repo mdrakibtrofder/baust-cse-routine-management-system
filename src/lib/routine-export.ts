@@ -317,6 +317,7 @@ function formatCredit(val: number | string | undefined | null): string {
 export function buildRoutineDocxDocument(data: AppData, scope: RoutineScope): Document {
   const info = getScopeInfo(data, scope);
   const { header, rows } = buildRoutineMatrix(data, scope);
+  const summary = buildRoutineCourseSummary(data, scope);
 
   const title1 = new Paragraph({
     alignment: AlignmentType.CENTER,
@@ -376,39 +377,31 @@ export function buildRoutineDocxDocument(data: AppData, scope: RoutineScope): Do
     const sec = data.sections.find(x => x.id === scope.section_id);
     const levelTermStr = sec ? `${sec.level}-${sec.term}` : "";
     const secName = sec ? sec.name : "";
-    const dpcName = "Md. Zahim Hassan";
-    const dpcPhone = "01736393334";
+    const sectionDept = sec && sec.department_id
+      ? data.departments.find((d) => d.id === sec.department_id)?.short_name ?? DEFAULT_DEPT
+      : DEFAULT_DEPT;
     
-    const widths0 = [2232, 3571, 2908, 3772, 2318];
+    const widths0 = [2232, 3571];
     table0 = new Table({
-      width: { size: 14801, type: WidthType.DXA },
+      width: { size: 5803, type: WidthType.DXA },
       columnWidths: widths0,
       rows: [
         new TableRow({
           children: [
+            createCell(widths0[0], { text: "Department:", bold: true, align: AlignmentType.LEFT }),
+            createCell(widths0[1], { text: sectionDept, bold: true, align: AlignmentType.LEFT }),
+          ],
+        }),
+        new TableRow({
+          children: [
             createCell(widths0[0], { text: "Level-Term:", bold: true, align: AlignmentType.LEFT }),
             createCell(widths0[1], { text: levelTermStr, bold: true, align: AlignmentType.LEFT }),
-            createCell(widths0[2], { text: "Batch Advisor:", bold: true, align: AlignmentType.LEFT }),
-            createCell(widths0[3], { text: "", align: AlignmentType.LEFT }),
-            createCell(widths0[4], { text: "", align: AlignmentType.LEFT }),
           ],
         }),
         new TableRow({
           children: [
             createCell(widths0[0], { text: "Section:", bold: true, align: AlignmentType.LEFT }),
             createCell(widths0[1], { text: secName, bold: true, align: AlignmentType.LEFT }),
-            createCell(widths0[2], { text: "Batch Advisor:", bold: true, align: AlignmentType.LEFT }),
-            createCell(widths0[3], { text: "", align: AlignmentType.LEFT }),
-            createCell(widths0[4], { text: "", align: AlignmentType.LEFT }),
-          ],
-        }),
-        new TableRow({
-          children: [
-            createCell(widths0[0], { text: "", align: AlignmentType.LEFT }),
-            createCell(widths0[1], { text: "", align: AlignmentType.LEFT }),
-            createCell(widths0[2], { text: "DPC/G2:", bold: true, align: AlignmentType.LEFT }),
-            createCell(widths0[3], { text: dpcName, bold: true, align: AlignmentType.LEFT }),
-            createCell(widths0[4], { text: dpcPhone, bold: true, align: AlignmentType.LEFT }),
           ],
         }),
       ],
@@ -435,7 +428,7 @@ export function buildRoutineDocxDocument(data: AppData, scope: RoutineScope): Do
     const tShort = t ? t.short_name : "";
     const designation = t ? t.designation : "";
     const dept = t ? (t.department || "CSE") : "CSE";
-    const contactHours = t ? formatCredit(t.assigned_credit_hours) : "0.0";
+    const contactHours = formatCredit(summary.totals.credit);
     
     const widths0 = [1713, 7833];
     table0 = new Table({
@@ -456,7 +449,7 @@ export function buildRoutineDocxDocument(data: AppData, scope: RoutineScope): Do
         }),
         new TableRow({
           children: [
-            createCell(widths0[0], { text: "Contact Hour:", bold: true, align: AlignmentType.LEFT }),
+            createCell(widths0[0], { text: "Total Credit Hours:", bold: true, align: AlignmentType.LEFT }),
             createCell(widths0[1], { text: contactHours, bold: true, align: AlignmentType.LEFT }),
           ],
         }),
@@ -478,10 +471,12 @@ export function buildRoutineDocxDocument(data: AppData, scope: RoutineScope): Do
   const headerRow = new TableRow({
     children: header.map((h, i) => {
       const displayHeader = h.includes(":") ? h.replace(/:/g, ".") : h;
+      const isDay = i === 0;
       return createCell(colWidths[i], {
         text: displayHeader,
         bold: true,
-        fill: "F1F5F9",
+        fill: isDay ? "4F46E5" : "059669",
+        color: "FFFFFF",
         size: 24, // 12pt
       });
     }),
@@ -536,7 +531,7 @@ export function buildRoutineDocxDocument(data: AppData, scope: RoutineScope): Do
           text,
           bold,
           size,
-          fill: isDay ? "F8FAFC" : undefined,
+          fill: isDay ? "E0E7FF" : undefined,
           colSpan,
         }));
       }
@@ -551,7 +546,6 @@ export function buildRoutineDocxDocument(data: AppData, scope: RoutineScope): Do
   });
 
   // Table 2: Course Load Summary Table
-  const summary = buildRoutineCourseSummary(data, scope);
   const widths2 = [1500, 6000, 1000, 1000, 1500];
   const totalTable2Width = widths2.reduce((sum, w) => sum + w, 0);
 
@@ -741,15 +735,17 @@ export function getRoutineHeaderAndMeta(data: AppData, scope: RoutineScope): Rou
     const sec = data.sections.find(x => x.id === scope.section_id);
     const levelTermStr = sec ? `${sec.level}-${sec.term}` : "";
     const secName = sec ? sec.name : "";
+    const sectionDept = sec && sec.department_id
+      ? data.departments.find((d) => d.id === sec.department_id)?.short_name ?? DEFAULT_DEPT
+      : DEFAULT_DEPT;
     
     lines.push("Bangladesh Army University of Science and Technology (BAUST), Saidpur");
     lines.push("Department of Computer Science and Engineering (CSE)");
     lines.push(`Batchwise Class Routine, ${semName}`);
 
+    metadata.push({ label: "Department", value: sectionDept });
     metadata.push({ label: "Level-Term", value: levelTermStr });
     metadata.push({ label: "Section", value: secName });
-    metadata.push({ label: "Batch Advisor", value: "" });
-    metadata.push({ label: "DPC/G2", value: "Md. Zahim Hassan (01736393334)" });
   } else if (scope.kind === "room") {
     const r = data.rooms.find(x => x.id === scope.room_id);
     const roomName = r ? r.name : "";
@@ -765,7 +761,9 @@ export function getRoutineHeaderAndMeta(data: AppData, scope: RoutineScope): Rou
     const tShort = t ? t.short_name : "";
     const designation = t ? t.designation : "";
     const dept = t ? (t.department || "CSE") : "CSE";
-    const contactHours = t ? formatCredit(t.assigned_credit_hours) : "0.0";
+    
+    const summary = buildRoutineCourseSummary(data, scope);
+    const totalCreditHours = formatCredit(summary.totals.credit);
 
     lines.push("Bangladesh Army University of Science and Technology (BAUST)");
     lines.push("Department of Computer Science and Engineering");
@@ -773,7 +771,7 @@ export function getRoutineHeaderAndMeta(data: AppData, scope: RoutineScope): Rou
 
     metadata.push({ label: "Teacher Name", value: `${tName} (${tShort})` });
     metadata.push({ label: "Designation", value: `${designation}, ${dept}` });
-    metadata.push({ label: "Contact Hour", value: contactHours });
+    metadata.push({ label: "Total Credit Hours", value: totalCreditHours });
   } else {
     lines.push("Bangladesh Army University of Science and Technology (BAUST)");
     lines.push("Department of Computer Science and Engineering");
@@ -1042,9 +1040,22 @@ export function buildRoutinePdfDocument(data: AppData, scope: RoutineScope): jsP
     body: finalBody as any,
     startY,
     styles: { fontSize: 7, cellPadding: 3, valign: "top", halign: "left", overflow: "linebreak" },
-    headStyles: { fillColor: [30, 58, 138], textColor: 255, fontStyle: "bold", halign: "center" },
-    columnStyles: { 0: { fontStyle: "bold", fillColor: [219, 234, 254], cellWidth: 60 } },
     theme: "grid",
+    columnStyles: { 0: { fontStyle: "bold", cellWidth: 60 } },
+    didParseCell: (data) => {
+      if (data.section === "head") {
+        if (data.column.index === 0) {
+          data.cell.styles.fillColor = [79, 70, 229]; // Indigo / blue-violet
+          data.cell.styles.textColor = [255, 255, 255];
+        } else {
+          data.cell.styles.fillColor = [5, 150, 105]; // Green/teal
+          data.cell.styles.textColor = [255, 255, 255];
+        }
+      } else if (data.section === "body" && data.column.index === 0) {
+        data.cell.styles.fillColor = [224, 231, 255]; // Soft indigo/blue-violet
+        data.cell.styles.textColor = [30, 41, 59];
+      }
+    }
   });
 
   const summary = buildRoutineCourseSummary(data, scope);
@@ -1199,8 +1210,21 @@ export function buildRoutineCanvas(data: AppData, scope: RoutineScope): HTMLCanv
 
   const tableX = padding;
   let tableY = currentY;
-  ctx.fillStyle = "#2563eb";
-  ctx.fillRect(tableX, tableY, cols * cellW, headerH);
+
+  // Draw green gradient for time slots (headers)
+  const grad = ctx.createLinearGradient(tableX + cellW, tableY, tableX + cols * cellW, tableY);
+  grad.addColorStop(0, "#10b981");
+  grad.addColorStop(1, "#047857");
+  ctx.fillStyle = grad;
+  ctx.fillRect(tableX + cellW, tableY, (cols - 1) * cellW, headerH);
+
+  // Draw blue-violet (indigo) gradient for the Day header cell
+  const dayGrad = ctx.createLinearGradient(tableX, tableY, tableX + cellW, tableY);
+  dayGrad.addColorStop(0, "#4f46e5");
+  dayGrad.addColorStop(1, "#6366f1");
+  ctx.fillStyle = dayGrad;
+  ctx.fillRect(tableX, tableY, cellW, headerH);
+
   ctx.fillStyle = "#ffffff";
   ctx.font = "bold 12px Arial, sans-serif";
   ctx.textAlign = "center";
@@ -1227,7 +1251,7 @@ export function buildRoutineCanvas(data: AppData, scope: RoutineScope): HTMLCanv
       const currentCellW = cellW * colSpan;
 
       const isDay = c === 0;
-      ctx.fillStyle = isDay ? "#dbeafe" : (content === "BREAK" ? "#fef3c7" : "#ffffff");
+      ctx.fillStyle = isDay ? "#e0e7ff" : (content === "BREAK" ? "#fef3c7" : "#ffffff");
       ctx.fillRect(x, yy, currentCellW, cellH);
       ctx.strokeStyle = "#cbd5e1";
       ctx.lineWidth = 1;
