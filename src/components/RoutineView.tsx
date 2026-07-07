@@ -397,10 +397,14 @@ export function RoutineView({
       <Dialog open={showPreview} onOpenChange={setShowPreview}>
         <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-y-auto p-0">
           <div className="p-6 space-y-6 bg-white">
-            <div className="text-center space-y-1 border-b pb-6">
-              <h1 className="text-2xl font-bold uppercase tracking-wider">{title || "Class Routine"}</h1>
-              {subtitle && <p className="text-sm text-muted-foreground font-medium uppercase">{subtitle}</p>}
-              <p className="text-xs text-muted-foreground mt-2">Generated on {new Date().toLocaleDateString()} · {DEFAULT_DEPT} Department</p>
+            <div className="flex items-center justify-between border-b pb-6 gap-4">
+              <img src="/BAUST.jpeg" alt="BAUST Logo" className="h-16 w-16 shrink-0 object-contain" />
+              <div className="flex-1 text-center space-y-1">
+                <h1 className="text-xl font-bold uppercase tracking-wider">{title || "Class Routine"}</h1>
+                {subtitle && <p className="text-sm text-muted-foreground font-medium uppercase">{subtitle}</p>}
+                <p className="text-xs text-muted-foreground mt-2">Generated on {new Date().toLocaleDateString()} · {DEFAULT_DEPT} Department</p>
+              </div>
+              <div className="w-16 shrink-0" />
             </div>
             
             <div className="overflow-x-auto border rounded-lg shadow-sm">
