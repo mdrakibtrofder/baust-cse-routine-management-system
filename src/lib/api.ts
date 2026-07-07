@@ -17,7 +17,11 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     try {
       if (text) {
         const error = JSON.parse(text);
-        message = error.message || message;
+        if (error.conflicts && Array.isArray(error.conflicts)) {
+          message = error.conflicts.map((c: any) => c.message).join(' | ');
+        } else {
+          message = error.message || message;
+        }
       }
     } catch (_) {}
     throw new Error(message);

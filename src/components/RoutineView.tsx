@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useStore } from "@/lib/store";
 import { cn, compareTimeValues, fmtTime12, fmtRange12, sortDays, fmtDayTitle } from "@/lib/utils";
-import { BookOpen, MapPin, Coffee, FlaskConical, FileSpreadsheet, FileText, FileType, FileJson, Image as ImageIcon, Eye, Users, Ban, Archive } from "lucide-react";
+import { BookOpen, MapPin, Coffee, FlaskConical, FileSpreadsheet, FileText, FileType, FileJson, Image as ImageIcon, Eye, Users, Ban, Archive, Repeat2 } from "lucide-react";
 import { COURSE_TYPE_INFO, type ClassSlot, type Section } from "@/lib/types";
 import { timesOverlap } from "@/lib/conflicts";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import { RoutineCourseSummary } from "@/components/RoutineCourseSummary";
 import { RoutineTeacherSummary } from "@/components/RoutineTeacherSummary";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ClassAssignDialog } from "@/features/course-load/ClassAssignDialog";
+import { SwapRoomModal } from "@/components/SwapRoomModal";
 
 const DEFAULT_DEPT = "CSE";
 
@@ -32,16 +33,34 @@ export function RoutineView({
   scope,
   title,
   subtitle,
+  // Optional externally-controlled swap state (lifted to parent for tab-reset)
+  swapMode: swapModeProp,
+  swapTarget: swapTargetProp,
+  onSwapModeChange,
+  onSwapTargetChange,
 }: {
   scope: RoutineScope;
   title?: string;
   subtitle?: string;
+  swapMode?: boolean;
+  swapTarget?: ClassSlot | null;
+  onSwapModeChange?: (v: boolean) => void;
+  onSwapTargetChange?: (v: ClassSlot | null) => void;
 }) {
   const data = useStore();
 
   const [showPreview, setShowPreview] = useState(false);
   const [showUnavailability, setShowUnavailability] = useState(false);
   const [editTarget, setEditTarget] = useState<{ course_id: string; section_id: string } | null>(null);
+  // Internal swap state — used when parent does NOT pass external state
+  const [swapModeInternal, setSwapModeInternal] = useState(false);
+  const [swapTargetInternal, setSwapTargetInternal] = useState<ClassSlot | null>(null);
+
+  // Resolve: prefer externally-controlled state when parent provides handlers
+  const swapMode = onSwapModeChange !== undefined ? (swapModeProp ?? false) : swapModeInternal;
+  const swapTarget = onSwapTargetChange !== undefined ? (swapTargetProp ?? null) : swapTargetInternal;
+  const setSwapMode = onSwapModeChange ?? setSwapModeInternal;
+  const setSwapTarget = onSwapTargetChange ?? setSwapTargetInternal;
 
   const editCourse = editTarget ? data.courses.find((c) => c.id === editTarget.course_id) ?? null : null;
   const editSection = editTarget ? data.sections.find((s) => s.id === editTarget.section_id) ?? null : null;
@@ -185,6 +204,27 @@ export function RoutineView({
             >
               <Ban className="h-3.5 w-3.5 mr-1" />
               {showUnavailability ? "Hide" : "Show"} Unavailability
+            </Button>
+          )}
+          {/* Swap Room button — shown for teacher, room and section views */}
+          {scope.kind !== "all" && (
+            <Button
+              size="sm"
+              variant="outline"
+              className={cn(
+                "h-7 text-xs font-semibold transition-all duration-200",
+                swapMode
+                  ? "text-white border-violet-500 shadow-md shadow-violet-200"
+                  : "border-violet-300 text-violet-700 hover:bg-violet-50",
+              )}
+              style={swapMode ? { background: "linear-gradient(135deg, oklch(0.50 0.18 290), oklch(0.42 0.20 260))" } : undefined}
+              onClick={() => {
+                setSwapMode(!swapMode);
+                setSwapTarget(null);
+              }}
+            >
+              <Repeat2 className="h-3.5 w-3.5 mr-1" />
+              {swapMode ? "Hide Swap" : "Swap Room"}
             </Button>
           )}
           <Button size="sm" variant="outline" className="h-7 text-xs bg-primary/5 border-primary/20 text-primary hover:bg-primary/10"
@@ -345,8 +385,14 @@ export function RoutineView({
                                 key={s.id}
                                 slot={s}
                                 large={!isExtended}
+                                swapMode={swapMode}
+                                onSwap={
+                                  swapMode && !s.lab_section_id && s.section_id
+                                    ? () => setSwapTarget(s)
+                                    : undefined
+                                }
                                 onEdit={
-                                  s.lab_section_id || !s.section_id
+                                  swapMode || s.lab_section_id || !s.section_id
                                     ? undefined
                                     : () => setEditTarget({ course_id: s.course_id, section_id: s.section_id as string })
                                 }
@@ -391,6 +437,13 @@ export function RoutineView({
           onOpenChange={(v) => !v && setEditTarget(null)}
           course={editCourse}
           section={editSection}
+        />
+      )}
+
+      {swapTarget && (
+        <SwapRoomModal
+          slot={swapTarget}
+          onClose={() => setSwapTarget(null)}
         />
       )}
 
@@ -582,7 +635,19 @@ export function RoutineView({
   );
 }
 
-function RoutineCell({ slot, large, onEdit }: { slot: ClassSlot; large?: boolean; onEdit?: () => void }) {
+function RoutineCell({
+  slot,
+  large,
+  onEdit,
+  swapMode,
+  onSwap,
+}: {
+  slot: ClassSlot;
+  large?: boolean;
+  onEdit?: () => void;
+  swapMode?: boolean;
+  onSwap?: () => void;
+}) {
   const data = useStore();
   const course = data.courses.find((c) => c.id === slot.course_id);
   const section = data.sections.find((s) => s.id === slot.section_id);
@@ -665,12 +730,29 @@ function RoutineCell({ slot, large, onEdit }: { slot: ClassSlot; large?: boolean
     <div
       onClick={onEdit}
       className={cn(
-        "rounded-lg border bg-background transition-all border-border/60 h-full flex flex-col",
+        "rounded-lg border bg-background transition-all border-border/60 h-full flex flex-col relative",
         "shadow-[0_2px_6px_-1px_rgba(0,0,0,0.1),0_1px_3px_-1px_rgba(0,0,0,0.06)]",
-        "hover:shadow-[0_4px_14px_-2px_rgba(0,0,0,0.15)] hover:-translate-y-px relative z-[1] hover:z-[2]",
+        "hover:shadow-[0_4px_14px_-2px_rgba(0,0,0,0.15)] hover:-translate-y-px z-[1] hover:z-[2]",
         onEdit && "cursor-pointer hover:border-primary/50",
+        swapMode && "ring-1 ring-violet-300/60 hover:ring-violet-400",
         large ? "px-3 py-3 gap-2.5" : "px-2 py-2 gap-2",
       )}>
+      {/* Swap mode button — top-right overlay */}
+      {swapMode && onSwap && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onSwap(); }}
+          className={cn(
+            "absolute top-1 right-1 z-10 flex items-center justify-center rounded-full",
+            "text-white shadow-md transition-all duration-150",
+            "hover:scale-110 active:scale-95",
+            large ? "h-6 w-6" : "h-5 w-5",
+          )}
+          style={{ background: "linear-gradient(135deg, oklch(0.50 0.18 290), oklch(0.42 0.20 260))" }}
+          title="Swap room"
+        >
+          <Repeat2 className={large ? "h-3.5 w-3.5" : "h-3 w-3"} />
+        </button>
+      )}
       {/* Course code + teacher badges */}
       <div className="flex items-start justify-between gap-1.5">
         <div className={cn("flex items-center gap-1.5 font-bold font-mono", large ? "text-base" : "text-sm")}>

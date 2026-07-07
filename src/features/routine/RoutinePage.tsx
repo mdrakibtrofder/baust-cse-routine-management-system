@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { useStore } from "@/lib/store";
 import { PageHeader } from "@/components/PageHeader";
 import { RoutineView, type RoutineScope } from "@/components/RoutineView";
+import type { ClassSlot } from "@/lib/types";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { Filter, Users, DoorOpen, Boxes, Eye, EyeOff, Archive, ChevronDown, FileType, FileText, FileSpreadsheet, Image as ImageIcon, FileJson } from "lucide-react";
@@ -53,6 +54,16 @@ export function RoutinePage() {
   const [roomId, setRoomId] = useState<string>(() => readStoredSelection().roomId ?? "");
   const [sectionId, setSectionId] = useState<string>(() => readStoredSelection().sectionId ?? "");
   const [showOtherRooms, setShowOtherRooms] = useState(false);
+  // Swap-room state lifted here so tab changes reset it
+  const [swapMode, setSwapMode] = useState(false);
+  const [swapTarget, setSwapTarget] = useState<ClassSlot | null>(null);
+
+  const handleModeChange = useCallback((v: string) => {
+    setMode(v as Mode);
+    // Reset swap state whenever the tab changes
+    setSwapMode(false);
+    setSwapTarget(null);
+  }, []);
 
   // Persist every change so the selection survives navigation and page refreshes.
   useEffect(() => {
@@ -318,7 +329,7 @@ export function RoutinePage() {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          <Tabs value={mode} onValueChange={(v) => setMode(v as Mode)}>
+          <Tabs value={mode} onValueChange={handleModeChange}>
             <TabsList>
               <TabsTrigger value="section" className="gap-1.5">
                 <Boxes className="h-3.5 w-3.5" /> Section
@@ -383,7 +394,14 @@ export function RoutinePage() {
           </Tabs>
         </div>
 
-        <RoutineView scope={scope} subtitle={subtitle} />
+        <RoutineView
+          scope={scope}
+          subtitle={subtitle}
+          swapMode={swapMode}
+          swapTarget={swapTarget}
+          onSwapModeChange={setSwapMode}
+          onSwapTargetChange={setSwapTarget}
+        />
       </div>
     </div>
   );

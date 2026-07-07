@@ -100,15 +100,20 @@ export interface ConflictCheckInput {
   teacherIds: string[];
   candidate: { day: string; start: string; end: string; room_id: string | null; week: WeekPattern };
   ignoreSlotId?: string;
+  ignoreSlotIds?: string[];
   siblingDrafts?: { day: string; start: string; end: string; week: WeekPattern }[];
 }
 
 export function checkConflicts(input: ConflictCheckInput): Conflict[] {
-  const { data, course, section, teacherIds, candidate, ignoreSlotId } = input;
+  const { data, course, section, teacherIds, candidate, ignoreSlotId, ignoreSlotIds } = input;
   const conflicts: Conflict[] = [];
   const info = COURSE_TYPE_INFO[course.course_type];
   const slots = semSlots(data);
   const csts = semCST(data);
+
+  const shouldIgnore = (slotId: string) =>
+    (ignoreSlotId !== undefined && slotId === ignoreSlotId) ||
+    (ignoreSlotIds !== undefined && ignoreSlotIds.includes(slotId));
 
   if (candidate.room_id) {
     const room = data.rooms.find((r) => r.id === candidate.room_id);
@@ -130,7 +135,7 @@ export function checkConflicts(input: ConflictCheckInput): Conflict[] {
 
   if (candidate.room_id) {
     for (const slot of slots) {
-      if (slot.id === ignoreSlotId) continue;
+      if (shouldIgnore(slot.id)) continue;
       if (slot.room_id !== candidate.room_id) continue;
       if (slot.day !== candidate.day) continue;
       if (!timesOverlap(slot.start, slot.end, candidate.start, candidate.end)) continue;
@@ -149,7 +154,7 @@ export function checkConflicts(input: ConflictCheckInput): Conflict[] {
 
   for (const tid of teacherIds) {
     for (const slot of slots) {
-      if (slot.id === ignoreSlotId) continue;
+      if (shouldIgnore(slot.id)) continue;
       if (slot.day !== candidate.day) continue;
       if (!timesOverlap(slot.start, slot.end, candidate.start, candidate.end)) continue;
       if (!weeksOverlap(slot.week, candidate.week)) continue;
@@ -194,7 +199,7 @@ export function checkConflicts(input: ConflictCheckInput): Conflict[] {
     }
   }
   for (const slot of slots) {
-    if (slot.id === ignoreSlotId) continue;
+    if (shouldIgnore(slot.id)) continue;
     if (slot.section_id !== section.id) continue;
     if (slot.day !== candidate.day) continue;
     if (!timesOverlap(slot.start, slot.end, candidate.start, candidate.end)) continue;
