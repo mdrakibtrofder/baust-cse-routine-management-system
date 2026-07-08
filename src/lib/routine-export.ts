@@ -540,7 +540,7 @@ export function buildRoutineDocxDocument(data: AppData, scope: RoutineScope, log
   }
 
   const routineGridTable = new Table({
-    width: { size: totalTable1Width, type: WidthType.DXA },
+    width: { size: 100, type: WidthType.PERCENTAGE },
     columnWidths: colWidths,
     rows: [headerRow, ...bodyRows],
   });
@@ -601,7 +601,7 @@ export function buildRoutineDocxDocument(data: AppData, scope: RoutineScope, log
   });
 
   const summaryTable = new Table({
-    width: { size: totalTable2Width, type: WidthType.DXA },
+    width: { size: 100, type: WidthType.PERCENTAGE },
     columnWidths: widths2,
     rows: [summaryHeaderRow0, summaryHeaderRow1, summaryHeaderRow2, ...summaryBodyRows, summaryTotalRow],
   });
@@ -635,7 +635,7 @@ export function buildRoutineDocxDocument(data: AppData, scope: RoutineScope, log
   });
 
   const teacherTable = new Table({
-    width: { size: totalTable3Width, type: WidthType.DXA },
+    width: { size: 100, type: WidthType.PERCENTAGE },
     columnWidths: widths3,
     rows: [teacherHeaderRow, ...teacherBodyRows],
   });
@@ -730,7 +730,7 @@ export function buildRoutineDocxDocument(data: AppData, scope: RoutineScope, log
         properties: {
           page: {
             size: { width: 16838, height: 11906, orientation: "landscape" as any },
-            margin: { top: 432, bottom: 432, left: 288, right: 576 },
+            margin: { top: 720, bottom: 720, left: 720, right: 720 },
           },
         },
         children: docChildren,
