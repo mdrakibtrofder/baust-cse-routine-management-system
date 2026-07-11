@@ -242,6 +242,23 @@ export function buildRoutineMatrix(data: AppData, scope: RoutineScope) {
   return { header, rows, periods: theoryPeriods, days, slots };
 }
 
+/** Matrix column indexes (col 0 = Day) that reference a break, matched
+ *  case-insensitively against header text and period labels/flags.
+ *  PDF/Word exports keep these columns but blank out all their content. */
+function getBreakColumnIndexes(
+  header: string[],
+  periods: { name: string; is_break?: boolean }[],
+): Set<number> {
+  const breakCols = new Set<number>();
+  header.forEach((h, i) => {
+    if (/break/i.test(h)) breakCols.add(i);
+  });
+  periods.forEach((p, i) => {
+    if (isBreak(p)) breakCols.add(i + 1); // +1 for the Day column
+  });
+  return breakCols;
+}
+
 
 
 /* =============== DOCX =============== */
@@ -316,7 +333,8 @@ function formatCredit(val: number | string | undefined | null): string {
 
 export function buildRoutineDocxDocument(data: AppData, scope: RoutineScope): Document {
   const info = getScopeInfo(data, scope);
-  const { header, rows } = buildRoutineMatrix(data, scope);
+  const { header, rows, periods } = buildRoutineMatrix(data, scope);
+  const breakCols = getBreakColumnIndexes(header, periods);
   const summary = buildRoutineCourseSummary(data, scope);
 
   const title1 = new Paragraph({
@@ -470,10 +488,12 @@ export function buildRoutineDocxDocument(data: AppData, scope: RoutineScope): Do
 
   const headerRow = new TableRow({
     children: header.map((h, i) => {
-      const displayHeader = h.includes(":") ? h.replace(/:/g, ".") : h;
+      const displayHeader = breakCols.has(i)
+        ? "" // break columns export as blank (structure kept, content cleared)
+        : h.includes(":") ? h.replace(/:/g, ".") : h;
       return createCell(colWidths[i], {
         text: displayHeader,
-        bold: true,
+        bold: !breakCols.has(i),
         size: 24, // 12pt
       });
     }),
@@ -511,14 +531,8 @@ export function buildRoutineDocxDocument(data: AppData, scope: RoutineScope): Do
 
       if (isDay) {
         size = 24; // 12pt
-      } else if (isBreak) {
-        if (scope.kind === "section") {
-          text = "BREAK (10.50- 11.30)";
-          size = 16; // 8pt
-        } else {
-          text = "BREAK";
-          size = 24; // 12pt
-        }
+      } else if (isBreak || breakCols.has(i)) {
+        text = ""; // break columns export as blank (structure kept, content cleared)
       } else if (cell !== "" && cell !== "SKIP") {
         bold = scope.kind === "section"; // bold only in section routine class cells
       }
@@ -1075,7 +1089,8 @@ function pdfTableConfig(startY: number, columnWidthsPt: number[], tableWidth?: n
 }
 
 export function buildRoutinePdfDocument(data: AppData, scope: RoutineScope): jsPDF {
-  const { header, rows } = buildRoutineMatrix(data, scope);
+  const { header, rows, periods } = buildRoutineMatrix(data, scope);
+  const breakCols = getBreakColumnIndexes(header, periods);
   const summary = buildRoutineCourseSummary(data, scope);
   const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
 
@@ -1186,9 +1201,11 @@ export function buildRoutinePdfDocument(data: AppData, scope: RoutineScope): jsP
   }
   const gridWidths = scaleColumnWidths(colWidths, PDF_CONTENT_WIDTH);
 
-  const gridHeaderRow = header.map((h) => {
-    const displayHeader = h.includes(":") ? h.replace(/:/g, ".") : h;
-    return pdfCell({ text: displayHeader, bold: true, size: 24 }); // 12pt
+  const gridHeaderRow = header.map((h, i) => {
+    const displayHeader = breakCols.has(i)
+      ? "" // break columns export as blank (structure kept, content cleared)
+      : h.includes(":") ? h.replace(/:/g, ".") : h;
+    return pdfCell({ text: displayHeader, bold: !breakCols.has(i), size: 24 }); // 12pt
   });
 
   const gridBodyRows: any[][] = [];
@@ -1221,14 +1238,8 @@ export function buildRoutinePdfDocument(data: AppData, scope: RoutineScope): jsP
 
       if (isDay) {
         size = 24; // 12pt
-      } else if (isBreakCell) {
-        if (scope.kind === "section") {
-          text = "BREAK (10.50- 11.30)";
-          size = 16; // 8pt
-        } else {
-          text = "BREAK";
-          size = 24; // 12pt
-        }
+      } else if (isBreakCell || breakCols.has(i)) {
+        text = ""; // break columns export as blank (structure kept, content cleared)
       } else if (cell !== "" && cell !== "SKIP") {
         bold = scope.kind === "section"; // bold only in section routine class cells
       }
