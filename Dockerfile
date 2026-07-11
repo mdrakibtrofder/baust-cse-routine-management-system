@@ -21,6 +21,6 @@ COPY docker-entrypoint.sh /docker-entrypoint.d/40-inject-api-url.sh
 RUN chmod +x /docker-entrypoint.d/40-inject-api-url.sh
 
 # Set at runtime, e.g. -e API_BASE_URL=https://api.yourdomain.com/api
-ENV API_BASE_URL=http://localhost:3000/api
+ENV API_BASE_URL=http://localhost:3201/api
 
 EXPOSE 80

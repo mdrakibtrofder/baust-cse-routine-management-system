@@ -11,4 +11,9 @@ export default defineConfig({
   tanstackStart: {
     spa: { enabled: true },
   },
+  vite: {
+    server: {
+      port: 3200,
+    },
+  },
 });

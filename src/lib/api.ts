@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3201/api';
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const headers = {
