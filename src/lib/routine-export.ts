@@ -314,7 +314,7 @@ function formatCredit(val: number | string | undefined | null): string {
   return n.toFixed(1);
 }
 
-export function buildRoutineDocxDocument(data: AppData, scope: RoutineScope, logoBuffer?: ArrayBuffer | null): Document {
+export function buildRoutineDocxDocument(data: AppData, scope: RoutineScope): Document {
   const info = getScopeInfo(data, scope);
   const { header, rows } = buildRoutineMatrix(data, scope);
   const summary = buildRoutineCourseSummary(data, scope);
@@ -471,12 +471,9 @@ export function buildRoutineDocxDocument(data: AppData, scope: RoutineScope, log
   const headerRow = new TableRow({
     children: header.map((h, i) => {
       const displayHeader = h.includes(":") ? h.replace(/:/g, ".") : h;
-      const isDay = i === 0;
       return createCell(colWidths[i], {
         text: displayHeader,
         bold: true,
-        fill: isDay ? "4F46E5" : "059669",
-        color: "FFFFFF",
         size: 24, // 12pt
       });
     }),
@@ -531,7 +528,6 @@ export function buildRoutineDocxDocument(data: AppData, scope: RoutineScope, log
           text,
           bold,
           size,
-          fill: isDay ? "E0E7FF" : undefined,
           colSpan,
         }));
       }
@@ -640,75 +636,12 @@ export function buildRoutineDocxDocument(data: AppData, scope: RoutineScope, log
     rows: [teacherHeaderRow, ...teacherBodyRows],
   });
 
-  let docChildren: any[];
-
-  if (logoBuffer) {
-    const headerTable = new Table({
-      width: { size: 100, type: WidthType.PERCENTAGE },
-      columnWidths: [2200, 12601],
-      borders: {
-        top: { style: BorderStyle.NONE },
-        bottom: { style: BorderStyle.NONE },
-        left: { style: BorderStyle.NONE },
-        right: { style: BorderStyle.NONE },
-      },
-      rows: [
-        new TableRow({
-          children: [
-            new TableCell({
-              width: { size: 2200, type: WidthType.DXA },
-              borders: {
-                top: { style: BorderStyle.NONE },
-                bottom: { style: BorderStyle.NONE },
-                left: { style: BorderStyle.NONE },
-                right: { style: BorderStyle.NONE },
-              },
-              children: [
-                new Paragraph({
-                  alignment: AlignmentType.CENTER,
-                  children: [
-                    new ImageRun({
-                      data: logoBuffer,
-                      transformation: {
-                        width: 72,
-                        height: 72,
-                      },
-                      type: "jpg",
-                    }),
-                  ],
-                }),
-              ],
-            }),
-            new TableCell({
-              width: { size: 12601, type: WidthType.DXA },
-              borders: {
-                top: { style: BorderStyle.NONE },
-                bottom: { style: BorderStyle.NONE },
-                left: { style: BorderStyle.NONE },
-                right: { style: BorderStyle.NONE },
-              },
-              children: [
-                title1,
-                title2,
-                title3,
-              ],
-            }),
-          ],
-        }),
-      ],
-    });
-    docChildren = [
-      headerTable,
-      new Paragraph({ spacing: { before: 120, after: 120 }, children: [new TextRun(" ")] }),
-    ];
-  } else {
-    docChildren = [
-      title1,
-      title2,
-      title3,
-      new Paragraph({ spacing: { before: 120, after: 120 }, children: [new TextRun(" ")] }),
-    ];
-  }
+  const docChildren: any[] = [
+    title1,
+    title2,
+    title3,
+    new Paragraph({ spacing: { before: 120, after: 120 }, children: [new TextRun(" ")] }),
+  ];
 
   if (table0) {
     docChildren.push(table0);
@@ -739,34 +672,23 @@ export function buildRoutineDocxDocument(data: AppData, scope: RoutineScope, log
   });
 }
 
-async function fetchLogoAsArrayBuffer(): Promise<ArrayBuffer | null> {
-  try {
-    const res = await fetch("/BAUST.jpeg");
-    if (!res.ok) return null;
-    return await res.arrayBuffer();
-  } catch (e) {
-    console.error("Failed to fetch logo image", e);
-    return null;
-  }
-}
+
 
 export async function exportRoutineDocx(data: AppData, scope: RoutineScope) {
   const info = getScopeInfo(data, scope);
-  const logoBuffer = await fetchLogoAsArrayBuffer();
-  const doc = buildRoutineDocxDocument(data, scope, logoBuffer);
+  const doc = buildRoutineDocxDocument(data, scope);
   const blob = await Packer.toBlob(doc);
   saveAs(blob, `${info.slug}.docx`);
 }
 
 export async function exportAllRoutinesDocxZip(data: AppData) {
   const zip = new JSZip();
-  const logoBuffer = await fetchLogoAsArrayBuffer();
 
   const sectionsFolder = zip.folder("Sections");
   for (const s of data.sections) {
     const scope: RoutineScope = { kind: "section", section_id: s.id };
     const info = getScopeInfo(data, scope);
-    const doc = buildRoutineDocxDocument(data, scope, logoBuffer);
+    const doc = buildRoutineDocxDocument(data, scope);
     const blob = await Packer.toBlob(doc);
     sectionsFolder?.file(`${info.slug}.docx`, blob);
   }
@@ -775,7 +697,7 @@ export async function exportAllRoutinesDocxZip(data: AppData) {
   for (const t of data.teachers) {
     const scope: RoutineScope = { kind: "teacher", teacher_id: t.id };
     const info = getScopeInfo(data, scope);
-    const doc = buildRoutineDocxDocument(data, scope, logoBuffer);
+    const doc = buildRoutineDocxDocument(data, scope);
     const blob = await Packer.toBlob(doc);
     teachersFolder?.file(`${info.slug}.docx`, blob);
   }
@@ -784,7 +706,7 @@ export async function exportAllRoutinesDocxZip(data: AppData) {
   for (const r of data.rooms) {
     const scope: RoutineScope = { kind: "room", room_id: r.id };
     const info = getScopeInfo(data, scope);
-    const doc = buildRoutineDocxDocument(data, scope, logoBuffer);
+    const doc = buildRoutineDocxDocument(data, scope);
     const blob = await Packer.toBlob(doc);
     roomsFolder?.file(`${info.slug}.docx`, blob);
   }
@@ -1067,18 +989,12 @@ export async function exportAllRoutinesExcelZip(data: AppData) {
 }
 
 /* =============== PDF =============== */
-export function buildRoutinePdfDocument(data: AppData, scope: RoutineScope, logoBase64?: string | null): jsPDF {
+export function buildRoutinePdfDocument(data: AppData, scope: RoutineScope): jsPDF {
   const sync = getRoutineHeaderAndMeta(data, scope);
   const { header, rows } = buildRoutineMatrix(data, scope);
   const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
 
-  if (logoBase64) {
-    try {
-      doc.addImage(logoBase64, "JPEG", 40, 20, 50, 50);
-    } catch (e) {
-      console.error("Failed to add logo to PDF", e);
-    }
-  }
+
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(14);
@@ -1206,39 +1122,22 @@ export function buildRoutinePdfDocument(data: AppData, scope: RoutineScope, logo
   return doc;
 }
 
-async function getLogoBase64(): Promise<string | null> {
-  try {
-    const res = await fetch("/BAUST.jpeg");
-    if (!res.ok) return null;
-    const blob = await res.blob();
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = () => resolve(null);
-      reader.readAsDataURL(blob);
-    });
-  } catch (err) {
-    console.error("Failed to load logo base64", err);
-    return null;
-  }
-}
+
 
 export async function exportRoutinePdf(data: AppData, scope: RoutineScope) {
   const info = getScopeInfo(data, scope);
-  const logoBase64 = await getLogoBase64();
-  const doc = buildRoutinePdfDocument(data, scope, logoBase64);
+  const doc = buildRoutinePdfDocument(data, scope);
   doc.save(`${info.slug}.pdf`);
 }
 
 export async function exportAllRoutinesPdfZip(data: AppData) {
   const zip = new JSZip();
-  const logoBase64 = await getLogoBase64();
 
   const sectionsFolder = zip.folder("Sections");
   for (const s of data.sections) {
     const scope: RoutineScope = { kind: "section", section_id: s.id };
     const info = getScopeInfo(data, scope);
-    const doc = buildRoutinePdfDocument(data, scope, logoBase64);
+    const doc = buildRoutinePdfDocument(data, scope);
     sectionsFolder?.file(`${info.slug}.pdf`, doc.output("arraybuffer"));
   }
 
@@ -1246,7 +1145,7 @@ export async function exportAllRoutinesPdfZip(data: AppData) {
   for (const t of data.teachers) {
     const scope: RoutineScope = { kind: "teacher", teacher_id: t.id };
     const info = getScopeInfo(data, scope);
-    const doc = buildRoutinePdfDocument(data, scope, logoBase64);
+    const doc = buildRoutinePdfDocument(data, scope);
     teachersFolder?.file(`${info.slug}.pdf`, doc.output("arraybuffer"));
   }
 
@@ -1254,7 +1153,7 @@ export async function exportAllRoutinesPdfZip(data: AppData) {
   for (const r of data.rooms) {
     const scope: RoutineScope = { kind: "room", room_id: r.id };
     const info = getScopeInfo(data, scope);
-    const doc = buildRoutinePdfDocument(data, scope, logoBase64);
+    const doc = buildRoutinePdfDocument(data, scope);
     roomsFolder?.file(`${info.slug}.pdf`, doc.output("arraybuffer"));
   }
 
