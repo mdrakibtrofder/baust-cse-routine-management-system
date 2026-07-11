@@ -989,133 +989,323 @@ export async function exportAllRoutinesExcelZip(data: AppData) {
 }
 
 /* =============== PDF =============== */
+/* Mirrors buildRoutineDocxDocument exactly: same page geometry, fonts, sizes,
+ * colors, borders, column widths and block ordering. DOCX units are converted
+ * as twips/20 = pt and half-points/2 = pt. */
+
+const PDF_PAGE_WIDTH = 841.89; // A4 landscape width in pt (16838 twips)
+const PDF_MARGIN = 36; // 720 twips
+const PDF_CONTENT_WIDTH = PDF_PAGE_WIDTH - PDF_MARGIN * 2; // tables at 100% width
+const PDF_BORDER_COLOR: [number, number, number] = [160, 160, 160]; // A0A0A0
+const PDF_BORDER_WIDTH = 0.5; // docx border size 4 (eighths of a pt)
+const PDF_CELL_PADDING = 3; // 60 twips
+const PDF_BLOCK_GAP = 25; // spacer paragraph: 6pt before + ~13pt line + 6pt after
+
+function hexToRgb(hex: string): [number, number, number] {
+  const n = parseInt(hex.replace("#", ""), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
+interface PdfCellOptions {
+  text: string;
+  bold?: boolean;
+  size?: number; // half-points, same convention as the docx builder
+  fill?: string;
+  align?: "left" | "center" | "right";
+  colSpan?: number;
+  rowSpan?: number;
+  color?: string;
+  italic?: boolean;
+}
+
+function pdfCell(options: PdfCellOptions) {
+  const {
+    text,
+    bold = false,
+    size = 24,
+    fill,
+    align = "center",
+    colSpan,
+    rowSpan,
+    color,
+    italic = false,
+  } = options;
+
+  return {
+    content: text,
+    colSpan: colSpan && colSpan > 1 ? colSpan : undefined,
+    rowSpan: rowSpan && rowSpan > 1 ? rowSpan : undefined,
+    styles: {
+      fontStyle: bold && italic ? "bolditalic" : bold ? "bold" : italic ? "italic" : "normal",
+      fontSize: size / 2,
+      fillColor: fill ? hexToRgb(fill) : false,
+      textColor: color ? hexToRgb(color) : [0, 0, 0],
+      halign: align,
+    },
+  } as any;
+}
+
+/** Scale docx DXA column widths so they fill the target width, like a 100%-width Word table. */
+function scaleColumnWidths(dxaWidths: number[], targetWidth: number): number[] {
+  const total = dxaWidths.reduce((sum, w) => sum + w, 0);
+  return dxaWidths.map((w) => (w / total) * targetWidth);
+}
+
+function pdfTableConfig(startY: number, columnWidthsPt: number[], tableWidth?: number) {
+  const columnStyles: Record<number, { cellWidth: number }> = {};
+  columnWidthsPt.forEach((w, i) => {
+    columnStyles[i] = { cellWidth: w };
+  });
+  return {
+    startY,
+    theme: "grid" as const,
+    margin: { top: PDF_MARGIN, bottom: PDF_MARGIN, left: PDF_MARGIN, right: PDF_MARGIN },
+    tableWidth: tableWidth ?? columnWidthsPt.reduce((sum, w) => sum + w, 0),
+    styles: {
+      font: "times",
+      cellPadding: PDF_CELL_PADDING,
+      lineColor: PDF_BORDER_COLOR,
+      lineWidth: PDF_BORDER_WIDTH,
+      textColor: [0, 0, 0] as [number, number, number],
+      valign: "top" as const,
+      overflow: "linebreak" as const,
+    },
+    columnStyles,
+  };
+}
+
 export function buildRoutinePdfDocument(data: AppData, scope: RoutineScope): jsPDF {
-  const sync = getRoutineHeaderAndMeta(data, scope);
   const { header, rows } = buildRoutineMatrix(data, scope);
+  const summary = buildRoutineCourseSummary(data, scope);
   const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
 
+  // --- Titles (same text, sizes and weights as the docx builder) ---
+  const title1Text = scope.kind === "section"
+    ? "Bangladesh Army University of Science and Technology (BAUST), Saidpur"
+    : "Bangladesh Army University of Science and Technology (BAUST)";
+  const title1Size = (scope.kind === "section" ? 32 : 36) / 2; // 16pt / 18pt
 
+  const title2Text = scope.kind === "section"
+    ? "Department of Computer Science and Engineering (CSE)"
+    : "Department of Computer Science and Engineering";
+  const title2Size = (scope.kind === "section" ? 28 : 34) / 2; // 14pt / 17pt
 
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(14);
-  let currentY = 32;
-  for (const line of sync.lines) {
-    const textWidth = doc.getTextWidth(line);
-    const x = (842 - textWidth) / 2;
-    doc.text(line, x, currentY);
-    currentY += 18;
+  const semName = data.semesters.find(s => s.id === data.active_semester_id)?.name || "Winter-2026";
+  let subtitleText = "";
+  if (scope.kind === "section") {
+    subtitleText = `Batchwise Class Routine, ${semName}`;
+  } else if (scope.kind === "room") {
+    subtitleText = `Room-wise Class Routine for ${semName}`;
+  } else {
+    subtitleText = `Individual Class Routine & Course Load for ${semName}`;
   }
-  currentY += 8;
+  const title3Size = 26 / 2; // 13pt
 
-  doc.setFontSize(10);
-  for (const m of sync.metadata) {
-    doc.setFont("helvetica", "bold");
-    doc.text(`${m.label}:`, 40, currentY);
-    doc.setFont("helvetica", "normal");
-    doc.text(String(m.value), 140, currentY);
-    currentY += 14;
-  }
-  const startY = currentY + 6;
+  let y = PDF_MARGIN;
+  const drawTitle = (text: string, sizePt: number, bold: boolean) => {
+    doc.setFont("times", bold ? "bold" : "normal");
+    doc.setFontSize(sizePt);
+    doc.text(text, PDF_PAGE_WIDTH / 2, y, { align: "center", baseline: "top" });
+    y += sizePt * 1.15; // single line spacing
+  };
+  drawTitle(title1Text, title1Size, true);
+  drawTitle(title2Text, title2Size, true);
+  drawTitle(subtitleText, title3Size, false);
+  y += PDF_BLOCK_GAP;
 
-  const body = rows.map(r => r.map(c => ({ content: c, colSpan: 1 })));
-  for (let r = 0; r < body.length; r++) {
-    for (let c = 1; c < body[r].length; c++) {
-      if (body[r][c].content === "SKIP") {
-        let prev = c - 1;
-        while (prev >= 1 && body[r][prev].content === "SKIP") prev--;
-        body[r][prev].colSpan++;
-      }
-    }
-  }
-  const finalBody = body.map(r => r.filter(c => c.content !== "SKIP").map(c => {
-    if (c.content === "BREAK") return { content: "BREAK", styles: { fillColor: [254, 243, 199], fontStyle: "bold", halign: "center" } };
-    return c;
-  }));
+  const lastY = () => (doc as any).lastAutoTable.finalY as number;
 
-  autoTable(doc, {
-    head: [header],
-    body: finalBody as any,
-    startY,
-    styles: { fontSize: 7, cellPadding: 3, valign: "top", halign: "left", overflow: "linebreak" },
-    theme: "grid",
-    columnStyles: { 0: { fontStyle: "bold", cellWidth: 60 } },
-    didParseCell: (data) => {
-      if (data.section === "head") {
-        if (data.column.index === 0) {
-          data.cell.styles.fillColor = [79, 70, 229]; // Indigo / blue-violet
-          data.cell.styles.textColor = [255, 255, 255];
-        } else {
-          data.cell.styles.fillColor = [5, 150, 105]; // Green/teal
-          data.cell.styles.textColor = [255, 255, 255];
-        }
-      } else if (data.section === "body" && data.column.index === 0) {
-        data.cell.styles.fillColor = [224, 231, 255]; // Soft indigo/blue-violet
-        data.cell.styles.textColor = [30, 41, 59];
-      }
-    }
-  });
+  // --- Table 0: metadata (fixed-width, left aligned, like the docx table) ---
+  let hasTable0 = false;
+  if (scope.kind === "section") {
+    const sec = data.sections.find(x => x.id === scope.section_id);
+    const levelTermStr = sec ? `${sec.level}-${sec.term}` : "";
+    const secName = sec ? sec.name : "";
+    const sectionDept = sec && sec.department_id
+      ? data.departments.find((d) => d.id === sec.department_id)?.short_name ?? DEFAULT_DEPT
+      : DEFAULT_DEPT;
 
-  const summary = buildRoutineCourseSummary(data, scope);
-  doc.addPage();
-  doc.setFontSize(14);
-  doc.setFont("helvetica", "bold");
-  doc.text("Course Load Summary", 40, 40);
-
-  autoTable(doc, {
-    startY: 60,
-    head: [
-      [
-        { content: "Course No.", rowSpan: 2, styles: { halign: "center", valign: "middle" } },
-        { content: "Course Title", rowSpan: 2, styles: { halign: "center", valign: "middle" } },
-        { content: "Hours/Week", colSpan: 2, styles: { halign: "center" } },
-        { content: "Credit Hours", rowSpan: 2, styles: { halign: "center", valign: "middle" } },
-        { content: "Classes/Week", rowSpan: 2, styles: { halign: "center", valign: "middle" } }
+    const widths0 = [2232, 3571].map((w) => w / 20);
+    autoTable(doc, {
+      ...pdfTableConfig(y, widths0),
+      body: [
+        [pdfCell({ text: "Department:", bold: true, align: "left" }), pdfCell({ text: sectionDept, bold: true, align: "left" })],
+        [pdfCell({ text: "Level-Term:", bold: true, align: "left" }), pdfCell({ text: levelTermStr, bold: true, align: "left" })],
+        [pdfCell({ text: "Section:", bold: true, align: "left" }), pdfCell({ text: secName, bold: true, align: "left" })],
       ],
-      [
-        "Theory",
-        "Sessional"
-      ]
-    ],
-    body: [
-      ...summary.rows.map(r => [
-        r.course.code,
-        r.course.name,
-        formatCredit(r.theory),
-        formatCredit(r.sessional),
-        formatCredit(r.credit),
-        r.meetings
-      ]),
-      [
-        { content: "TOTAL", colSpan: 2, styles: { fontStyle: "bold", halign: "right" } },
-        formatCredit(summary.totals.theory),
-        formatCredit(summary.totals.sessional),
-        formatCredit(summary.totals.credit),
-        summary.totals.meetings
-      ]
-    ],
-    styles: { fontSize: 8, cellPadding: 4 },
-    headStyles: { fillColor: [30, 58, 138], textColor: 255, fontStyle: "bold" },
-    theme: "grid",
+    });
+    hasTable0 = true;
+  } else if (scope.kind === "room") {
+    const r = data.rooms.find(x => x.id === scope.room_id);
+    const roomName = r ? r.name : "";
+    const widths0 = [2600, 2700].map((w) => w / 20);
+    autoTable(doc, {
+      ...pdfTableConfig(y, widths0),
+      body: [
+        [
+          pdfCell({ text: "Room No:", bold: true, size: 36, align: "right" }),
+          pdfCell({ text: roomName, bold: true, size: 36, align: "left" }),
+        ],
+      ],
+    });
+    hasTable0 = true;
+  } else if (scope.kind === "teacher") {
+    const t = data.teachers.find(x => x.id === scope.teacher_id);
+    const tName = t ? t.name : "";
+    const tShort = t ? t.short_name : "";
+    const designation = t ? t.designation : "";
+    const dept = t ? (t.department || "CSE") : "CSE";
+    const contactHours = formatCredit(summary.totals.credit);
+
+    const widths0 = [1713, 7833].map((w) => w / 20);
+    autoTable(doc, {
+      ...pdfTableConfig(y, widths0),
+      body: [
+        [pdfCell({ text: "Teacher Name:", bold: true, align: "left" }), pdfCell({ text: `${tName} (${tShort})`, bold: true, align: "left" })],
+        [pdfCell({ text: "Designation:", bold: true, align: "left" }), pdfCell({ text: `${designation}, ${dept}`, bold: true, align: "left" })],
+        [pdfCell({ text: "Total Credit Hours:", bold: true, align: "left" }), pdfCell({ text: contactHours, bold: true, align: "left" })],
+      ],
+    });
+    hasTable0 = true;
+  }
+  if (hasTable0) y = lastY() + PDF_BLOCK_GAP;
+
+  // --- Table 1: routine matrix (same column widths and cell rules as docx) ---
+  let colWidths: number[];
+  if (scope.kind === "section") {
+    colWidths = [780, 1670, 1526, 1526, 360, 1612, 1713, 1612, 1483, 1454, 1368];
+  } else if (scope.kind === "room") {
+    colWidths = [780, 1612, 1612, 1612, 504, 1656, 1656, 1656, 1641, 1641, 1641];
+  } else { // teacher
+    colWidths = [820, 1540, 1540, 1540, 532, 1584, 1584, 1584, 1584, 1584, 1584];
+  }
+  // Guard against period counts that differ from the 11 predefined widths
+  if (header.length !== colWidths.length) {
+    const avg = colWidths.reduce((s, w) => s + w, 0) / colWidths.length;
+    colWidths = header.map((_, i) => colWidths[i] ?? avg);
+  }
+  const gridWidths = scaleColumnWidths(colWidths, PDF_CONTENT_WIDTH);
+
+  const gridHeaderRow = header.map((h) => {
+    const displayHeader = h.includes(":") ? h.replace(/:/g, ".") : h;
+    return pdfCell({ text: displayHeader, bold: true, size: 24 }); // 12pt
   });
 
+  const gridBodyRows: any[][] = [];
+  for (const r of rows) {
+    const rowCells: any[] = [];
+    let skipCount = 0;
+    for (let i = 0; i < r.length; i++) {
+      const cell = r[i];
+      if (skipCount > 0) {
+        skipCount--;
+        continue;
+      }
+
+      let colSpan = 1;
+      if (cell !== "" && cell !== "BREAK" && cell !== "SKIP") {
+        let j = i + 1;
+        while (j < r.length && r[j] === "SKIP") {
+          colSpan++;
+          j++;
+        }
+        skipCount = colSpan - 1;
+      }
+
+      const isDay = i === 0;
+      const isBreakCell = cell === "BREAK";
+
+      let text = cell;
+      let size = scope.kind === "section" ? 18 : 24; // 9pt for section, 12pt for teacher/room
+      let bold = false;
+
+      if (isDay) {
+        size = 24; // 12pt
+      } else if (isBreakCell) {
+        if (scope.kind === "section") {
+          text = "BREAK (10.50- 11.30)";
+          size = 16; // 8pt
+        } else {
+          text = "BREAK";
+          size = 24; // 12pt
+        }
+      } else if (cell !== "" && cell !== "SKIP") {
+        bold = scope.kind === "section"; // bold only in section routine class cells
+      }
+
+      if (cell !== "SKIP") {
+        rowCells.push(pdfCell({ text, bold, size, colSpan }));
+      }
+    }
+    gridBodyRows.push(rowCells);
+  }
+
+  autoTable(doc, {
+    ...pdfTableConfig(y, gridWidths, PDF_CONTENT_WIDTH),
+    body: [gridHeaderRow, ...gridBodyRows],
+  });
+  y = lastY() + PDF_BLOCK_GAP;
+
+  // --- Table 2: course load summary (COURSES banner + Hours/Week split header) ---
+  const widths2 = scaleColumnWidths([1500, 6000, 1000, 1000, 1500], PDF_CONTENT_WIDTH);
+
+  const summaryRows: any[][] = [
+    [pdfCell({ text: "COURSES", bold: true, size: 24, fill: "4F46E5", color: "FFFFFF", colSpan: 5 })],
+    [
+      pdfCell({ text: "Course No.", bold: true, fill: "E0E7FF", rowSpan: 2 }),
+      pdfCell({ text: "Course Title", bold: true, fill: "E0E7FF", rowSpan: 2 }),
+      pdfCell({ text: "Hours/Week", bold: true, fill: "E0E7FF", colSpan: 2 }),
+      pdfCell({ text: "Credit Hours", bold: true, fill: "E0E7FF", rowSpan: 2 }),
+    ],
+    [
+      pdfCell({ text: "Theory", bold: true, fill: "E0E7FF" }),
+      pdfCell({ text: "Sessional", bold: true, fill: "E0E7FF" }),
+    ],
+    ...summary.rows.map((r) => [
+      pdfCell({ text: r.course.code, size: 18 }),
+      pdfCell({ text: r.course.name, size: 18, align: "left" }),
+      pdfCell({ text: formatCredit(r.theory), size: 18 }),
+      pdfCell({ text: formatCredit(r.sessional), size: 18 }),
+      pdfCell({ text: formatCredit(r.credit), size: 18 }),
+    ]),
+    [
+      pdfCell({ text: "" }),
+      pdfCell({ text: "Total:", bold: true, size: 18, align: "right" }),
+      pdfCell({ text: formatCredit(summary.totals.theory), bold: true, size: 18 }),
+      pdfCell({ text: formatCredit(summary.totals.sessional), bold: true, size: 18 }),
+      pdfCell({ text: formatCredit(summary.totals.credit), bold: true, size: 18 }),
+    ],
+  ];
+
+  autoTable(doc, {
+    ...pdfTableConfig(y, widths2, PDF_CONTENT_WIDTH),
+    body: summaryRows,
+  });
+  y = lastY() + PDF_BLOCK_GAP;
+
+  // --- Table 3: teacher details ---
   const teacherSummary = buildRoutineTeacherSummary(data, scope);
   if (teacherSummary.length > 0) {
-    doc.addPage();
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text("Teacher Details", 40, 40);
-
+    const widths3 = scaleColumnWidths([1500, 4500, 4000], PDF_CONTENT_WIDTH);
     autoTable(doc, {
-      startY: 60,
-      head: [["Short Form", "Teachers Name", "Designation"]],
-      body: teacherSummary.map((r) => [
-        r.teacher.short_name,
-        r.teacher.name,
-        r.teacher.department ? `${r.teacher.designation}, ${r.teacher.department}` : r.teacher.designation,
-      ]),
-      styles: { fontSize: 8, cellPadding: 4 },
-      headStyles: { fillColor: [30, 58, 138], textColor: 255, fontStyle: "bold" },
-      theme: "grid",
+      ...pdfTableConfig(y, widths3, PDF_CONTENT_WIDTH),
+      body: [
+        [
+          pdfCell({ text: "Short Form", bold: true, size: 20, fill: "4F46E5", color: "FFFFFF" }),
+          pdfCell({ text: "Teachers Name", bold: true, size: 20, fill: "4F46E5", color: "FFFFFF" }),
+          pdfCell({ text: "Designation", bold: true, size: 20, fill: "4F46E5", color: "FFFFFF" }),
+        ],
+        ...teacherSummary.map((r) => [
+          pdfCell({ text: r.teacher.short_name, size: 18 }),
+          pdfCell({ text: r.teacher.name, size: 18 }),
+          pdfCell({
+            text: r.teacher.department
+              ? `${r.teacher.designation} ,${r.teacher.department}`
+              : r.teacher.designation,
+            size: 18,
+          }),
+        ]),
+      ],
     });
   }
 
