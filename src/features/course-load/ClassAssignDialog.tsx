@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "@/lib/store";
 import {
   AlertDialog,
@@ -141,6 +141,16 @@ export function ClassAssignDialog({
   const [splitMode, setSplitMode] = useState(false);
   const [slotTeacherIds, setSlotTeacherIds] = useState<string[][]>([[], []]);
 
+  // Snapshot of the original (last-saved) draft state, captured when the modal
+  // mounts/opens, before any local edits. Used to fully discard unsaved changes
+  // (including deferred deletions) if the modal is closed by any means other
+  // than the explicit Save button.
+  const snapshotRef = useRef<{
+    drafts: DraftClass[];
+    splitMode: boolean;
+    slotTeacherIds: string[][];
+  } | null>(null);
+
   const maxTeachers = info.roomKind === "sessional" ? 2 : 1;
   const canAddTeacher = teacherIds.length < maxTeachers;
 
@@ -159,8 +169,17 @@ export function ClassAssignDialog({
     setStep(0);
     // Initialize split-teacher state from saved config
     const hasSplit = !!(cst?.slot_teacher_ids?.length);
+    const initialSplitTeacherIds = hasSplit ? (cst!.slot_teacher_ids as string[][]) : [[], []];
     setSplitMode(hasSplit);
-    setSlotTeacherIds(hasSplit ? (cst!.slot_teacher_ids as string[][]) : [[], []]);
+    setSlotTeacherIds(initialSplitTeacherIds);
+
+    // Capture the pre-edit snapshot so we can fully discard unsaved changes
+    // (including deferred deletions) if the modal is closed without saving.
+    snapshotRef.current = {
+      drafts: initial.map((d) => ({ ...d })),
+      splitMode: hasSplit,
+      slotTeacherIds: initialSplitTeacherIds.map((ids) => [...ids]),
+    };
   }, [open, course.id, section.id, info.classCount, info.classDuration, info.weekPattern]);
 
   const safeStep = Math.min(step, Math.max(drafts.length - 1, 0));
@@ -362,7 +381,10 @@ export function ClassAssignDialog({
       confirmLabel: "Delete",
     });
     if (!ok) return;
-    if (d?.id) data.deleteClassSlot(d.id);
+    // Local-only: do not delete from the backend here. The actual removal is
+    // deferred until Save (batchReplaceClassSlots omits any draft without a
+    // room/day/time), so canceling the modal afterwards leaves the original
+    // saved class slot untouched.
     setDrafts((prev) => prev.map((x, i) => (i === idx ? EMPTY_CLASS(info) : x)));
     toast.success(`Class ${idx + 1} cleared`);
   };
@@ -375,10 +397,31 @@ export function ClassAssignDialog({
       confirmLabel: "Clear all",
     });
     if (!ok) return;
-    data.deleteClassSlotsForCourseSection(course.id, section.id);
+    // Local-only: do not delete from the backend here. Deferred to Save (see
+    // deleteOne above) so canceling the modal leaves all existing room
+    // assignments for this course/section untouched.
     setDrafts(Array.from({ length: info.classCount }, () => EMPTY_CLASS(info)));
     setStep(0);
     toast.success("All classes cleared");
+  };
+
+  /**
+   * Handles every dialog-close path that is NOT the explicit Save button:
+   * the X icon, clicking outside, and Escape. Discards any unsaved local
+   * edits (including deferred deletions from deleteOne/clearAll) by
+   * restoring the pre-mount snapshot before notifying the parent.
+   * Note: persist() closes the dialog itself by calling `onOpenChange(false)`
+   * directly after a successful save, bypassing this handler, so saved
+   * changes are never discarded.
+   */
+  const handleOpenChange = (v: boolean) => {
+    if (!v && snapshotRef.current) {
+      setDrafts(snapshotRef.current.drafts.map((d) => ({ ...d })));
+      setSplitMode(snapshotRef.current.splitMode);
+      setSlotTeacherIds(snapshotRef.current.slotTeacherIds.map((ids) => [...ids]));
+      setStep(0);
+    }
+    onOpenChange(v);
   };
 
   if (drafts.length === 0) return null;
@@ -390,7 +433,7 @@ export function ClassAssignDialog({
 
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent className="max-w-[1200px] max-h-[95vh] flex flex-col p-0 overflow-hidden">
           <DialogHeader className="px-6 py-4 border-b">
             <DialogTitle className="flex items-center gap-2 flex-wrap">
