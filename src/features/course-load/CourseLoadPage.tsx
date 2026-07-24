@@ -9,8 +9,7 @@ import type { Course, Section, Department } from "@/lib/types";
 import { COURSE_TYPE_INFO } from "@/lib/types";
 import { TeacherPicker } from "./TeacherPicker";
 import { RoomPicker } from "./RoomPicker";
-import { ClassAssignDialog } from "./ClassAssignDialog";
-import { LabSectionsPanel } from "./LabSectionsPanel";
+import { ClassScheduleModal } from "./ClassScheduleModal";
 import { checkConflicts } from "@/lib/conflicts";
 import { RoutineDialog } from "@/components/RoutineDialog";
 import { CourseDetailsDialog } from "@/components/CourseDetailsDialog";
@@ -113,7 +112,8 @@ export function CourseLoadPage() {
         ))}
       </div>
       {openAssign && (
-        <ClassAssignDialog
+        <ClassScheduleModal
+          mode="section"
           open={!!openAssign}
           onOpenChange={(v) => !v && setOpenAssign(null)}
           course={openAssign.course}
@@ -306,11 +306,12 @@ function CourseRow({ course, sections, onAssign, alt, onCourseDetails }: {
         })()}
       </tr>
       {isSessional && labSectionsOpen && (
-        <LabSectionsPanel
+        <ClassScheduleModal
+          mode="lab"
           course={course}
           sections={sections}
           open={labSectionsOpen}
-          onClose={() => setLabSectionsOpen(false)}
+          onOpenChange={(v) => !v && setLabSectionsOpen(false)}
         />
       )}
     </>
@@ -338,7 +339,7 @@ function SectionCell({ course, section, sections, onAssign, onManageLabSections,
       g.section_ids.includes(section.id),
   );
   if (labSections.length > 0) {
-    // Same per-lab-section limit the LabSectionsPanel enforces
+    // Same per-lab-section limit ClassScheduleModal (mode="lab") enforces
     const maxSlotsPerLab = course.credit === 1.5 ? 1 : Math.ceil(course.credit / 3);
     return (
       <td className="px-3 py-2 border-l align-top">

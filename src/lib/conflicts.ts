@@ -93,10 +93,27 @@ export interface Conflict {
   message: string;
 }
 
+/**
+ * Describes *what* is being scheduled, independent of the UI that's editing it:
+ * - "section": a regular class/theory slot for one real `Section`, rostered via
+ *   `CourseSectionTeacher` (`course_section_teachers`).
+ * - "lab": a meeting for a virtual `CourseLabSection`, which maps to one or more
+ *   real sections (`sectionIds`) and has its own teacher roster + room capacity
+ *   (there's no single `Section` to read `total_students`/`id` from).
+ */
+export type ConflictScope =
+  | { kind: "section"; section: Section }
+  | { kind: "lab"; totalStudents: number; sectionIds: string[]; labSectionId?: string };
+
 export interface ConflictCheckInput {
   data: AppData;
   course: Course;
-  section: Section;
+  /** Regular-section scheduling context. Ignored when `scope` is provided; kept
+   *  for backward compatibility with existing section-only call sites. */
+  section?: Section;
+  /** Explicit scope. Required for lab-section scheduling; optional (derived from
+   *  `section`) for regular section scheduling. */
+  scope?: ConflictScope;
   teacherIds: string[];
   candidate: { day: string; start: string; end: string; room_id: string | null; week: WeekPattern };
   ignoreSlotId?: string;
@@ -104,24 +121,85 @@ export interface ConflictCheckInput {
   siblingDrafts?: { day: string; start: string; end: string; week: WeekPattern }[];
 }
 
+/** Teacher roster occupying a given (already-persisted) class slot, whether it
+ *  belongs to a regular section (via `course_section_teachers`) or a lab
+ *  section (via `course_lab_sections.teacher_ids`). */
+function resolveSlotTeacherIds(data: AppData, slot: ClassSlot): string[] {
+  if (slot.lab_section_id) {
+    const lab = data.course_lab_sections.find((g) => g.id === slot.lab_section_id);
+    return lab?.teacher_ids ?? [];
+  }
+  const cst = semCST(data).find(
+    (x) => x.course_id === slot.course_id && x.section_id === slot.section_id,
+  );
+  return cst?.teacher_ids ?? [];
+}
+
+/** Real section id(s) "occupied" by a given class slot — either its own
+ *  `section_id`, or (for a lab meeting) every real section the owning lab
+ *  section maps to. */
+function resolveSlotSectionIds(data: AppData, slot: ClassSlot): string[] {
+  if (slot.lab_section_id) {
+    const lab = data.course_lab_sections.find((g) => g.id === slot.lab_section_id);
+    return lab?.section_ids ?? [];
+  }
+  return slot.section_id ? [slot.section_id] : [];
+}
+
+/** Human-readable course/section labels for a persisted slot, used in conflict
+ *  messages. Understands both regular-section and lab-section slots. */
+function describeSlotOwner(data: AppData, slot: ClassSlot): { courseLabel: string; sectionLabel: string } {
+  const otherCourse = data.courses.find((c) => c.id === slot.course_id);
+  const otherSec = data.sections.find((s) => s.id === slot.section_id);
+  const otherLabSection = slot.lab_section_id
+    ? data.course_lab_sections.find((ls) => ls.id === slot.lab_section_id)
+    : null;
+  const courseLabel = otherCourse ? `${otherCourse.code} - ${otherCourse.name}` : "Sessional";
+  const sectionLabel = otherLabSection
+    ? otherLabSection.label
+    : otherSec
+      ? `Level ${otherSec.level} Term ${otherSec.term} Sec ${otherSec.name}`
+      : "Lab";
+  return { courseLabel, sectionLabel };
+}
+
+function resolveScope(input: ConflictCheckInput): ConflictScope {
+  if (input.scope) return input.scope;
+  if (input.section) return { kind: "section", section: input.section };
+  throw new Error("checkConflicts requires either `scope` or `section`.");
+}
+
 export function checkConflicts(input: ConflictCheckInput): Conflict[] {
-  const { data, course, section, teacherIds, candidate, ignoreSlotId, ignoreSlotIds } = input;
+  const { data, course, teacherIds, candidate, ignoreSlotId, ignoreSlotIds } = input;
+  const scope = resolveScope(input);
   const conflicts: Conflict[] = [];
   const info = COURSE_TYPE_INFO[course.course_type];
   const slots = semSlots(data);
-  const csts = semCST(data);
+
+  const totalStudents = scope.kind === "section" ? scope.section.total_students : scope.totalStudents;
+  const scopeSectionIds = scope.kind === "section" ? [scope.section.id] : scope.sectionIds;
 
   const shouldIgnore = (slotId: string) =>
     (ignoreSlotId !== undefined && slotId === ignoreSlotId) ||
     (ignoreSlotIds !== undefined && ignoreSlotIds.includes(slotId));
 
+  /** True when `slot` belongs to the same entity currently being edited (same
+   *  course+section for regular scheduling, same lab_section_id for labs) —
+   *  such slots are the entity's own other meetings, not "double-bookings". */
+  const isOwnEntitySlot = (slot: ClassSlot) => {
+    if (scope.kind === "section") {
+      return slot.course_id === course.id && slot.section_id === scope.section.id;
+    }
+    return !!scope.labSectionId && slot.lab_section_id === scope.labSectionId;
+  };
+
   if (candidate.room_id) {
     const room = data.rooms.find((r) => r.id === candidate.room_id);
     if (room) {
-      if (room.capacity < section.total_students) {
+      if (room.capacity < totalStudents) {
         conflicts.push({
           type: "room_capacity",
-          message: `Room ${room.name} capacity ${room.capacity} < section students ${section.total_students}.`,
+          message: `Room ${room.name} capacity ${room.capacity} < ${totalStudents} students.`,
         });
       }
       if (!roomSupportsKind(room.room_type, info.roomKind)) {
@@ -140,11 +218,8 @@ export function checkConflicts(input: ConflictCheckInput): Conflict[] {
       if (slot.day !== candidate.day) continue;
       if (!timesOverlap(slot.start, slot.end, candidate.start, candidate.end)) continue;
       if (!weeksOverlap(slot.week, candidate.week)) continue;
-      const otherCourse = data.courses.find((c) => c.id === slot.course_id);
-      const otherSec = data.sections.find((s) => s.id === slot.section_id);
+      const { courseLabel, sectionLabel } = describeSlotOwner(data, slot);
       const room = data.rooms.find((r) => r.id === candidate.room_id);
-      const courseLabel = otherCourse ? `${otherCourse.code} - ${otherCourse.name}` : "Sessional";
-      const sectionLabel = otherSec ? `Level ${otherSec.level} Term ${otherSec.term} Sec ${otherSec.name}` : "Lab";
       conflicts.push({
         type: "room_double",
         message: `Room ${room?.name} already booked ${slot.day} ${fmtRange12(slot.start, slot.end)} by ${courseLabel} (${sectionLabel}).`,
@@ -158,16 +233,11 @@ export function checkConflicts(input: ConflictCheckInput): Conflict[] {
       if (slot.day !== candidate.day) continue;
       if (!timesOverlap(slot.start, slot.end, candidate.start, candidate.end)) continue;
       if (!weeksOverlap(slot.week, candidate.week)) continue;
-      const cst = csts.find(
-        (x) => x.course_id === slot.course_id && x.section_id === slot.section_id,
-      );
-      if (!cst || !cst.teacher_ids.includes(tid)) continue;
-      if (cst.course_id === course.id && cst.section_id === section.id) continue;
+      if (isOwnEntitySlot(slot)) continue;
+      const rosterIds = resolveSlotTeacherIds(data, slot);
+      if (!rosterIds.includes(tid)) continue;
       const t = data.teachers.find((x) => x.id === tid);
-      const otherCourse = data.courses.find((c) => c.id === slot.course_id);
-      const otherSec = data.sections.find((s) => s.id === slot.section_id);
-      const courseLabel = otherCourse ? `${otherCourse.code} - ${otherCourse.name}` : "Sessional";
-      const sectionLabel = otherSec ? `Level ${otherSec.level} Term ${otherSec.term} Sec ${otherSec.name}` : "Lab";
+      const { courseLabel, sectionLabel } = describeSlotOwner(data, slot);
       conflicts.push({
         type: "teacher_double",
         message: `Teacher ${t?.short_name} already teaches ${courseLabel} (${sectionLabel}) on ${slot.day} ${fmtRange12(slot.start, slot.end)}.`,
@@ -198,17 +268,20 @@ export function checkConflicts(input: ConflictCheckInput): Conflict[] {
       });
     }
   }
+
+  // Section double-booking: does any real section covered by this scope
+  // (the section itself, or every section a lab meeting maps to) already have
+  // a *different course's* class at this day/time?
   for (const slot of slots) {
     if (shouldIgnore(slot.id)) continue;
-    if (slot.section_id !== section.id) continue;
+    if (isOwnEntitySlot(slot)) continue;
     if (slot.day !== candidate.day) continue;
     if (!timesOverlap(slot.start, slot.end, candidate.start, candidate.end)) continue;
     if (!weeksOverlap(slot.week, candidate.week)) continue;
     if (slot.course_id === course.id) continue;
-    const otherCourse = data.courses.find((c) => c.id === slot.course_id);
-    const otherSec = data.sections.find((s) => s.id === slot.section_id);
-    const courseLabel = otherCourse ? `${otherCourse.code} - ${otherCourse.name}` : "Sessional";
-    const sectionLabel = otherSec ? `Level ${otherSec.level} Term ${otherSec.term} Sec ${otherSec.name}` : "Lab";
+    const slotSectionIds = resolveSlotSectionIds(data, slot);
+    if (!slotSectionIds.some((id) => scopeSectionIds.includes(id))) continue;
+    const { courseLabel, sectionLabel } = describeSlotOwner(data, slot);
     conflicts.push({
       type: "section_double",
       message: `Section ${sectionLabel} already has ${courseLabel} on ${slot.day} ${fmtRange12(slot.start, slot.end)}.`,
@@ -220,7 +293,7 @@ export function checkConflicts(input: ConflictCheckInput): Conflict[] {
       if (!sd.day || !sd.start) continue;
       if (sd === (candidate as any)) continue;
       if (sd.day !== candidate.day) continue;
-      
+
       // Multiple classes of the same course must be on different days
       // Unless they are on different weeks (ODD/EVEN)
       if (weeksOverlap(sd.week, candidate.week)) {
@@ -282,26 +355,29 @@ export function teachersBusyAt(
   teacherIds: string[],
   candidate: { day: string; start: string; end: string; week: WeekPattern },
   ignoreSlotId?: string,
-  ignoreCourseSection?: { course_id: string; section_id: string },
+  /** The entity currently being edited, so its own other meetings aren't
+   *  reported as a clash. Pass `lab_section_id` for lab scheduling, or
+   *  `section_id` for regular section scheduling. */
+  ignoreEntity?: { course_id: string; section_id?: string | null; lab_section_id?: string | null },
 ): { teacherId: string; slot: ClassSlot } | null {
-  const csts = semCST(data);
   for (const slot of semSlots(data)) {
     if (slot.id === ignoreSlotId) continue;
     if (slot.day !== candidate.day) continue;
     if (!timesOverlap(slot.start, slot.end, candidate.start, candidate.end)) continue;
     if (!weeksOverlap(slot.week, candidate.week)) continue;
-    if (
-      ignoreCourseSection &&
-      slot.course_id === ignoreCourseSection.course_id &&
-      slot.section_id === ignoreCourseSection.section_id
-    )
-      continue;
-    const cst = csts.find(
-      (x) => x.course_id === slot.course_id && x.section_id === slot.section_id,
-    );
-    if (!cst) continue;
+    if (ignoreEntity) {
+      if (ignoreEntity.lab_section_id) {
+        if (slot.lab_section_id === ignoreEntity.lab_section_id) continue;
+      } else if (
+        slot.course_id === ignoreEntity.course_id &&
+        slot.section_id === ignoreEntity.section_id
+      ) {
+        continue;
+      }
+    }
+    const rosterIds = resolveSlotTeacherIds(data, slot);
     for (const tid of teacherIds) {
-      if (cst.teacher_ids.includes(tid)) return { teacherId: tid, slot };
+      if (rosterIds.includes(tid)) return { teacherId: tid, slot };
     }
   }
   return null;
@@ -310,7 +386,7 @@ export function teachersBusyAt(
 export function findAvailableRooms(
   data: AppData,
   course: Course,
-  section: Section,
+  scope: ConflictScope,
   candidate: { day: string; start: string; end: string; week: WeekPattern },
   ignoreSlotId?: string,
   teacherIds: string[] = [],
@@ -321,7 +397,7 @@ export function findAvailableRooms(
   const baseConflicts = checkConflicts({
     data,
     course,
-    section,
+    scope,
     teacherIds,
     candidate: { ...candidate, room_id: null },
     ignoreSlotId,
@@ -329,10 +405,10 @@ export function findAvailableRooms(
   });
 
   // If there are teacher, section, or day-duplicate conflicts, no room can fix that
-  const fatalConflicts = baseConflicts.filter(c => 
-    c.type === 'teacher_double' || 
-    c.type === 'teacher_unavailable' || 
-    c.type === 'section_double' || 
+  const fatalConflicts = baseConflicts.filter(c =>
+    c.type === 'teacher_double' ||
+    c.type === 'teacher_unavailable' ||
+    c.type === 'section_double' ||
     c.type === 'self_duplicate'
   );
 
@@ -348,7 +424,7 @@ export function findAvailableRooms(
     const roomConflicts = checkConflicts({
       data,
       course,
-      section,
+      scope,
       teacherIds,
       candidate: { ...candidate, room_id: room.id },
       ignoreSlotId,
@@ -368,7 +444,7 @@ export interface SuggestedSlot {
 export function findAllConflictFreeSlots(
   data: AppData,
   course: Course,
-  section: Section,
+  scope: ConflictScope,
   teacherIds: string[],
   ignoreSlotId?: string,
   siblingDrafts: { day: string; start: string; end: string; week: WeekPattern }[] = [],
@@ -384,11 +460,11 @@ export function findAllConflictFreeSlots(
   for (const day of data.days) {
     for (const period of periods) {
       const candidate = { day: day.name, start: period.start, end: period.end, week };
-      
+
       const rooms = findAvailableRooms(
         data,
         course,
-        section,
+        scope,
         candidate,
         ignoreSlotId,
         teacherIds,

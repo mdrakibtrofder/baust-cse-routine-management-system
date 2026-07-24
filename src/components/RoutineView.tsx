@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { RoutineCourseSummary } from "@/components/RoutineCourseSummary";
 import { RoutineTeacherSummary } from "@/components/RoutineTeacherSummary";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ClassAssignDialog } from "@/features/course-load/ClassAssignDialog";
+import { ClassScheduleModal } from "@/features/course-load/ClassScheduleModal";
 import { SwapRoomModal } from "@/components/SwapRoomModal";
 
 const DEFAULT_DEPT = "CSE";
@@ -432,7 +432,8 @@ export function RoutineView({
       <RoutineTeacherSummary scope={scope} />
 
       {editCourse && editSection && (
-        <ClassAssignDialog
+        <ClassScheduleModal
+          mode="section"
           open={!!editTarget}
           onOpenChange={(v) => !v && setEditTarget(null)}
           course={editCourse}
