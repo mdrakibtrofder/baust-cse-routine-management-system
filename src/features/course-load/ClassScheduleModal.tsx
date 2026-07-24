@@ -120,9 +120,16 @@ interface ClassScheduleModalProps {
   section?: Section;
   /** Required for mode="lab" — candidate real sections lab sections can map to. */
   sections?: Section[];
+  /** Lab mode only: open with this lab section (`CourseLabSection.id`) active
+   *  instead of defaulting to the first one — e.g. when opened by clicking a
+   *  specific lab cell on a routine grid. */
+  focusEntityId?: string;
+  /** Either mode: open with the meeting/session containing this persisted
+   *  `ClassSlot.id` active instead of defaulting to the first one. */
+  focusMeetingId?: string;
 }
 
-export function ClassScheduleModal({ mode, open, onOpenChange, course, section, sections }: ClassScheduleModalProps) {
+export function ClassScheduleModal({ mode, open, onOpenChange, course, section, sections, focusEntityId, focusMeetingId }: ClassScheduleModalProps) {
   const data = useStore();
   const confirmDialog = useConfirm();
   const info = COURSE_TYPE_INFO[course.course_type];
@@ -185,9 +192,10 @@ export function ClassScheduleModal({ mode, open, onOpenChange, course, section, 
         meetings,
       };
       const hasSplit = !!cst?.slot_teacher_ids?.length;
+      const focusedMeetingIdx = focusMeetingId ? meetings.findIndex((m) => m.id === focusMeetingId) : -1;
       setEntities([entity]);
       setActiveEntityIdx(0);
-      setActiveMeetingIdx(0);
+      setActiveMeetingIdx(focusedMeetingIdx >= 0 ? focusedMeetingIdx : 0);
       setSplitMode(hasSplit);
       setSlotTeacherIds(hasSplit ? (cst!.slot_teacher_ids as string[][]) : [[], []]);
       snapshotRef.current = {
@@ -217,14 +225,20 @@ export function ClassScheduleModal({ mode, open, onOpenChange, course, section, 
           meetings,
         };
       });
+      const focusedEntityIdx = focusEntityId ? built.findIndex((e) => e.id === focusEntityId) : -1;
+      const initialEntityIdx = focusedEntityIdx >= 0 ? focusedEntityIdx : built.length > 0 ? 0 : null;
+      const focusedMeetingIdx =
+        initialEntityIdx !== null && focusMeetingId
+          ? built[initialEntityIdx].meetings.findIndex((m) => m.id === focusMeetingId)
+          : -1;
       setEntities(built);
-      setActiveEntityIdx(built.length > 0 ? 0 : null);
-      setActiveMeetingIdx(0);
+      setActiveEntityIdx(initialEntityIdx);
+      setActiveMeetingIdx(focusedMeetingIdx >= 0 ? focusedMeetingIdx : 0);
       setSplitMode(false);
       setSlotTeacherIds([[], []]);
       snapshotRef.current = {
         entities: built.map(cloneEntity),
-        activeEntityIdx: built.length > 0 ? 0 : null,
+        activeEntityIdx: initialEntityIdx,
         splitMode: false,
         slotTeacherIds: [[], []],
       };

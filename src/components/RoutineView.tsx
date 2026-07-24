@@ -15,6 +15,7 @@ import { RoutineTeacherSummary } from "@/components/RoutineTeacherSummary";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ClassScheduleModal } from "@/features/course-load/ClassScheduleModal";
 import { SwapRoomModal } from "@/components/SwapRoomModal";
+import { candidateSectionsForCourse } from "@/lib/course-sections";
 
 const DEFAULT_DEPT = "CSE";
 
@@ -51,7 +52,15 @@ export function RoutineView({
 
   const [showPreview, setShowPreview] = useState(false);
   const [showUnavailability, setShowUnavailability] = useState(false);
-  const [editTarget, setEditTarget] = useState<{ course_id: string; section_id: string } | null>(null);
+  /** Which cell's schedule modal to open — covers both regular class cells
+   *  (mode="section") and lab-section cells (mode="lab"), so every cell type
+   *  on any routine grid opens the same ClassScheduleModal. `slot_id` lets
+   *  the modal focus the exact meeting/session that was clicked. */
+  const [editTarget, setEditTarget] = useState<
+    | { mode: "section"; course_id: string; section_id: string; slot_id: string }
+    | { mode: "lab"; course_id: string; lab_section_id: string; slot_id: string }
+    | null
+  >(null);
   // Internal swap state — used when parent does NOT pass external state
   const [swapModeInternal, setSwapModeInternal] = useState(false);
   const [swapTargetInternal, setSwapTargetInternal] = useState<ClassSlot | null>(null);
@@ -63,7 +72,12 @@ export function RoutineView({
   const setSwapTarget = onSwapTargetChange ?? setSwapTargetInternal;
 
   const editCourse = editTarget ? data.courses.find((c) => c.id === editTarget.course_id) ?? null : null;
-  const editSection = editTarget ? data.sections.find((s) => s.id === editTarget.section_id) ?? null : null;
+  const editSection =
+    editTarget?.mode === "section" ? data.sections.find((s) => s.id === editTarget.section_id) ?? null : null;
+  const editCandidateSections = useMemo(
+    () => (editTarget?.mode === "lab" && editCourse ? candidateSectionsForCourse(data, editCourse) : []),
+    [editTarget, editCourse, data],
+  );
 
   /** Unavailable windows relevant to this scope, normalized to {day, start, end, reason}.
    *  Only populated for teacher/room scopes — sections/rooms-as-a-whole don't have a single owner. */
@@ -392,9 +406,16 @@ export function RoutineView({
                                     : undefined
                                 }
                                 onEdit={
-                                  swapMode || s.lab_section_id || !s.section_id
+                                  swapMode
                                     ? undefined
-                                    : () => setEditTarget({ course_id: s.course_id, section_id: s.section_id as string })
+                                    : () =>
+                                        setEditTarget(
+                                          s.lab_section_id
+                                            ? { mode: "lab", course_id: s.course_id, lab_section_id: s.lab_section_id, slot_id: s.id }
+                                            : s.section_id
+                                              ? { mode: "section", course_id: s.course_id, section_id: s.section_id, slot_id: s.id }
+                                              : null,
+                                        )
                                 }
                               />
                             ))}
@@ -431,13 +452,26 @@ export function RoutineView({
       <RoutineCourseSummary scope={scope} />
       <RoutineTeacherSummary scope={scope} />
 
-      {editCourse && editSection && (
+      {editTarget?.mode === "section" && editCourse && editSection && (
         <ClassScheduleModal
           mode="section"
           open={!!editTarget}
           onOpenChange={(v) => !v && setEditTarget(null)}
           course={editCourse}
           section={editSection}
+          focusMeetingId={editTarget.slot_id}
+        />
+      )}
+
+      {editTarget?.mode === "lab" && editCourse && (
+        <ClassScheduleModal
+          mode="lab"
+          open={!!editTarget}
+          onOpenChange={(v) => !v && setEditTarget(null)}
+          course={editCourse}
+          sections={editCandidateSections}
+          focusEntityId={editTarget.lab_section_id}
+          focusMeetingId={editTarget.slot_id}
         />
       )}
 
