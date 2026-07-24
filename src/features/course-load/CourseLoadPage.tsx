@@ -229,6 +229,15 @@ function CourseRow({ course, sections, onAssign, alt, onCourseDetails }: {
   const info = COURSE_TYPE_INFO[course.course_type];
   const isSessional = info.roomKind === "sessional";
   const [labSectionsOpen, setLabSectionsOpen] = useState(false);
+  // Which specific lab section (CourseLabSection.id) to open the manager
+  // focused on — set when a specific lab-section chip is clicked, left null
+  // for the generic "N lab sections" badge / "Manage lab sections" button.
+  const [focusLabSectionId, setFocusLabSectionId] = useState<string | null>(null);
+
+  const openLabSections = (labSectionId?: string) => {
+    setFocusLabSectionId(labSectionId ?? null);
+    setLabSectionsOpen(true);
+  };
 
   const labSectionCount = data.course_lab_sections.filter(
     (g) => g.course_id === course.id && g.semester_id === data.active_semester_id,
@@ -244,7 +253,7 @@ function CourseRow({ course, sections, onAssign, alt, onCourseDetails }: {
             </button>
             {isSessional && (
               <button
-                onClick={() => setLabSectionsOpen(true)}
+                onClick={() => openLabSections()}
                 className={cn(
                   "flex items-center gap-1 text-[10px] rounded px-1.5 py-0.5 border transition-colors",
                   labSectionCount > 0
@@ -297,7 +306,7 @@ function CourseRow({ course, sections, onAssign, alt, onCourseDetails }: {
                   section={s}
                   sections={sections}
                   onAssign={onAssign}
-                  onManageLabSections={() => setLabSectionsOpen(true)}
+                  onManageLabSections={openLabSections}
                   combinedWith={combinedWith}
                   colSpan={1 + combinedWith.length}
                 />
@@ -311,7 +320,13 @@ function CourseRow({ course, sections, onAssign, alt, onCourseDetails }: {
           course={course}
           sections={sections}
           open={labSectionsOpen}
-          onOpenChange={(v) => !v && setLabSectionsOpen(false)}
+          onOpenChange={(v) => {
+            if (!v) {
+              setLabSectionsOpen(false);
+              setFocusLabSectionId(null);
+            }
+          }}
+          focusEntityId={focusLabSectionId ?? undefined}
         />
       )}
     </>
@@ -320,7 +335,7 @@ function CourseRow({ course, sections, onAssign, alt, onCourseDetails }: {
 
 function SectionCell({ course, section, sections, onAssign, onManageLabSections, combinedWith = [], colSpan = 1 }: {
   course: Course; section: Section; sections: Section[]; onAssign: (c: Course, s: Section) => void;
-  onManageLabSections?: () => void;
+  onManageLabSections?: (labSectionId?: string) => void;
   combinedWith?: Section[];
   colSpan?: number;
 }) {
@@ -419,7 +434,7 @@ function SectionCell({ course, section, sections, onAssign, onManageLabSections,
                 </div>
                 {gSlots.length === 0 ? (
                   <button
-                    onClick={onManageLabSections}
+                    onClick={() => onManageLabSections?.(g.id)}
                     className="w-full text-left"
                   >
                     <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
@@ -434,7 +449,7 @@ function SectionCell({ course, section, sections, onAssign, onManageLabSections,
                   </button>
                 ) : (
                   <button
-                    onClick={onManageLabSections}
+                    onClick={() => onManageLabSections?.(g.id)}
                     className="w-full text-left"
                   >
                     {gSlots.map((slot) => {
@@ -461,7 +476,7 @@ function SectionCell({ course, section, sections, onAssign, onManageLabSections,
               </div>
             );
           })}
-          <Button variant="outline" size="sm" className="w-full h-6 text-[10px] gap-1" onClick={onManageLabSections}>
+          <Button variant="outline" size="sm" className="w-full h-6 text-[10px] gap-1" onClick={() => onManageLabSections?.()}>
             <FlaskConical className="h-2.5 w-2.5" /> Manage lab sections
           </Button>
         </div>
