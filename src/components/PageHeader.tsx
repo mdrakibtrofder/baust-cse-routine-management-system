@@ -6,7 +6,6 @@ import { utils, writeFileXLSX } from "xlsx";
 import { toast } from "sonner";
 import { useRef } from "react";
 import { useConfirm } from "@/components/ConfirmDialog";
-import { Link } from "@tanstack/react-router";
 
 interface Props {
   title: string;
@@ -92,16 +91,16 @@ export function PageHeader({
             </Button>
           )}
           {showReset && (
-            <Link to="/generate-routine">
-              <Button
-                variant="default"
-                size="sm"
-                className="bg-primary hover:bg-primary/90"
-              >
-                <Play className="h-4 w-4 mr-1.5 fill-current" />
-                Generate Routine
-              </Button>
-            </Link>
+            <Button
+              variant="default"
+              size="sm"
+              disabled
+              title="Routine generation is temporarily disabled"
+              className="bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary"
+            >
+              <Play className="h-4 w-4 mr-1.5 fill-current" />
+              Generate Routine
+            </Button>
           )}
         </div>
       </div>

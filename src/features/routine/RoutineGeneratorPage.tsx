@@ -140,7 +140,12 @@ export function RoutineGeneratorPage() {
                     />
                     Auto-resolve conflicts
                   </label>
-                  <Button onClick={handleStart} className="gap-2 px-6">
+                  <Button
+                    onClick={handleStart}
+                    disabled
+                    title="Routine generation is temporarily disabled"
+                    className="gap-2 px-6 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
                     <Play className="h-4 w-4 fill-current" /> {isIdle ? "Start Generation" : "Restart"}
                   </Button>
                 </>
@@ -151,7 +156,13 @@ export function RoutineGeneratorPage() {
                       <Pause className="h-4 w-4 fill-current" /> Pause
                     </Button>
                   ) : (
-                    <Button onClick={handleResume} variant="outline" className="gap-2">
+                    <Button
+                      onClick={handleResume}
+                      variant="outline"
+                      disabled
+                      title="Routine generation is temporarily disabled"
+                      className="gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
                       <Play className="h-4 w-4 fill-current" /> Resume
                     </Button>
                   )}
