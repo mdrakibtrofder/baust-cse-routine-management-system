@@ -9,11 +9,11 @@ import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Loader2, BookOpen, RefreshCw, CalendarIcon, MapPin, Clock, CalendarDays, Edit3, AlertCircle, Check } from "lucide-react";
+import { Loader2, BookOpen, RefreshCw, CalendarIcon, MapPin, CalendarDays, Edit3 } from "lucide-react";
 import { format, parseISO, isValid } from "date-fns";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
-import { Course, Section, CTAssignment } from "@/lib/types";
+import { CTAssignment } from "@/lib/types";
 import { toast } from "sonner";
 
 export function CourseCTSchedulePage() {
@@ -137,23 +137,6 @@ export function CourseCTSchedulePage() {
     return grouped;
   }, [filteredAssignments]);
 
-  // Check if a course's CTs are synced (all sections have same date for same CT number)
-  const checkCTSync = (courseId: string) => {
-    const courseCTs = groupedByCourse[courseId] || [];
-
-    for (let ctNum = 1; ctNum <= 3; ctNum++) {
-      const ctsForThisNum = courseCTs.filter(ct => ct.ct_number === ctNum);
-      if (ctsForThisNum.length > 1) {
-        const dates = new Set(ctsForThisNum.map(ct => {
-          const d = typeof ct.date === 'string' ? ct.date.split('T')[0] : format(new Date(ct.date), 'yyyy-MM-dd');
-          return d;
-        }));
-        if (dates.size > 1) return false; // Dates don't match
-      }
-    }
-    return true;
-  };
-
   const selectedCourseCTs = useMemo(() => {
     if (!viewingCourseKey) return [];
     const courseId = viewingCourseKey.split('|')[1];
@@ -217,51 +200,21 @@ export function CourseCTSchedulePage() {
           <div className="space-y-6">
             {Object.entries(groupedByCourse).map(([courseId, allCTs]) => {
               const course = allCTs[0]?.course;
-              const isSynced = checkCTSync(courseId);
-
-              // Group CTs by section
-              const ctsBySection: Record<string, CTAssignment[]> = {};
-              allCTs.forEach(ct => {
-                const sectionName = ct.section?.name || "Common";
-                if (!ctsBySection[sectionName]) ctsBySection[sectionName] = [];
-                ctsBySection[sectionName].push(ct);
-              });
-
               const courseKey = `${course?.code} - ${course?.name}|${courseId}`;
 
               return (
                 <div
                   key={courseId}
                   onClick={() => setViewingCourseKey(courseKey)}
-                  className={cn(
-                    "rounded-2xl border-2 overflow-hidden shadow-md hover:shadow-lg transition-all cursor-pointer group",
-                    isSynced
-                      ? "bg-gradient-to-br from-success/5 to-success/10 border-success/30 hover:border-success/50"
-                      : "bg-gradient-to-br from-destructive/5 to-destructive/10 border-destructive/30 hover:border-destructive/50"
-                  )}
+                  className="rounded-2xl border-2 overflow-hidden shadow-md hover:shadow-lg transition-all cursor-pointer group bg-gradient-to-br from-success/5 to-success/10 border-success/30 hover:border-success/50"
                 >
-                  <div className={cn(
-                    "p-4 border-b backdrop-blur-sm",
-                    isSynced ? "bg-success/10 border-success/20" : "bg-destructive/10 border-destructive/20"
-                  )}>
+                  <div className="p-4 border-b backdrop-blur-sm bg-success/10 border-success/20">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
                           <h4 className="font-black text-base truncate text-foreground group-hover:text-primary transition-colors">
                             {course?.code}
                           </h4>
-                          {isSynced && (
-                            <div className="flex items-center gap-1 px-2.5 py-1 bg-success/20 rounded-full shadow-sm" title="All sections synchronized">
-                              <Check className="h-3.5 w-3.5 text-success" />
-                              <span className="text-[9px] font-bold text-success uppercase">Synced</span>
-                            </div>
-                          )}
-                          {!isSynced && (
-                            <div className="flex items-center gap-1 px-2.5 py-1 bg-destructive/20 rounded-full shadow-sm" title="CT dates are not synchronized across sections">
-                              <AlertCircle className="h-3.5 w-3.5 text-destructive" />
-                              <span className="text-[9px] font-bold text-destructive uppercase">Unsync</span>
-                            </div>
-                          )}
                         </div>
                         <p className="text-[12px] font-semibold text-muted-foreground truncate">{course?.name}</p>
                         <div className="flex items-center gap-2 mt-2 flex-wrap">
@@ -289,53 +242,32 @@ export function CourseCTSchedulePage() {
                     </div>
                   </div>
 
-                  <div className="p-4 space-y-5">
-                    {Object.entries(ctsBySection).map(([sectionName, sectionCTs]) => (
-                      <div key={sectionName} className="space-y-2.5">
-                        <div className="flex items-center gap-2">
-                          <div className="h-1.5 w-1.5 rounded-full bg-primary/40"></div>
-                          <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
-                            {course?.departmental_type === 'Non-Departmental' ? 'Common Section' : `Section ${sectionName}`}
-                          </div>
-                          <div className="flex-1 h-px bg-border/50"></div>
-                        </div>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5">
-                          {sectionCTs.map(ct => (
-                            <div
-                              key={ct.id}
-                              className={cn(
-                                "p-3.5 rounded-xl border-2 backdrop-blur-sm hover:scale-105 transition-all",
-                                isSynced
-                                  ? "bg-success/10 border-success/40 hover:bg-success/20 hover:border-success/60"
-                                  : "bg-muted/50 border-border hover:border-primary/50"
-                              )}
-                            >
-                              <div className="flex items-center gap-2 mb-2.5">
-                                <div className={cn(
-                                  "w-7 h-7 rounded-lg flex items-center justify-center font-black text-[10px] shadow-sm",
-                                  isSynced
-                                    ? "bg-success/40 text-success-foreground"
-                                    : "bg-primary/20 text-primary"
-                                )}>
-                                  {ct.ct_number}
-                                </div>
-                                <span className="font-bold text-xs tracking-tight">CT {ct.ct_number}</span>
-                              </div>
-                              <div className="space-y-1.5">
-                                <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-bold">
-                                  <CalendarIcon className="h-3 w-3 text-primary" />
-                                  <span className="font-semibold text-foreground">{format(parseISO(ct.date), "dd MMM")}</span>
-                                </div>
-                                <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-bold">
-                                  <MapPin className="h-3 w-3 text-primary" />
-                                  <span className="font-mono text-foreground">{ct.room?.name}</span>
-                                </div>
-                              </div>
+                  <div className="p-4">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5">
+                      {allCTs.map(ct => (
+                        <div
+                          key={ct.id}
+                          className="p-3.5 rounded-xl border-2 backdrop-blur-sm hover:scale-105 transition-all bg-success/10 border-success/40 hover:bg-success/20 hover:border-success/60"
+                        >
+                          <div className="flex items-center gap-2 mb-2.5">
+                            <div className="w-7 h-7 rounded-lg flex items-center justify-center font-black text-[10px] shadow-sm bg-success/40 text-success-foreground">
+                              {ct.ct_number}
                             </div>
-                          ))}
+                            <span className="font-bold text-xs tracking-tight">CT {ct.ct_number}</span>
+                          </div>
+                          <div className="space-y-1.5">
+                            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-bold">
+                              <CalendarIcon className="h-3 w-3 text-primary" />
+                              <span className="font-semibold text-foreground">{format(parseISO(ct.date), "dd MMM")}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-bold">
+                              <MapPin className="h-3 w-3 text-primary" />
+                              <span className="font-mono text-foreground">{ct.room?.name}</span>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 </div>
               );
@@ -409,12 +341,7 @@ export function CourseCTSchedulePage() {
 
             {/* Timeline */}
             <div className="relative space-y-6 before:absolute before:inset-0 before:ml-4 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-primary/20 before:to-transparent">
-              {selectedCourseCTs.map((ct, idx) => {
-                const sectionLabel =
-                  ct.course?.departmental_type === 'Non-Departmental'
-                    ? 'Common'
-                    : `${ct.course?.level}-${ct.course?.term} ${ct.section?.name}`;
-
+              {selectedCourseCTs.map((ct) => {
                 return (
                   <div key={ct.id} className="relative flex items-center justify-between group">
                     <div className="flex items-center w-full">
@@ -428,16 +355,6 @@ export function CourseCTSchedulePage() {
                               <div className="text-sm font-black text-primary">
                                 CT {ct.ct_number}
                               </div>
-                              <Badge
-                                variant="outline"
-                                className="text-[10px] font-bold bg-background"
-                                style={{
-                                  borderColor: "hsl(var(--primary))",
-                                  color: "hsl(var(--primary))"
-                                }}
-                              >
-                                {sectionLabel}
-                              </Badge>
                             </div>
 
                             <div className="space-y-1.5">
@@ -501,7 +418,7 @@ export function CourseCTSchedulePage() {
               <div className="bg-muted/30 p-4 rounded-lg border space-y-1">
                 <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Selected Course</div>
                 <div className="text-sm font-black">{editingAssignment.course?.code} - {editingAssignment.course?.name}</div>
-                <div className="text-[11px] font-bold text-primary">Section {editingAssignment.section?.name} · CT {editingAssignment.ct_number}</div>
+                <div className="text-[11px] font-bold text-primary">CT {editingAssignment.ct_number}</div>
               </div>
 
               <div className="grid gap-2">

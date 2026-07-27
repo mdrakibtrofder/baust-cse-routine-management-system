@@ -216,7 +216,6 @@ export interface CTSetting {
   id: string;
   semester_id: string;
   total_weeks: number;
-  start_week: number;
   start_date: string | null;
 }
 
@@ -232,14 +231,32 @@ export interface CTAssignment {
   id: string;
   semester_id: string;
   course_id: string;
-  section_id: string;
   room_id: string;
   week_number: number;
   date: string;
   ct_number: number;
   course?: Course;
-  section?: Section;
   room?: Room;
+}
+
+/** Bucket key shared by CTLevelTermDayMapping and CTLevelTermRoomMapping. */
+export interface CTLevelTermBucket {
+  level: number;
+  term: 'I' | 'II';
+  departmental_type: 'Departmental' | 'Non-Departmental';
+  department_id: string | null;
+}
+
+export interface CTLevelTermDayMapping extends CTLevelTermBucket {
+  id: string;
+  semester_id: string;
+  days: string[];
+}
+
+export interface CTLevelTermRoomMapping extends CTLevelTermBucket {
+  id: string;
+  semester_id: string;
+  room_ids: string[];
 }
 
 export const COURSE_TYPE_INFO: Record<

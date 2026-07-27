@@ -9,14 +9,16 @@ import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format, parseISO, isValid } from "date-fns";
-import { Loader2, CalendarIcon, Wand2 } from "lucide-react";
+import { Loader2, CalendarIcon, Wand2, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
-import { CTSetting, CTAssignment } from "@/lib/types";
+import { CTAssignment } from "@/lib/types";
 import { toast } from "sonner";
+import { exportCourseWiseCTPdf, exportWeekWiseCTPdf, exportTeacherWiseCTPdf } from "@/lib/ct-export";
 
 export function CTTableViewPage() {
-  const { active_semester_id, rooms } = useStore();
+  const store = useStore();
+  const { active_semester_id, rooms } = store;
   const [assignments, setAssignments] = useState<CTAssignment[]>([]);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -143,14 +145,43 @@ export function CTTableViewPage() {
             </h3>
             <p className="text-sm text-muted-foreground mt-1">All class tests organized by date and room</p>
           </div>
-          <Button
-            onClick={handleGenerate}
-            disabled={generating}
-            className="w-full sm:w-auto bg-gradient-to-r from-primary to-primary/80 font-bold"
-          >
-            {generating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
-            Generate CT Schedule
-          </Button>
+          <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={assignments.length === 0}
+              onClick={() => exportCourseWiseCTPdf(store, assignments)}
+              className="font-bold"
+            >
+              <Download className="mr-1.5 h-3.5 w-3.5" /> Course-wise PDF
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={assignments.length === 0}
+              onClick={() => exportWeekWiseCTPdf(store, assignments)}
+              className="font-bold"
+            >
+              <Download className="mr-1.5 h-3.5 w-3.5" /> Week-wise PDF
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={assignments.length === 0}
+              onClick={() => exportTeacherWiseCTPdf(store, assignments)}
+              className="font-bold"
+            >
+              <Download className="mr-1.5 h-3.5 w-3.5" /> Teacher-wise PDF
+            </Button>
+            <Button
+              onClick={handleGenerate}
+              disabled={generating}
+              className="w-full sm:w-auto bg-gradient-to-r from-primary to-primary/80 font-bold"
+            >
+              {generating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
+              Generate CT Schedule
+            </Button>
+          </div>
         </div>
 
         {assignments.length > 0 ? (
@@ -224,9 +255,6 @@ export function CTTableViewPage() {
                                     <span className="w-1 h-1 bg-muted-foreground rounded-full"></span>
                                     <span>T{a.course?.term}</span>
                                   </div>
-                                  <span className="text-[9px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                                    {a.course?.departmental_type === 'Non-Departmental' ? 'Common' : `Sec ${a.section?.name}`}
-                                  </span>
                                 </button>
                               ) : (
                                 <div className="h-24 flex items-center justify-center text-muted-foreground/30 rounded-lg bg-muted/20 border-2 border-dashed border-muted/40">
@@ -261,12 +289,6 @@ export function CTTableViewPage() {
               <div className="grid gap-2">
                 <Label>Course</Label>
                 <div className="text-sm font-bold text-primary">{editingAssignment.course?.code} - {editingAssignment.course?.name}</div>
-              </div>
-              <div className="grid gap-2">
-                <Label>Section</Label>
-                <div className="text-sm font-medium">
-                  {editingAssignment.course?.departmental_type === 'Non-Departmental' ? 'Common' : `Section ${editingAssignment.section?.name}`}
-                </div>
               </div>
               <div className="grid gap-2">
                 <Label>Level & Term</Label>
@@ -365,7 +387,7 @@ export function CTTableViewPage() {
                         {ct.course?.code} CT{ct.ct_number}
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        {ct.course?.departmental_type === 'Non-Departmental' ? 'Common' : `Section ${ct.section?.name}`} • {ct.room?.name}
+                        {ct.room?.name}
                       </div>
                     </div>
                   </label>

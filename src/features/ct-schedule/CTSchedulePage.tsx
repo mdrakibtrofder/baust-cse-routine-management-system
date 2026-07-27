@@ -7,31 +7,56 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { format, addDays, parseISO, isValid } from "date-fns";
-import { CalendarIcon, Loader2, Save, RefreshCw } from "lucide-react";
+import { CalendarIcon, Loader2, Save, RefreshCw, Wand2, Search, DoorOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { roomDeptShort } from "@/lib/room-dept";
+import { HOME_DEPT_SHORT_NAME } from "@/lib/constants";
 import api from "@/lib/api";
-import { CTSetting, CTWeekConfig } from "@/lib/types";
+import { CTSetting, CTWeekConfig, CTLevelTermDayMapping, CTLevelTermRoomMapping, CTLevelTermBucket } from "@/lib/types";
 import { toast } from "sonner";
 
-const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"];
+const DAYS = [
+  { code: "SUN", label: "Sunday" },
+  { code: "MON", label: "Monday" },
+  { code: "TUE", label: "Tuesday" },
+  { code: "WED", label: "Wednesday" },
+  { code: "THU", label: "Thursday" },
+];
+
+function bucketKey(b: CTLevelTermBucket) {
+  return `${b.level}|${b.term}|${b.departmental_type}|${b.department_id || ""}`;
+}
 
 export function CTScheduleConfigPage() {
-  const { active_semester_id } = useStore();
+  const { active_semester_id, courses, course_section_teachers, departments, rooms } = useStore();
   const [settings, setSettings] = useState<CTSetting | null>(null);
   const [weekConfigs, setWeekConfigs] = useState<CTWeekConfig[]>([]);
+  const [dayMappings, setDayMappings] = useState<Record<string, string[]>>({});
+  const [roomMappings, setRoomMappings] = useState<Record<string, string[]>>({});
+  const [showAllRoomsByBucket, setShowAllRoomsByBucket] = useState<Record<string, boolean>>({});
+  const [roomSearchByBucket, setRoomSearchByBucket] = useState<Record<string, string>>({});
+  const [viewingRoomsBucket, setViewingRoomsBucket] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [generating, setGenerating] = useState(false);
 
   const loadData = useCallback(async () => {
     if (!active_semester_id) return;
     setLoading(true);
     try {
-      const [s, w] = await Promise.all([
+      const [s, w, dm, rm] = await Promise.all([
         api.get<CTSetting>(`/ct-schedule/settings/${active_semester_id}`),
         api.get<CTWeekConfig[]>(`/ct-schedule/week-configs/${active_semester_id}`),
+        api.get<CTLevelTermDayMapping[]>(`/ct-schedule/day-mappings/${active_semester_id}`),
+        api.get<CTLevelTermRoomMapping[]>(`/ct-schedule/room-mappings/${active_semester_id}`),
       ]);
       setSettings(s);
       setWeekConfigs(w);
+      setDayMappings(Object.fromEntries(dm.map((m) => [bucketKey(m), m.days])));
+      setRoomMappings(Object.fromEntries(rm.map((m) => [bucketKey(m), m.room_ids])));
     } catch (error) {
       toast.error("Failed to load CT schedule data");
     } finally {
@@ -43,19 +68,57 @@ export function CTScheduleConfigPage() {
     loadData();
   }, [loadData]);
 
-  const handleUpdateSettings = async () => {
+  // Level-term buckets actually offered this semester (theory courses only)
+  const buckets = useMemo(() => {
+    if (!active_semester_id) return [];
+    const offeredCourseIds = new Set(
+      course_section_teachers
+        .filter((cst) => cst.semester_id === active_semester_id)
+        .map((cst) => cst.course_id),
+    );
+    const map = new Map<string, CTLevelTermBucket & { label: string; deptLabel: string }>();
+    for (const course of courses) {
+      if (!offeredCourseIds.has(course.id)) continue;
+      if (!course.course_type.startsWith("theory")) continue;
+      const bucket: CTLevelTermBucket = {
+        level: course.level,
+        term: course.term as "I" | "II",
+        departmental_type: course.departmental_type,
+        department_id: course.department_id,
+      };
+      const key = bucketKey(bucket);
+      if (map.has(key)) continue;
+      const deptLabel =
+        course.departmental_type === "Non-Departmental"
+          ? "Non-Departmental"
+          : departments.find((d) => d.id === course.department_id)?.short_name ?? HOME_DEPT_SHORT_NAME;
+      map.set(key, { ...bucket, label: `${course.level}-${course.term}`, deptLabel });
+    }
+    return Array.from(map.entries())
+      .map(([key, b]) => ({ key, ...b }))
+      .sort((a, b) => (a.level !== b.level ? a.level - b.level : a.term.localeCompare(b.term)));
+  }, [active_semester_id, courses, course_section_teachers, departments]);
+
+  const handleSaveConfiguration = async () => {
     if (!settings || !active_semester_id) return;
+    setSaving(true);
     try {
-      const updated = await api.put<CTSetting>(`/ct-schedule/settings/${active_semester_id}`, {
+      await api.put<CTSetting>(`/ct-schedule/settings/${active_semester_id}`, {
         total_weeks: settings.total_weeks,
-        start_week: settings.start_week,
         start_date: settings.start_date,
       });
-      setSettings(updated);
-      toast.success("Settings updated");
+      const configsToSave = weekConfigs.map((c) => ({
+        week_number: c.week_number,
+        date: c.date.split("T")[0],
+        is_available: c.is_available,
+      }));
+      await api.put(`/ct-schedule/week-configs/${active_semester_id}`, { configs: configsToSave });
+      toast.success("Configuration saved");
       loadData();
     } catch (error) {
-      toast.error("Failed to update settings");
+      toast.error("Failed to save configuration");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -72,33 +135,14 @@ export function CTScheduleConfigPage() {
     });
   };
 
-  const saveWeekConfigs = async () => {
-    if (!active_semester_id) return;
-    try {
-      const configsToSave = weekConfigs.map(c => ({
-        week_number: c.week_number,
-        date: c.date.split('T')[0],
-        is_available: c.is_available
-      }));
-      await api.put(`/ct-schedule/week-configs/${active_semester_id}`, { configs: configsToSave });
-      toast.success("Week configurations saved");
-      loadData();
-    } catch (error) {
-      toast.error("Failed to save week configurations");
-    }
-  };
-
   const weeks = useMemo(() => {
     if (!settings?.total_weeks || !settings.start_date) return [];
-    
+
     const startDate = parseISO(settings.start_date);
     if (!isValid(startDate)) return [];
 
     const result = [];
     for (let i = 1; i <= settings.total_weeks; i++) {
-      // Filter weeks based on start_week configuration
-      if (i < settings.start_week) continue;
-
       const weekStart = addDays(startDate, (i - 1) * 7);
       const daysInWeek = DAYS.map((_, idx) => {
         const d = addDays(weekStart, idx);
@@ -115,6 +159,74 @@ export function CTScheduleConfigPage() {
     return result;
   }, [settings, weekConfigs]);
 
+  const toggleMappedDay = (key: string, code: string) => {
+    setDayMappings((prev) => {
+      const current = prev[key] ?? [];
+      const next = current.includes(code) ? current.filter((c) => c !== code) : [...current, code];
+      return { ...prev, [key]: next };
+    });
+  };
+
+  const saveDayMappings = async () => {
+    if (!active_semester_id) return;
+    try {
+      const mappings = buckets.map((b) => ({
+        level: b.level,
+        term: b.term,
+        departmental_type: b.departmental_type,
+        department_id: b.department_id,
+        days: dayMappings[b.key] ?? [],
+      }));
+      await api.put(`/ct-schedule/day-mappings/${active_semester_id}`, { mappings });
+      toast.success("Day mapping saved");
+    } catch (error) {
+      toast.error("Failed to save day mapping");
+    }
+  };
+
+  const toggleMappedRoom = (key: string, roomId: string) => {
+    setRoomMappings((prev) => {
+      const current = prev[key] ?? [];
+      const next = current.includes(roomId) ? current.filter((id) => id !== roomId) : [...current, roomId];
+      return { ...prev, [key]: next };
+    });
+  };
+
+  const roomsForBucket = (key: string) => {
+    if (showAllRoomsByBucket[key]) return rooms;
+    return rooms.filter((r) => roomDeptShort(r, departments) === HOME_DEPT_SHORT_NAME);
+  };
+
+  const saveRoomMappings = async () => {
+    if (!active_semester_id) return;
+    try {
+      const mappings = buckets.map((b) => ({
+        level: b.level,
+        term: b.term,
+        departmental_type: b.departmental_type,
+        department_id: b.department_id,
+        room_ids: roomMappings[b.key] ?? [],
+      }));
+      await api.put(`/ct-schedule/room-mappings/${active_semester_id}`, { mappings });
+      toast.success("Room mapping saved");
+    } catch (error) {
+      toast.error("Failed to save room mapping");
+    }
+  };
+
+  const handleGenerateMap = async () => {
+    if (!active_semester_id) return;
+    setGenerating(true);
+    try {
+      await api.post(`/ct-schedule/generate/${active_semester_id}`, {});
+      toast.success("CT Map generated successfully");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to generate CT map");
+    } finally {
+      setGenerating(false);
+    }
+  };
+
   if (loading && !settings) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
@@ -129,7 +241,7 @@ export function CTScheduleConfigPage() {
     <div className="pb-10">
       <PageHeader
         title="CT Configuration"
-        subtitle="Configure semester weeks and map available dates for Class Tests generation"
+        subtitle="Configure semester weeks, level-term day/room mapping, and generate Class Tests"
       />
 
       <div className="p-4 sm:p-6 space-y-6">
@@ -138,22 +250,13 @@ export function CTScheduleConfigPage() {
           <h3 className="text-lg font-black text-primary mb-5 flex items-center gap-2">
             ⚙️ Semester Settings
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label className="text-xs font-black uppercase tracking-wider text-primary/70">Total Weeks</Label>
               <Input
                 type="number"
                 value={settings?.total_weeks ?? 14}
                 onChange={(e) => setSettings((s) => s ? { ...s, total_weeks: parseInt(e.target.value) || 0 } : null)}
-                className="font-bold text-base h-10 border-primary/30 focus:border-primary/60 focus:ring-primary/20"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs font-black uppercase tracking-wider text-primary/70">CT Start Week</Label>
-              <Input
-                type="number"
-                value={settings?.start_week ?? 4}
-                onChange={(e) => setSettings((s) => s ? { ...s, start_week: parseInt(e.target.value) || 0 } : null)}
                 className="font-bold text-base h-10 border-primary/30 focus:border-primary/60 focus:ring-primary/20"
               />
             </div>
@@ -188,10 +291,12 @@ export function CTScheduleConfigPage() {
             </div>
             <div className="flex gap-2 items-end">
               <Button
-                onClick={handleUpdateSettings}
+                onClick={handleSaveConfiguration}
+                disabled={saving}
                 className="flex-1 font-black h-10 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
               >
-                <Save className="mr-2 h-4 w-4" /> Save Settings
+                {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                Save Configuration
               </Button>
               <Button
                 variant="outline"
@@ -208,23 +313,13 @@ export function CTScheduleConfigPage() {
         {/* Week Configuration */}
         {settings?.start_date && isValid(safeStartDate) && (
           <div className="bg-gradient-to-br from-success/10 to-success/5 p-6 rounded-2xl border-2 border-success/30 shadow-lg space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b-2 border-success/20">
-              <div>
-                <h3 className="text-xl font-black text-success flex items-center gap-2">
-                  📅 Map Available Days
-                </h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Select days when CTs can be scheduled
-                  <span className="font-bold text-foreground"> (Weeks {settings.start_week}–{settings.total_weeks})</span>
-                </p>
-              </div>
-              <Button
-                variant="default"
-                onClick={saveWeekConfigs}
-                className="font-black bg-gradient-to-r from-success to-success/80 hover:from-success/90 hover:to-success/70 shadow-md"
-              >
-                <Save className="mr-2 h-4 w-4" /> Save Mapping
-              </Button>
+            <div className="pb-4 border-b-2 border-success/20">
+              <h3 className="text-xl font-black text-success flex items-center gap-2">
+                📅 Map Available Days
+              </h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                Select days when CTs can be scheduled
+              </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -285,7 +380,236 @@ export function CTScheduleConfigPage() {
             </div>
           </div>
         )}
+
+        {/* Level-Term Day Mapping */}
+        <div className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 p-6 rounded-2xl border-2 border-blue-500/30 shadow-lg space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b-2 border-blue-500/20">
+            <div>
+              <h3 className="text-xl font-black text-blue-600 flex items-center gap-2">
+                🗓️ Level-Term Day Mapping
+              </h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                Choose which weekday(s) each level-term tests on, e.g. Level 1-I &amp; 2-II on Sunday and Wednesday.
+              </p>
+            </div>
+            <Button
+              variant="default"
+              onClick={saveDayMappings}
+              className="font-black bg-blue-600 hover:bg-blue-600/90 shadow-md"
+            >
+              <Save className="mr-2 h-4 w-4" /> Save Day Mapping
+            </Button>
+          </div>
+
+          {buckets.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No theory courses offered this semester yet.</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {buckets.map((b) => (
+                <div key={b.key} className="p-4 rounded-xl border-2 bg-card space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="font-black text-sm">Level {b.label}</span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-600">
+                      {b.deptLabel}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {DAYS.map((d) => {
+                      const checked = (dayMappings[b.key] ?? []).includes(d.code);
+                      return (
+                        <button
+                          key={d.code}
+                          type="button"
+                          onClick={() => toggleMappedDay(b.key, d.code)}
+                          className={cn(
+                            "px-3 py-1.5 rounded-lg text-[11px] font-bold border-2 transition-all",
+                            checked
+                              ? "bg-blue-600 text-white border-blue-600"
+                              : "bg-muted/40 text-muted-foreground border-border hover:border-blue-500/40"
+                          )}
+                        >
+                          {d.label.slice(0, 3)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Level-Term Room Mapping */}
+        <div className="bg-gradient-to-br from-amber-500/10 to-amber-500/5 p-6 rounded-2xl border-2 border-amber-500/30 shadow-lg space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b-2 border-amber-500/20">
+            <div>
+              <h3 className="text-xl font-black text-amber-600 flex items-center gap-2">
+                🏫 Level-Term Room Mapping
+              </h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                Select one or more rooms each level-term may use for CTs.
+              </p>
+            </div>
+            <Button
+              variant="default"
+              onClick={saveRoomMappings}
+              className="font-black bg-amber-600 hover:bg-amber-600/90 shadow-md"
+            >
+              <Save className="mr-2 h-4 w-4" /> Save Room Mapping
+            </Button>
+          </div>
+
+          {buckets.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No theory courses offered this semester yet.</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {buckets.map((b) => {
+                const search = (roomSearchByBucket[b.key] ?? "").trim().toLowerCase();
+                const availableRooms = roomsForBucket(b.key).filter((r) =>
+                  search ? r.name.toLowerCase().includes(search) : true
+                );
+                const selected = roomMappings[b.key] ?? [];
+                return (
+                  <div key={b.key} className="p-4 rounded-xl border-2 bg-card space-y-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-black text-sm">Level {b.label}</span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600">
+                          {b.deptLabel}
+                        </span>
+                      </div>
+                      <TooltipProvider delayDuration={150}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              onClick={() => setViewingRoomsBucket(b.key)}
+                              className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-600 text-white shrink-0 hover:bg-amber-700 hover:shadow-md transition-all"
+                            >
+                              {selected.length} selected
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-[220px]">
+                            {selected.length === 0 ? (
+                              <span>No rooms selected</span>
+                            ) : (
+                              <span>
+                                {rooms
+                                  .filter((r) => selected.includes(r.id))
+                                  .map((r) => r.name)
+                                  .join(", ")}
+                              </span>
+                            )}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    <label className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground cursor-pointer">
+                      <Checkbox
+                        checked={!!showAllRoomsByBucket[b.key]}
+                        onCheckedChange={(v) =>
+                          setShowAllRoomsByBucket((prev) => ({ ...prev, [b.key]: !!v }))
+                        }
+                      />
+                      Show all rooms (default: {HOME_DEPT_SHORT_NAME} only)
+                    </label>
+                    <div className="relative">
+                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                      <Input
+                        value={roomSearchByBucket[b.key] ?? ""}
+                        onChange={(e) =>
+                          setRoomSearchByBucket((prev) => ({ ...prev, [b.key]: e.target.value }))
+                        }
+                        placeholder="Search rooms..."
+                        className="h-8 pl-8 text-xs font-semibold border-amber-500/30 focus:border-amber-500/60 focus:ring-amber-500/20"
+                      />
+                    </div>
+                    <div className="max-h-40 overflow-y-auto space-y-1.5 pr-1">
+                      {availableRooms.map((r) => (
+                        <label
+                          key={r.id}
+                          className="flex items-center gap-2 text-xs font-semibold cursor-pointer hover:bg-amber-500/10 rounded px-1.5 py-1"
+                        >
+                          <Checkbox
+                            checked={selected.includes(r.id)}
+                            onCheckedChange={() => toggleMappedRoom(b.key, r.id)}
+                          />
+                          {r.name}
+                          <span className="text-[10px] text-muted-foreground font-normal">({r.capacity})</span>
+                        </label>
+                      ))}
+                      {availableRooms.length === 0 && (
+                        <p className="text-[11px] text-muted-foreground">
+                          {search ? "No rooms match your search." : "No rooms available."}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Generate */}
+        <div className="flex justify-end">
+          <Button
+            onClick={handleGenerateMap}
+            disabled={generating}
+            size="lg"
+            className="font-black bg-gradient-to-r from-primary to-primary/80"
+          >
+            {generating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
+            Generate CT Map
+          </Button>
+        </div>
       </div>
+
+      {/* Selected Rooms Modal */}
+      <Dialog open={!!viewingRoomsBucket} onOpenChange={(open) => !open && setViewingRoomsBucket(null)}>
+        <DialogContent className="sm:max-w-[480px] border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-background to-primary/10 backdrop-blur-xl overflow-hidden">
+          <div className="absolute inset-0 -z-10 bg-gradient-to-br from-amber-500/10 via-transparent to-primary/10" />
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-lg font-black">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 text-white shadow-lg">
+                <DoorOpen className="h-4.5 w-4.5" />
+              </span>
+              {(() => {
+                const b = buckets.find((x) => x.key === viewingRoomsBucket);
+                return b ? `Level ${b.label} · ${b.deptLabel}` : "Selected Rooms";
+              })()}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="max-h-[50vh] overflow-y-auto space-y-2 pr-1 py-2">
+            {(() => {
+              const selectedIds = viewingRoomsBucket ? roomMappings[viewingRoomsBucket] ?? [] : [];
+              const selectedRooms = rooms.filter((r) => selectedIds.includes(r.id));
+              if (selectedRooms.length === 0) {
+                return (
+                  <p className="text-sm text-muted-foreground text-center py-8">No rooms selected for this level-term yet.</p>
+                );
+              }
+              return selectedRooms.map((r) => (
+                <div
+                  key={r.id}
+                  className="flex items-center justify-between gap-3 rounded-xl border-2 border-amber-500/20 bg-gradient-to-r from-amber-500/10 to-transparent px-4 py-3 hover:border-amber-500/40 hover:shadow-md transition-all"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/20 text-amber-600 font-black text-xs">
+                      {r.name.slice(0, 2).toUpperCase()}
+                    </span>
+                    <span className="font-bold text-sm">{r.name}</span>
+                  </div>
+                  <span className="text-[10px] font-bold text-muted-foreground bg-muted/60 px-2.5 py-1 rounded-full">
+                    {r.capacity} seats
+                  </span>
+                </div>
+              ));
+            })()}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
