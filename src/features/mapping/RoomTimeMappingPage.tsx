@@ -293,19 +293,33 @@ function TeacherTimeMapping() {
   const data = useStore();
   const [selectedDay, setSelectedDay] = useState<string>("SUN");
   const [q, setQ] = useState("");
+  const [showOtherTeachers, setShowOtherTeachers] = useState(false);
 
   const days = useMemo(() => sortDays(data.days), [data.days]);
+  // Theory time slots only — sessional periods are excluded from this view.
   const periods = useMemo(() => {
     return data.periods
-      .filter(p => !/break/i.test(p.name))
+      .filter(p => p.kind === "theory" && !p.is_break && !/break/i.test(p.name))
       .sort((a, b) => compareTimeValues(a.start, b.start));
   }, [data.periods]);
 
+  // Department rule: home-dept (CSE) teachers by default; other departments'
+  // teachers only behind the "show other teachers" toggle
+  const { homeTeachers, otherTeachers } = useMemo(() => {
+    const homeTeachers: Teacher[] = [];
+    const otherTeachers: Teacher[] = [];
+    for (const t of data.teachers) {
+      ((t.department ?? "").trim().toUpperCase() === HOME_DEPT_SHORT_NAME ? homeTeachers : otherTeachers).push(t);
+    }
+    return { homeTeachers, otherTeachers };
+  }, [data.teachers]);
+
   const filteredTeachers = useMemo(() => {
-    return data.teachers
+    const visible = showOtherTeachers ? [...homeTeachers, ...otherTeachers] : homeTeachers;
+    return visible
       .filter(t => t.short_name.toLowerCase().includes(q.toLowerCase()) || t.name.toLowerCase().includes(q.toLowerCase()))
       .sort((a, b) => a.short_name.localeCompare(b.short_name));
-  }, [data.teachers, q]);
+  }, [homeTeachers, otherTeachers, showOtherTeachers, q]);
 
   const slotsBySemester = useMemo(
     () => data.class_slots.filter((s) => s.semester_id === data.active_semester_id),
@@ -350,12 +364,23 @@ function TeacherTimeMapping() {
         <div className="flex items-center gap-2 max-w-xs flex-1">
           <Search className="h-4 w-4 text-muted-foreground" />
           <Input 
-            placeholder="Search teacher..." 
-            value={q} 
+            placeholder="Search teacher..."
+            value={q}
             onChange={e => setQ(e.target.value)}
             className="h-9"
           />
         </div>
+        {otherTeachers.length > 0 && (
+          <button
+            onClick={() => setShowOtherTeachers((v) => !v)}
+            className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors self-start md:self-auto"
+          >
+            {showOtherTeachers ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+            {showOtherTeachers
+              ? "Hide other departments' teachers"
+              : `Show other departments' teachers (${otherTeachers.length})`}
+          </button>
+        )}
       </div>
 
       <div className="rounded-xl border bg-card overflow-hidden shadow-sm">
@@ -379,7 +404,10 @@ function TeacherTimeMapping() {
                 <tr key={t.id} className="border-b hover:bg-muted/30 transition-colors group">
                   <td className="px-4 py-3 sticky left-0 z-10 bg-white group-hover:bg-slate-50 border-r shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
                     <div className="font-bold text-primary font-mono">{t.short_name}</div>
-                    <div className="text-[10px] text-muted-foreground truncate">{t.name}</div>
+                    <div className="text-[10px] text-muted-foreground truncate">
+                      {t.name}
+                      {showOtherTeachers && t.department ? ` · ${t.department.trim().toUpperCase()}` : ""}
+                    </div>
                   </td>
                   {periods.map(p => {
                     const slots = teacherIdToSlots.get(t.id) || [];
