@@ -7,8 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { cn, compareTimeValues, fmtRange12, fmtTime12, sortDays, tagColorClasses } from "@/lib/utils";
 import { timesOverlap, teacherUnavailableAt, roomUnavailableAt } from "@/lib/conflicts";
 import {
-  Users, MapPin, Clock, BookOpen, UserX, DoorClosed, Check, Search, CalendarDays, Boxes, DoorOpen
+  Users, MapPin, Clock, BookOpen, UserX, DoorClosed, Check, Search, CalendarDays, Boxes, DoorOpen, Eye, EyeOff
 } from "lucide-react";
+import { roomDeptShort } from "@/lib/room-dept";
 import type { Course, Section, Teacher, Room, Period, ClassSlot, Department } from "@/lib/types";
 import { RoomPicker } from "@/features/course-load/RoomPicker";
 import { LabSectionRoomPicker } from "@/features/course-load/LabSectionRoomPicker";
@@ -435,19 +436,33 @@ function RoomTimeMapping() {
   const data = useStore();
   const [selectedDay, setSelectedDay] = useState<string>("SUN");
   const [q, setQ] = useState("");
+  const [showOtherRooms, setShowOtherRooms] = useState(false);
 
   const days = useMemo(() => sortDays(data.days), [data.days]);
+  // Theory time slots only — sessional periods are excluded from this view.
   const periods = useMemo(() => {
     return data.periods
-      .filter(p => !/break/i.test(p.name))
+      .filter(p => p.kind === "theory" && !p.is_break && !/break/i.test(p.name))
       .sort((a, b) => compareTimeValues(a.start, b.start));
   }, [data.periods]);
 
+  // Department rule: home-dept (CSE) rooms by default; other departments' rooms
+  // only behind the "show other rooms" toggle
+  const { homeRooms, otherRooms } = useMemo(() => {
+    const homeRooms: Room[] = [];
+    const otherRooms: Room[] = [];
+    for (const r of data.rooms) {
+      (roomDeptShort(r, data.departments) === HOME_DEPT_SHORT_NAME ? homeRooms : otherRooms).push(r);
+    }
+    return { homeRooms, otherRooms };
+  }, [data.rooms, data.departments]);
+
   const filteredRooms = useMemo(() => {
-    return data.rooms
+    const visible = showOtherRooms ? [...homeRooms, ...otherRooms] : homeRooms;
+    return visible
       .filter(r => r.name.toLowerCase().includes(q.toLowerCase()) || r.room_type.toLowerCase().includes(q.toLowerCase()))
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [data.rooms, q]);
+  }, [homeRooms, otherRooms, showOtherRooms, q]);
 
   const slotsBySemester = useMemo(
     () => data.class_slots.filter((s) => s.semester_id === data.active_semester_id),
@@ -474,12 +489,23 @@ function RoomTimeMapping() {
         <div className="flex items-center gap-2 max-w-xs flex-1">
           <Search className="h-4 w-4 text-muted-foreground" />
           <Input 
-            placeholder="Search room..." 
-            value={q} 
+            placeholder="Search room..."
+            value={q}
             onChange={e => setQ(e.target.value)}
             className="h-9"
           />
         </div>
+        {otherRooms.length > 0 && (
+          <button
+            onClick={() => setShowOtherRooms((v) => !v)}
+            className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors self-start md:self-auto"
+          >
+            {showOtherRooms ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+            {showOtherRooms
+              ? "Hide other departments' rooms"
+              : `Show other departments' rooms (${otherRooms.length})`}
+          </button>
+        )}
       </div>
 
       <div className="rounded-xl border bg-card overflow-hidden shadow-sm">
@@ -505,7 +531,10 @@ function RoomTimeMapping() {
                     <div className="font-bold text-orange-600 font-mono flex items-center gap-1.5">
                       <MapPin className="h-3 w-3" /> {r.name}
                     </div>
-                    <div className="text-[10px] text-muted-foreground truncate">{r.room_type} · Capacity: {r.capacity}</div>
+                    <div className="text-[10px] text-muted-foreground truncate">
+                      {r.room_type} · Capacity: {r.capacity}
+                      {showOtherRooms && ` · ${roomDeptShort(r, data.departments)}`}
+                    </div>
                   </td>
                   {periods.map(p => {
                     const assigned = slotsBySemester.find(s => s.room_id === r.id && s.day === selectedDay && timesOverlap(s.start, s.end, p.start, p.end));
