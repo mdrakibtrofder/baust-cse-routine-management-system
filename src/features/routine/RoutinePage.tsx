@@ -19,6 +19,7 @@ import {
   exportAllRoutinesDocxZip,
   exportAllRoutinesPdfZip,
   exportAllRoutinesExcelZip,
+  exportAllRoutinesExcelProZip,
   exportAllRoutinesImageZip,
   exportAllRoutinesJsonZip,
 } from "@/lib/routine-export";
@@ -293,6 +294,22 @@ export function RoutinePage() {
                 >
                   <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-500" />
                   <span>Excel Spreadsheet (.xlsx)</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  className="rounded-lg gap-2 cursor-pointer text-xs py-2 hover:bg-indigo-50 hover:text-indigo-900 dark:hover:bg-indigo-950/40"
+                  onClick={async () => {
+                    const t = toast.loading("Generating Excel Pro zip archive...");
+                    try {
+                      await exportAllRoutinesExcelProZip(data);
+                      toast.success("Excel Pro zip downloaded successfully", { id: t });
+                    } catch (e: any) {
+                      toast.error(e.message, { id: t });
+                    }
+                  }}
+                >
+                  <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" />
+                  <span>Excel Pro — code + teacher only (.xlsx)</span>
                 </DropdownMenuItem>
 
                 <DropdownMenuItem 

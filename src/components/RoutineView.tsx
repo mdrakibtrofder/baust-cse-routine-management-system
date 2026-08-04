@@ -6,7 +6,7 @@ import { COURSE_TYPE_INFO, type ClassSlot, type Section } from "@/lib/types";
 import { timesOverlap } from "@/lib/conflicts";
 import { Button } from "@/components/ui/button";
 import {
-  exportRoutineExcel, exportRoutinePdf, exportRoutineDocx,
+  exportRoutineExcel, exportRoutineExcelPro, exportRoutinePdf, exportRoutineDocx,
   exportRoutineJson, exportRoutineImage, exportAllRoutinesDocxZip,
 } from "@/lib/routine-export";
 import { toast } from "sonner";
@@ -252,6 +252,11 @@ export function RoutineView({
           <Button size="sm" variant="outline" className="h-7 text-xs"
             onClick={() => { try { exportRoutineExcel(data, scope); } catch (e: any) { toast.error(e.message); } }}>
             <FileSpreadsheet className="h-3.5 w-3.5 mr-1" /> Excel
+          </Button>
+          <Button size="sm" variant="outline" className="h-7 text-xs"
+            title="Excel with compact cells — course code + teacher only (e.g. CSE 4215 MAS)"
+            onClick={() => { try { exportRoutineExcelPro(data, scope); } catch (e: any) { toast.error(e.message); } }}>
+            <FileSpreadsheet className="h-3.5 w-3.5 mr-1 text-emerald-600" /> Excel Pro
           </Button>
           <Button size="sm" variant="outline" className="h-7 text-xs"
             onClick={async () => { try { await exportRoutineDocx(data, scope); } catch (e: any) { toast.error(e.message); } }}>

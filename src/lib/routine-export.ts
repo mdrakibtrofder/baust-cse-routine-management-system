@@ -97,7 +97,14 @@ export function getScopeInfo(data: AppData, scope: RoutineScope) {
 }
 
 /** Build a 2D matrix [day][period] => string for the routine. */
-export function buildRoutineMatrix(data: AppData, scope: RoutineScope) {
+/** `simple: true` renders a stripped-down cell — course code (with lab label) and
+ *  teacher short names only, e.g. "CSE 4215 MAS" instead of
+ *  "CSE 4215(MAS) [306]{4/II - B}". Used by the "Excel Pro" export. */
+export function buildRoutineMatrix(
+  data: AppData,
+  scope: RoutineScope,
+  opts: { simple?: boolean } = {},
+) {
   const theoryPeriods = [...data.periods]
     .filter((p) => p.kind === "theory")
     .filter((p) => data.app_settings.show_break_column || !isBreak(p))
@@ -172,6 +179,12 @@ export function buildRoutineMatrix(data: AppData, scope: RoutineScope) {
 
     const weekText = slot.week !== "EVERY" ? ` #${slot.week}#` : "";
     const courseCodeWithLab = labLabel && c ? `${c.code}(${labLabel})` : c?.code || "";
+
+    // Simple ("pro") layout: course code + teacher short names only — no room,
+    // no section tags. Same for every scope/tab.
+    if (opts.simple) {
+      return `${courseCodeWithLab}${weekText}${teacherShorts ? ` ${teacherShorts}` : ""}`;
+    }
 
     if (scope.kind === "section") {
       const teachersPart = teacherShorts ? ` (${teacherShorts})` : "";
@@ -906,8 +919,12 @@ export async function exportAllRoutinesJsonZip(data: AppData) {
 }
 
 /* =============== EXCEL =============== */
-function getExcelBuffer(data: AppData, scope: RoutineScope): ArrayBuffer {
-  const { header, rows } = buildRoutineMatrix(data, scope);
+function getExcelBuffer(
+  data: AppData,
+  scope: RoutineScope,
+  opts: { simple?: boolean } = {},
+): ArrayBuffer {
+  const { header, rows } = buildRoutineMatrix(data, scope, opts);
   const sync = getRoutineHeaderAndMeta(data, scope);
   const aoa: (string | number)[][] = [];
   
@@ -974,32 +991,50 @@ export function exportRoutineExcel(data: AppData, scope: RoutineScope) {
   saveAs(blob, `${info.slug}.xlsx`);
 }
 
-export async function exportAllRoutinesExcelZip(data: AppData) {
+/** Same workbook as {@link exportRoutineExcel}, but every routine cell is the
+ *  compact "CSE 4215 MAS" form (no room, no section tags). */
+export function exportRoutineExcelPro(data: AppData, scope: RoutineScope) {
+  const info = getScopeInfo(data, scope);
+  const buf = getExcelBuffer(data, scope, { simple: true });
+  const blob = new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  saveAs(blob, `${info.slug}_Pro.xlsx`);
+}
+
+async function buildExcelZip(data: AppData, opts: { simple?: boolean } = {}) {
   const zip = new JSZip();
+  const suffix = opts.simple ? "_Pro" : "";
 
   const sectionsFolder = zip.folder("Sections");
   for (const s of data.sections) {
     const scope: RoutineScope = { kind: "section", section_id: s.id };
     const info = getScopeInfo(data, scope);
-    sectionsFolder?.file(`${info.slug}.xlsx`, getExcelBuffer(data, scope));
+    sectionsFolder?.file(`${info.slug}${suffix}.xlsx`, getExcelBuffer(data, scope, opts));
   }
 
   const teachersFolder = zip.folder("Teachers");
   for (const t of data.teachers) {
     const scope: RoutineScope = { kind: "teacher", teacher_id: t.id };
     const info = getScopeInfo(data, scope);
-    teachersFolder?.file(`${info.slug}.xlsx`, getExcelBuffer(data, scope));
+    teachersFolder?.file(`${info.slug}${suffix}.xlsx`, getExcelBuffer(data, scope, opts));
   }
 
   const roomsFolder = zip.folder("Rooms");
   for (const r of data.rooms) {
     const scope: RoutineScope = { kind: "room", room_id: r.id };
     const info = getScopeInfo(data, scope);
-    roomsFolder?.file(`${info.slug}.xlsx`, getExcelBuffer(data, scope));
+    roomsFolder?.file(`${info.slug}${suffix}.xlsx`, getExcelBuffer(data, scope, opts));
   }
 
   const content = await zip.generateAsync({ type: "blob" });
-  saveAs(content, "All_Routines_Excel.zip");
+  saveAs(content, opts.simple ? "All_Routines_Excel_Pro.zip" : "All_Routines_Excel.zip");
+}
+
+export async function exportAllRoutinesExcelZip(data: AppData) {
+  await buildExcelZip(data);
+}
+
+export async function exportAllRoutinesExcelProZip(data: AppData) {
+  await buildExcelZip(data, { simple: true });
 }
 
 /* =============== PDF =============== */
