@@ -530,8 +530,19 @@ export function ClassScheduleModal({ mode, open, onOpenChange, course, section, 
     }
   };
 
-  const save = () => {
+  const save = async () => {
     if (mode === "lab") {
+      if (entities.length === 0) {
+        const ok = await confirmDialog({
+          title: "Remove all lab sections?",
+          description: "Are you sure you want to remove all lab sections for this course? This will delete all existing lab sections and their scheduled sessions.",
+          confirmLabel: "Remove all",
+          destructive: true,
+        });
+        if (!ok) return;
+        persist(false);
+        return;
+      }
       persist(false);
       return;
     }
@@ -1231,7 +1242,7 @@ export function ClassScheduleModal({ mode, open, onOpenChange, course, section, 
               <Button
                 size="sm"
                 onClick={save}
-                disabled={submitting || !activeEntity}
+                disabled={submitting || (mode === "section" && !activeEntity) || (mode === "lab" && entities.length > 0 && !activeEntity)}
                 className="h-9 px-6 font-bold"
                 style={{ background: "var(--gradient-primary)", color: "var(--primary-foreground)" }}
               >
