@@ -1040,7 +1040,7 @@ export function ClassScheduleModal({ mode, open, onOpenChange, course, section, 
                           <SelectContent>
                             <SelectItem value="EVEN">Even weeks</SelectItem>
                             <SelectItem value="ODD">Odd weeks</SelectItem>
-                            {course.course_type !== "sessional_0.75" && <SelectItem value="EVERY">Every week</SelectItem>}
+                            <SelectItem value="EVERY">Every week</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
