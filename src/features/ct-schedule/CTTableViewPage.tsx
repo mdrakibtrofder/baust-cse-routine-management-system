@@ -10,7 +10,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { format, parseISO } from "date-fns";
-import { Loader2, CalendarIcon, Wand2, Download, ChevronDown, X } from "lucide-react";
+import { Loader2, CalendarIcon, Download, ChevronDown, X } from "lucide-react";
+import { CTGenerateButton } from "@/components/CTGenerateButton";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
 import { CTAssignment, CTWeekConfig, Room } from "@/lib/types";
@@ -29,7 +30,6 @@ export function CTTableViewPage() {
   const { active_semester_id, rooms, departments } = store;
   const [assignments, setAssignments] = useState<CTAssignment[]>([]);
   const [loading, setLoading] = useState(false);
-  const [generating, setGenerating] = useState(false);
   const [editingAssignment, setEditingAssignment] = useState<CTAssignment | null>(null);
 
   const [weekConfigs, setWeekConfigs] = useState<CTWeekConfig[]>([]);
@@ -114,15 +114,12 @@ export function CTTableViewPage() {
 
   const handleGenerate = async () => {
     if (!active_semester_id) return;
-    setGenerating(true);
     try {
       const res = await api.post<CTAssignment[]>(`/ct-schedule/generate/${active_semester_id}`, {});
       setAssignments(res);
       toast.success("CT Schedule generated successfully");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to generate schedule");
-    } finally {
-      setGenerating(false);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to generate schedule");
     }
   };
 
@@ -275,14 +272,11 @@ export function CTTableViewPage() {
             >
               <Download className="mr-1.5 h-3.5 w-3.5" /> Room-wise PDF
             </Button>
-            <Button
-              onClick={handleGenerate}
-              disabled={generating}
-              className="w-full sm:w-auto bg-gradient-to-r from-primary to-primary/80 font-bold"
-            >
-              {generating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
-              Generate CT Schedule
-            </Button>
+            <CTGenerateButton
+              hasSchedule={assignments.length > 0}
+              onGenerate={handleGenerate}
+              className="w-full sm:w-auto"
+            />
           </div>
         </div>
 

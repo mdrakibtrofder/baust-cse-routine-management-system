@@ -10,7 +10,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { format, addDays, parseISO, isValid, startOfWeek, isBefore } from "date-fns";
-import { CalendarIcon, Loader2, Save, RefreshCw, Wand2, Search, DoorOpen } from "lucide-react";
+import { CalendarIcon, Loader2, Save, RefreshCw, Search, DoorOpen } from "lucide-react";
+import { CTGenerateButton } from "@/components/CTGenerateButton";
 import { cn } from "@/lib/utils";
 import { roomDeptShort } from "@/lib/room-dept";
 import { HOME_DEPT_SHORT_NAME } from "@/lib/constants";
@@ -41,18 +42,20 @@ export function CTScheduleConfigPage() {
   const [viewingRoomsBucket, setViewingRoomsBucket] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [generating, setGenerating] = useState(false);
+  const [hasSchedule, setHasSchedule] = useState(false);
 
   const loadData = useCallback(async () => {
     if (!active_semester_id) return;
     setLoading(true);
     try {
-      const [s, w, dm, rm] = await Promise.all([
+      const [s, w, dm, rm, assignments] = await Promise.all([
         api.get<CTSetting>(`/ct-schedule/settings/${active_semester_id}`),
         api.get<CTWeekConfig[]>(`/ct-schedule/week-configs/${active_semester_id}`),
         api.get<CTLevelTermDayMapping[]>(`/ct-schedule/day-mappings/${active_semester_id}`),
         api.get<CTLevelTermRoomMapping[]>(`/ct-schedule/room-mappings/${active_semester_id}`),
+        api.get<unknown[]>(`/ct-schedule/assignments/${active_semester_id}`),
       ]);
+      setHasSchedule(assignments.length > 0);
       setSettings(s);
       setWeekConfigs(w);
       setDayMappings(Object.fromEntries(dm.map((m) => [bucketKey(m), m.days])));
@@ -233,14 +236,12 @@ export function CTScheduleConfigPage() {
 
   const handleGenerateMap = async () => {
     if (!active_semester_id) return;
-    setGenerating(true);
     try {
       await api.post(`/ct-schedule/generate/${active_semester_id}`, {});
+      setHasSchedule(true);
       toast.success("CT Map generated successfully");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to generate CT map");
-    } finally {
-      setGenerating(false);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to generate CT map");
     }
   };
 
@@ -577,15 +578,12 @@ export function CTScheduleConfigPage() {
 
         {/* Generate */}
         <div className="flex justify-end">
-          <Button
-            onClick={handleGenerateMap}
-            disabled={generating}
-            size="lg"
-            className="font-black bg-gradient-to-r from-primary to-primary/80"
-          >
-            {generating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
-            Generate CT Map
-          </Button>
+          <CTGenerateButton
+            hasSchedule={hasSchedule}
+            onGenerate={handleGenerateMap}
+            label="Generate CT Map"
+            className="h-11 px-8"
+          />
         </div>
       </div>
 
