@@ -13,7 +13,7 @@ import { Loader2, BookOpen, RefreshCw, CalendarIcon, MapPin, CalendarDays, Edit3
 import { format, parseISO, isValid } from "date-fns";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
-import { CTAssignment } from "@/lib/types";
+import { CTAssignment, CTWeekConfig } from "@/lib/types";
 import { toast } from "sonner";
 
 export function CourseCTSchedulePage() {
@@ -24,18 +24,34 @@ export function CourseCTSchedulePage() {
   const [viewingCourseKey, setViewingCourseKey] = useState<string | null>(null);
   const [editingAssignment, setEditingAssignment] = useState<CTAssignment | null>(null);
 
+  const [weekConfigs, setWeekConfigs] = useState<CTWeekConfig[]>([]);
+
   const loadAssignments = useCallback(async () => {
     if (!active_semester_id) return;
     setLoading(true);
     try {
-      const res = await api.get<CTAssignment[]>(`/ct-schedule/assignments/${active_semester_id}`);
+      const [res, w] = await Promise.all([
+        api.get<CTAssignment[]>(`/ct-schedule/assignments/${active_semester_id}`),
+        api.get<CTWeekConfig[]>(`/ct-schedule/week-configs/${active_semester_id}`),
+      ]);
       setAssignments(res);
+      setWeekConfigs(w);
     } catch (error) {
       toast.error("Failed to load CT assignments");
     } finally {
       setLoading(false);
     }
   }, [active_semester_id]);
+
+  /** date (YYYY-MM-DD) -> week number, straight from the saved CT calendar. */
+  const availableDates = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const c of weekConfigs) {
+      if (!c.is_available) continue;
+      map.set(c.date.split("T")[0], c.week_number);
+    }
+    return map;
+  }, [weekConfigs]);
 
   useEffect(() => {
     loadAssignments();
@@ -446,18 +462,28 @@ export function CourseCTSchedulePage() {
                   <PopoverTrigger asChild>
                     <Button variant="outline" className="justify-start text-left font-bold border-2">
                       <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
-                      {format(parseISO(editingAssignment.date), "PPP")}
+                      {format(parseISO(editingAssignment.date.split("T")[0]), "PPP")}
+                      <span className="ml-auto text-xs font-semibold text-muted-foreground">
+                        Week {availableDates.get(editingAssignment.date.split("T")[0]) ?? editingAssignment.week_number}
+                      </span>
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
-                      selected={parseISO(editingAssignment.date)}
+                      selected={parseISO(editingAssignment.date.split("T")[0])}
+                      // Only dates marked available in the CT configuration are selectable.
+                      disabled={(date) =>
+                        availableDates.size > 0 && !availableDates.has(format(date, "yyyy-MM-dd"))
+                      }
                       onSelect={(date) => date && setEditingAssignment({ ...editingAssignment, date: format(date, "yyyy-MM-dd") })}
                       initialFocus
                     />
                   </PopoverContent>
                 </Popover>
+                <p className="text-[11px] text-muted-foreground">
+                  Only dates enabled in CT Configuration can be selected.
+                </p>
               </div>
             </div>
           )}

@@ -194,3 +194,72 @@ export function exportTeacherWiseCTPdf(data: AppData, assignments: CTAssignment[
 
   doc.save(`CT-Teacher-wise-Routine-${slugify(semName)}.pdf`);
 }
+
+/** Room-wise CT routine: one section per room (in the app's room order), listing every
+ *  class test sitting in that room in chronological order. */
+export function exportRoomWiseCTPdf(data: AppData, assignments: CTAssignment[]) {
+  const doc = newDoc();
+  const semName = getSemesterName(data);
+  let y = drawHeader(doc, "Room-wise Class Test Routine", semName);
+
+  const byRoom = new Map<string, CTAssignment[]>();
+  for (const a of assignments) {
+    if (!byRoom.has(a.room_id)) byRoom.set(a.room_id, []);
+    byRoom.get(a.room_id)!.push(a);
+  }
+
+  const roomIds = data.rooms.filter((r) => byRoom.has(r.id)).map((r) => r.id);
+
+  for (const roomId of roomIds) {
+    const room = data.rooms.find((r) => r.id === roomId);
+    const rows = byRoom
+      .get(roomId)!
+      .slice()
+      .sort((a, b) => (a.date > b.date ? 1 : a.date < b.date ? -1 : a.ct_number - b.ct_number));
+
+    doc.setFont("times", "bold");
+    doc.setFontSize(11);
+    if (y > doc.internal.pageSize.getHeight() - 100) {
+      doc.addPage();
+      y = MARGIN;
+    }
+    doc.text(
+      `${room?.name ?? "Unknown Room"}  (${room?.room_type ?? "-"}, capacity ${room?.capacity ?? "-"})`,
+      MARGIN,
+      y,
+    );
+    y += 14;
+
+    autoTable(doc, {
+      startY: y,
+      margin: { left: MARGIN, right: MARGIN },
+      head: [["Week", "Date", "Day", "Course", "Level-Term", "CT No."]],
+      body: rows.map((a) => [
+        `Week ${a.week_number}`,
+        fmtDate(a.date),
+        fmtDay(a.date),
+        `${a.course?.code ?? ""} — ${a.course?.name ?? ""}`,
+        `${a.course?.level}-${a.course?.term}`,
+        `CT ${a.ct_number}`,
+      ]),
+      styles: { font: "times", fontSize: 9, cellPadding: 5 },
+      columnStyles: {
+        0: { cellWidth: 52, halign: "center" },
+        4: { cellWidth: 62, halign: "center" },
+        5: { cellWidth: 46, halign: "center" },
+      },
+      headStyles: { fillColor: [79, 70, 229], textColor: 255, fontStyle: "bold" },
+      theme: "grid",
+    });
+
+    y = (doc as any).lastAutoTable.finalY + 24;
+  }
+
+  if (roomIds.length === 0) {
+    doc.setFont("times", "normal");
+    doc.setFontSize(11);
+    doc.text("No class tests have been assigned to any room yet.", MARGIN, y);
+  }
+
+  doc.save(`CT-Room-wise-Routine-${slugify(semName)}.pdf`);
+}

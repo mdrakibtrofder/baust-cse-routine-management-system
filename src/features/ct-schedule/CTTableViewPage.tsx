@@ -13,9 +13,14 @@ import { format, parseISO } from "date-fns";
 import { Loader2, CalendarIcon, Wand2, Download, ChevronDown, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
-import { CTAssignment, Room } from "@/lib/types";
+import { CTAssignment, CTWeekConfig, Room } from "@/lib/types";
 import { toast } from "sonner";
-import { exportCourseWiseCTPdf, exportWeekWiseCTPdf, exportTeacherWiseCTPdf } from "@/lib/ct-export";
+import {
+  exportCourseWiseCTPdf,
+  exportWeekWiseCTPdf,
+  exportTeacherWiseCTPdf,
+  exportRoomWiseCTPdf,
+} from "@/lib/ct-export";
 import { roomDeptShort } from "@/lib/room-dept";
 import { HOME_DEPT_SHORT_NAME } from "@/lib/constants";
 
@@ -27,18 +32,35 @@ export function CTTableViewPage() {
   const [generating, setGenerating] = useState(false);
   const [editingAssignment, setEditingAssignment] = useState<CTAssignment | null>(null);
 
+  const [weekConfigs, setWeekConfigs] = useState<CTWeekConfig[]>([]);
+
   const loadData = useCallback(async () => {
     if (!active_semester_id) return;
     setLoading(true);
     try {
-      const a = await api.get<CTAssignment[]>(`/ct-schedule/assignments/${active_semester_id}`);
+      const [a, w] = await Promise.all([
+        api.get<CTAssignment[]>(`/ct-schedule/assignments/${active_semester_id}`),
+        api.get<CTWeekConfig[]>(`/ct-schedule/week-configs/${active_semester_id}`),
+      ]);
       setAssignments(a);
+      setWeekConfigs(w);
     } catch (error) {
       toast.error("Failed to load CT schedule data");
     } finally {
       setLoading(false);
     }
   }, [active_semester_id]);
+
+  /** date (YYYY-MM-DD) -> week number, straight from the saved CT calendar.
+   *  Only these dates may be picked when editing an assignment. */
+  const availableDates = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const c of weekConfigs) {
+      if (!c.is_available) continue;
+      map.set(c.date.split("T")[0], c.week_number);
+    }
+    return map;
+  }, [weekConfigs]);
 
   useEffect(() => {
     loadData();
@@ -243,6 +265,15 @@ export function CTTableViewPage() {
               className="font-bold"
             >
               <Download className="mr-1.5 h-3.5 w-3.5" /> Teacher-wise PDF
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={assignments.length === 0}
+              onClick={() => exportRoomWiseCTPdf(store, assignments)}
+              className="font-bold"
+            >
+              <Download className="mr-1.5 h-3.5 w-3.5" /> Room-wise PDF
             </Button>
             <Button
               onClick={handleGenerate}
@@ -546,18 +577,29 @@ export function CTTableViewPage() {
                   <PopoverTrigger asChild>
                     <Button variant="outline" className="justify-start text-left font-normal">
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {format(parseISO(editingAssignment.date), "PPP")}
+                      {format(parseISO(editingAssignment.date.split("T")[0]), "PPP")}
+                      <span className="ml-auto text-xs text-muted-foreground">
+                        Week {availableDates.get(editingAssignment.date.split("T")[0]) ?? editingAssignment.week_number}
+                      </span>
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0">
                     <Calendar
                       mode="single"
-                      selected={parseISO(editingAssignment.date)}
+                      selected={parseISO(editingAssignment.date.split("T")[0])}
+                      // Only dates marked available in the CT configuration are selectable,
+                      // so an edited CT can never land outside the configured calendar.
+                      disabled={(date) =>
+                        availableDates.size > 0 && !availableDates.has(format(date, "yyyy-MM-dd"))
+                      }
                       onSelect={(date) => date && handleDateChange(format(date, "yyyy-MM-dd"))}
                       initialFocus
                     />
                   </PopoverContent>
                 </Popover>
+                <p className="text-[11px] text-muted-foreground">
+                  Only dates enabled in CT Configuration can be selected.
+                </p>
               </div>
             </div>
           )}

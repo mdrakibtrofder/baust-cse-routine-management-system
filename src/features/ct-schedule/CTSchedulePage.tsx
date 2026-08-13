@@ -9,7 +9,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
-import { format, addDays, parseISO, isValid } from "date-fns";
+import { format, addDays, parseISO, isValid, startOfWeek, isBefore } from "date-fns";
 import { CalendarIcon, Loader2, Save, RefreshCw, Wand2, Search, DoorOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { roomDeptShort } from "@/lib/room-dept";
@@ -107,11 +107,19 @@ export function CTScheduleConfigPage() {
         total_weeks: settings.total_weeks,
         start_date: settings.start_date,
       });
-      const configsToSave = weekConfigs.map((c) => ({
-        week_number: c.week_number,
-        date: c.date.split("T")[0],
-        is_available: c.is_available,
-      }));
+      // Send the complete grid currently on screen, not the rows that happened to be
+      // loaded. The server replaces the semester's calendar with exactly this payload,
+      // so anything left over from a previous start date is dropped instead of
+      // lingering invisibly and polluting generation.
+      const configsToSave = weeks.flatMap((w) =>
+        w.days
+          .filter((d) => !d.isBeforeStart)
+          .map((d) => ({
+            week_number: w.number,
+            date: d.date,
+            is_available: d.isAvailable,
+          })),
+      );
       await api.put(`/ct-schedule/week-configs/${active_semester_id}`, { configs: configsToSave });
       toast.success("Configuration saved");
       loadData();
@@ -141,9 +149,16 @@ export function CTScheduleConfigPage() {
     const startDate = parseISO(settings.start_date);
     if (!isValid(startDate)) return [];
 
+    // Week 1 is anchored to the Sunday of the week containing the start date, so
+    // every column below lines up with its real weekday (DAYS[0]=SUN … DAYS[4]=THU).
+    // Offsetting blindly from an arbitrary start date would label e.g. a Tuesday as
+    // "Sunday", and the generator (which reads the stored date's actual weekday)
+    // would then place CTs on days the configuration never selected.
+    const firstWeekSunday = startOfWeek(startDate, { weekStartsOn: 0 });
+
     const result = [];
     for (let i = 1; i <= settings.total_weeks; i++) {
-      const weekStart = addDays(startDate, (i - 1) * 7);
+      const weekStart = addDays(firstWeekSunday, (i - 1) * 7);
       const daysInWeek = DAYS.map((_, idx) => {
         const d = addDays(weekStart, idx);
         const dateStr = format(d, "yyyy-MM-dd");
@@ -152,6 +167,8 @@ export function CTScheduleConfigPage() {
           date: dateStr,
           label: format(d, "dd MMM (EEE)"),
           isAvailable: config?.is_available ?? false,
+          // Days in week 1 that fall before the semester start date cannot be used.
+          isBeforeStart: isBefore(d, startDate),
         };
       });
       result.push({ number: i, days: daysInWeek });
@@ -353,12 +370,19 @@ export function CTScheduleConfigPage() {
                     {w.days.map((d) => (
                       <div
                         key={d.date}
-                        className="flex items-center space-x-3 p-2.5 rounded-lg hover:bg-primary/10 transition-colors cursor-pointer group"
-                        onClick={() => toggleDayAvailability(w.number, d.date)}
+                        className={cn(
+                          "flex items-center space-x-3 p-2.5 rounded-lg transition-colors group",
+                          d.isBeforeStart
+                            ? "opacity-40 cursor-not-allowed"
+                            : "hover:bg-primary/10 cursor-pointer"
+                        )}
+                        onClick={() => !d.isBeforeStart && toggleDayAvailability(w.number, d.date)}
+                        title={d.isBeforeStart ? "Before the semester start date" : undefined}
                       >
                         <Checkbox
                           id={`w${w.number}-${d.date}`}
                           checked={d.isAvailable}
+                          disabled={d.isBeforeStart}
                           onCheckedChange={() => toggleDayAvailability(w.number, d.date)}
                           onClick={(e) => e.stopPropagation()}
                           className="h-5 w-5"
