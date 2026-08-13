@@ -26,7 +26,9 @@ import { Route as ConflictedClassesRouteImport } from './routes/conflicted-class
 import { Route as AvailabilityRouteImport } from './routes/availability'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CtScheduleViewRouteImport } from './routes/ct-schedule.view'
+import { Route as CtScheduleTeachersRouteImport } from './routes/ct-schedule.teachers'
 import { Route as CtScheduleTableRouteImport } from './routes/ct-schedule.table'
+import { Route as CtScheduleRoomsRouteImport } from './routes/ct-schedule.rooms'
 import { Route as CtScheduleConfigRouteImport } from './routes/ct-schedule.config'
 
 const TeachersRoute = TeachersRouteImport.update({
@@ -114,9 +116,19 @@ const CtScheduleViewRoute = CtScheduleViewRouteImport.update({
   path: '/ct-schedule/view',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CtScheduleTeachersRoute = CtScheduleTeachersRouteImport.update({
+  id: '/ct-schedule/teachers',
+  path: '/ct-schedule/teachers',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CtScheduleTableRoute = CtScheduleTableRouteImport.update({
   id: '/ct-schedule/table',
   path: '/ct-schedule/table',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CtScheduleRoomsRoute = CtScheduleRoomsRouteImport.update({
+  id: '/ct-schedule/rooms',
+  path: '/ct-schedule/rooms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CtScheduleConfigRoute = CtScheduleConfigRouteImport.update({
@@ -143,7 +155,9 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/teachers': typeof TeachersRoute
   '/ct-schedule/config': typeof CtScheduleConfigRoute
+  '/ct-schedule/rooms': typeof CtScheduleRoomsRoute
   '/ct-schedule/table': typeof CtScheduleTableRoute
+  '/ct-schedule/teachers': typeof CtScheduleTeachersRoute
   '/ct-schedule/view': typeof CtScheduleViewRoute
 }
 export interface FileRoutesByTo {
@@ -164,7 +178,9 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/teachers': typeof TeachersRoute
   '/ct-schedule/config': typeof CtScheduleConfigRoute
+  '/ct-schedule/rooms': typeof CtScheduleRoomsRoute
   '/ct-schedule/table': typeof CtScheduleTableRoute
+  '/ct-schedule/teachers': typeof CtScheduleTeachersRoute
   '/ct-schedule/view': typeof CtScheduleViewRoute
 }
 export interface FileRoutesById {
@@ -186,7 +202,9 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/teachers': typeof TeachersRoute
   '/ct-schedule/config': typeof CtScheduleConfigRoute
+  '/ct-schedule/rooms': typeof CtScheduleRoomsRoute
   '/ct-schedule/table': typeof CtScheduleTableRoute
+  '/ct-schedule/teachers': typeof CtScheduleTeachersRoute
   '/ct-schedule/view': typeof CtScheduleViewRoute
 }
 export interface FileRouteTypes {
@@ -209,7 +227,9 @@ export interface FileRouteTypes {
     | '/settings'
     | '/teachers'
     | '/ct-schedule/config'
+    | '/ct-schedule/rooms'
     | '/ct-schedule/table'
+    | '/ct-schedule/teachers'
     | '/ct-schedule/view'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -230,7 +250,9 @@ export interface FileRouteTypes {
     | '/settings'
     | '/teachers'
     | '/ct-schedule/config'
+    | '/ct-schedule/rooms'
     | '/ct-schedule/table'
+    | '/ct-schedule/teachers'
     | '/ct-schedule/view'
   id:
     | '__root__'
@@ -251,7 +273,9 @@ export interface FileRouteTypes {
     | '/settings'
     | '/teachers'
     | '/ct-schedule/config'
+    | '/ct-schedule/rooms'
     | '/ct-schedule/table'
+    | '/ct-schedule/teachers'
     | '/ct-schedule/view'
   fileRoutesById: FileRoutesById
 }
@@ -273,7 +297,9 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   TeachersRoute: typeof TeachersRoute
   CtScheduleConfigRoute: typeof CtScheduleConfigRoute
+  CtScheduleRoomsRoute: typeof CtScheduleRoomsRoute
   CtScheduleTableRoute: typeof CtScheduleTableRoute
+  CtScheduleTeachersRoute: typeof CtScheduleTeachersRoute
   CtScheduleViewRoute: typeof CtScheduleViewRoute
 }
 
@@ -398,11 +424,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CtScheduleViewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ct-schedule/teachers': {
+      id: '/ct-schedule/teachers'
+      path: '/ct-schedule/teachers'
+      fullPath: '/ct-schedule/teachers'
+      preLoaderRoute: typeof CtScheduleTeachersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ct-schedule/table': {
       id: '/ct-schedule/table'
       path: '/ct-schedule/table'
       fullPath: '/ct-schedule/table'
       preLoaderRoute: typeof CtScheduleTableRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ct-schedule/rooms': {
+      id: '/ct-schedule/rooms'
+      path: '/ct-schedule/rooms'
+      fullPath: '/ct-schedule/rooms'
+      preLoaderRoute: typeof CtScheduleRoomsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ct-schedule/config': {
@@ -433,7 +473,9 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   TeachersRoute: TeachersRoute,
   CtScheduleConfigRoute: CtScheduleConfigRoute,
+  CtScheduleRoomsRoute: CtScheduleRoomsRoute,
   CtScheduleTableRoute: CtScheduleTableRoute,
+  CtScheduleTeachersRoute: CtScheduleTeachersRoute,
   CtScheduleViewRoute: CtScheduleViewRoute,
 }
 export const routeTree = rootRouteImport

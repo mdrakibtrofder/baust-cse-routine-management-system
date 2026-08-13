@@ -31,6 +31,30 @@ export function roomAllowedForHomeDept(room: Room, departments: Department[]): b
   return roomDept === HOME_DEPT_SHORT_NAME;
 }
 
+/** Short name of the department a teacher belongs to; teachers without one are
+ *  treated as home department. */
+export function teacherDeptShort(teacher: { department?: string | null }): string {
+  const value = (teacher.department ?? "").trim().toUpperCase();
+  return value === "" ? HOME_DEPT_SHORT_NAME : value;
+}
+
+/** Stable sort putting home-department (CSE) entries first, then every other
+ *  department grouped alphabetically, then the original order within a group.
+ *  Used anywhere a room / teacher / course list is presented or exported so the
+ *  home department always reads first. */
+export function sortHomeDeptFirst<T>(items: T[], deptShortOf: (item: T) => string): T[] {
+  return items
+    .map((item, index) => ({ item, index, dept: deptShortOf(item) }))
+    .sort((a, b) => {
+      const aHome = a.dept === HOME_DEPT_SHORT_NAME;
+      const bHome = b.dept === HOME_DEPT_SHORT_NAME;
+      if (aHome !== bHome) return aHome ? -1 : 1;
+      if (a.dept !== b.dept) return a.dept.localeCompare(b.dept);
+      return a.index - b.index;
+    })
+    .map((e) => e.item);
+}
+
 /** Split a room list into [allowed, other] for a course, preserving order. */
 export function partitionRoomsForCourse<T extends Room>(
   rooms: T[],

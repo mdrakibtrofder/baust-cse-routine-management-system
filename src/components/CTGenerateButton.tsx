@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,33 +38,39 @@ export function CTGenerateButton({
 
   const [generating, setGenerating] = useState(false);
   const [step, setStep] = useState(0);
-  const timers = useRef<number[]>([]);
+
+  /** Every step stays on screen for at least this long, so the loader reads as three
+   *  distinct stages rather than flashing past on a fast server. */
+  const STEP_MIN_MS = 1000;
 
   // Re-lock whenever a schedule comes into existence (including right after a run).
   useEffect(() => {
     if (hasSchedule) setUnlocked(false);
   }, [hasSchedule]);
 
-  useEffect(() => () => timers.current.forEach((t) => window.clearTimeout(t)), []);
-
   const locked = hasSchedule && !unlocked;
+
+  const sleep = (ms: number) => new Promise((r) => window.setTimeout(r, ms));
 
   const runGeneration = async () => {
     setGenerating(true);
     setStep(0);
-    // The server does not stream progress, so the first two steps advance on a timer
-    // and the last one resolves with the request itself.
-    timers.current = [
-      window.setTimeout(() => setStep(1), 700),
-      window.setTimeout(() => setStep(2), 1600),
-    ];
+    // The server does not stream progress. The request is kicked off immediately and
+    // runs alongside the walkthrough; each step is held for STEP_MIN_MS so all three
+    // are actually readable, and the final step also waits for the request itself.
+    const request = onGenerate();
+    // Surface the rejection through the caller's handler only — an unhandled rejection
+    // here would fire before the awaits below reach it.
+    request.catch(() => undefined);
     try {
-      await onGenerate();
-      timers.current.forEach((t) => window.clearTimeout(t));
+      await sleep(STEP_MIN_MS);
+      setStep(1);
+      await sleep(STEP_MIN_MS);
+      setStep(2);
+      await Promise.all([sleep(STEP_MIN_MS), request]);
       setStep(STEPS.length);
-      await new Promise((r) => window.setTimeout(r, 600));
+      await sleep(400);
     } finally {
-      timers.current.forEach((t) => window.clearTimeout(t));
       setGenerating(false);
       setStep(0);
     }

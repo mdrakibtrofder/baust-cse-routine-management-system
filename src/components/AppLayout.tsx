@@ -37,8 +37,10 @@ const nav = [
     icon: CalendarDays,
     sub: [
       { to: "/ct-schedule/config", label: "Configuration" },
-      { to: "/ct-schedule/table", label: "Table View" },
+      { to: "/ct-schedule/table", label: "Calendar View" },
       { to: "/ct-schedule/view", label: "Course View" },
+      { to: "/ct-schedule/rooms", label: "Room View" },
+      { to: "/ct-schedule/teachers", label: "Teacher View" },
     ],
   },
   { to: "/mapping", label: "Room & Time Mapping", icon: Boxes },

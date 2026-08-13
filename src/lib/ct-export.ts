@@ -3,6 +3,7 @@ import autoTable from "jspdf-autotable";
 import { format, parseISO, isValid } from "date-fns";
 import type { AppData, CTAssignment } from "@/lib/types";
 import { slugify } from "@/lib/routine-export";
+import { courseCodeDeptShort, roomDeptShort, teacherDeptShort, sortHomeDeptFirst } from "@/lib/room-dept";
 
 const MARGIN = 36;
 
@@ -54,10 +55,15 @@ export function exportCourseWiseCTPdf(data: AppData, assignments: CTAssignment[]
     if (!byCourse.has(a.course_id)) byCourse.set(a.course_id, []);
     byCourse.get(a.course_id)!.push(a);
   }
-  const courseIds = Array.from(byCourse.keys()).sort((idA, idB) => {
-    const a = byCourse.get(idA)![0].course, b = byCourse.get(idB)![0].course;
-    return (a?.code ?? "").localeCompare(b?.code ?? "");
-  });
+  // Home-department (CSE) courses first, then each other department grouped
+  // together; alphabetical by course code within a department.
+  const courseIds = sortHomeDeptFirst(
+    Array.from(byCourse.keys()).sort((idA, idB) => {
+      const a = byCourse.get(idA)![0].course, b = byCourse.get(idB)![0].course;
+      return (a?.code ?? "").localeCompare(b?.code ?? "");
+    }),
+    (id) => courseCodeDeptShort(byCourse.get(id)![0].course?.code ?? ""),
+  );
 
   const rows = courseIds.map((courseId) => {
     const cts = byCourse.get(courseId)!.sort((a, b) => a.ct_number - b.ct_number);
@@ -153,11 +159,16 @@ export function exportTeacherWiseCTPdf(data: AppData, assignments: CTAssignment[
     }
   }
 
-  const teacherIds = Array.from(rowsByTeacher.keys()).sort((idA, idB) => {
-    const a = data.teachers.find((t) => t.id === idA);
-    const b = data.teachers.find((t) => t.id === idB);
-    return (a?.name ?? "").localeCompare(b?.name ?? "");
-  });
+  // Home-department (CSE) teachers first, then each other department grouped
+  // together; alphabetical by name within a department.
+  const teacherIds = sortHomeDeptFirst(
+    Array.from(rowsByTeacher.keys()).sort((idA, idB) => {
+      const a = data.teachers.find((t) => t.id === idA);
+      const b = data.teachers.find((t) => t.id === idB);
+      return (a?.name ?? "").localeCompare(b?.name ?? "");
+    }),
+    (id) => teacherDeptShort(data.teachers.find((t) => t.id === id) ?? {}),
+  );
 
   for (const tid of teacherIds) {
     const teacher = data.teachers.find((t) => t.id === tid);
@@ -169,7 +180,11 @@ export function exportTeacherWiseCTPdf(data: AppData, assignments: CTAssignment[
       doc.addPage();
       y = MARGIN;
     }
-    doc.text(`${teacher?.name ?? "Unknown Teacher"} (${teacher?.short_name ?? ""})`, MARGIN, y);
+    doc.text(
+      `${teacher?.name ?? "Unknown Teacher"} (${teacher?.short_name ?? ""}) [${teacher ? teacherDeptShort(teacher) : ""}]`,
+      MARGIN,
+      y,
+    );
     y += 14;
 
     autoTable(doc, {
@@ -208,7 +223,11 @@ export function exportRoomWiseCTPdf(data: AppData, assignments: CTAssignment[]) 
     byRoom.get(a.room_id)!.push(a);
   }
 
-  const roomIds = data.rooms.filter((r) => byRoom.has(r.id)).map((r) => r.id);
+  // Home-department (CSE) rooms first, then each other department grouped together.
+  const roomIds = sortHomeDeptFirst(
+    data.rooms.filter((r) => byRoom.has(r.id)),
+    (r) => roomDeptShort(r, data.departments),
+  ).map((r) => r.id);
 
   for (const roomId of roomIds) {
     const room = data.rooms.find((r) => r.id === roomId);
@@ -223,8 +242,9 @@ export function exportRoomWiseCTPdf(data: AppData, assignments: CTAssignment[]) 
       doc.addPage();
       y = MARGIN;
     }
+    const roomDept = room ? roomDeptShort(room, data.departments) : "";
     doc.text(
-      `${room?.name ?? "Unknown Room"}  (${room?.room_type ?? "-"}, capacity ${room?.capacity ?? "-"})`,
+      `${room?.name ?? "Unknown Room"} [${roomDept}]  (${room?.room_type ?? "-"}, capacity ${room?.capacity ?? "-"})`,
       MARGIN,
       y,
     );

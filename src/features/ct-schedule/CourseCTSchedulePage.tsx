@@ -270,6 +270,10 @@ export function CourseCTSchedulePage() {
                               {ct.ct_number}
                             </div>
                             <span className="font-bold text-xs tracking-tight">CT {ct.ct_number}</span>
+                            {/* Week tag sits on the same row as the CT number. */}
+                            <span className="ml-auto shrink-0 rounded-full bg-primary/15 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-primary">
+                              Week {ct.week_number}
+                            </span>
                           </div>
                           <div className="space-y-1.5">
                             <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-bold">
