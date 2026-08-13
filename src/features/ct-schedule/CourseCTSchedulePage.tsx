@@ -26,7 +26,7 @@ export function CourseCTSchedulePage() {
   const { active_semester_id, sections, rooms, departments } = store;
   const [assignments, setAssignments] = useState<CTAssignment[]>([]);
   const [loading, setLoading] = useState(false);
-  const [showNonDepartmental, setShowNonDepartmental] = useState(true);
+  const [showNonDepartmental, setShowNonDepartmental] = useState(false);
   const [selectedLevelTerm, setSelectedLevelTerm] = useState<string>("all");
   const [viewingCourseKey, setViewingCourseKey] = useState<string | null>(null);
   const [editingAssignment, setEditingAssignment] = useState<CTAssignment | null>(null);

@@ -128,7 +128,7 @@ export function CTTableViewPage() {
   // ---- Filters -------------------------------------------------------------
   // Default view: home-department (CSE) rooms only — Theory, Sessional and Both.
   const [showOtherDeptRooms, setShowOtherDeptRooms] = useState(false);
-  const [showNonDepartmental, setShowNonDepartmental] = useState(true);
+  const [showNonDepartmental, setShowNonDepartmental] = useState(false);
   const [selectedRoomIds, setSelectedRoomIds] = useState<string[]>([]);
   const [selectedLevelTerms, setSelectedLevelTerms] = useState<string[]>([]);
 

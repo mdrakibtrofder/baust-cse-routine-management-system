@@ -22,7 +22,7 @@ export function CTTeacherViewPage() {
   const { active_semester_id, teachers, course_section_teachers, rooms } = store;
   const [assignments, setAssignments] = useState<CTAssignment[]>([]);
   const [loading, setLoading] = useState(false);
-  const [showNonDepartmental, setShowNonDepartmental] = useState(true);
+  const [showNonDepartmental, setShowNonDepartmental] = useState(false);
 
   const loadData = useCallback(async () => {
     if (!active_semester_id) return;
