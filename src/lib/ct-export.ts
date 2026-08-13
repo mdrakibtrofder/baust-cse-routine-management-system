@@ -55,7 +55,8 @@ function getSemesterName(data: AppData) {
   return data.semesters.find((s) => s.id === data.active_semester_id)?.name ?? "";
 }
 
-/** Course-wise CT routine: one section per course listing CT1/CT2/CT3 date, day, week and room. */
+/** Course-wise CT routine: one table per level-term, each starting on its own page,
+ *  listing every course that batch sits with its CT1/CT2/CT3 date, day, week and rooms. */
 function buildCourseWiseCTDoc(data: AppData, assignments: CTAssignment[]): CTDoc {
   const doc = newDoc();
   const semName = getSemesterName(data);
@@ -73,31 +74,63 @@ function buildCourseWiseCTDoc(data: AppData, assignments: CTAssignment[]): CTDoc
     compareCoursesByLevelTerm(byCourse.get(idA)![0].course, byCourse.get(idB)![0].course),
   );
 
-  const rows = courseIds.map((courseId) => {
-    const cts = byCourse.get(courseId)!.sort((a, b) => a.ct_number - b.ct_number);
-    const course = cts[0].course;
-    return [
-      `${course?.code ?? ""}\n${course?.name ?? ""}`,
-      `${course?.level}-${course?.term}`,
-      ...[1, 2, 3].map((num) => {
-        const ct = cts.find((c) => c.ct_number === num);
-        return ct
-          ? `${fmtDate(ct.date)}\n${fmtDay(ct.date)}\nWeek ${ct.week_number}\n${ctRoomNames(ct, data.rooms)}`
-          : "-";
-      }),
-    ];
-  });
+  // Group the sorted courses into level-term blocks; insertion order already
+  // carries the ordering established above.
+  const byLevelTerm = new Map<string, string[]>();
+  for (const courseId of courseIds) {
+    const course = byCourse.get(courseId)![0].course;
+    const key = `${course?.level}-${course?.term}`;
+    if (!byLevelTerm.has(key)) byLevelTerm.set(key, []);
+    byLevelTerm.get(key)!.push(courseId);
+  }
 
-  autoTable(doc, {
-    startY: y,
-    margin: { left: MARGIN, right: MARGIN },
-    head: [["Course", "Level-Term", "CT 1", "CT 2", "CT 3"]],
-    body: rows,
-    styles: { font: "times", fontSize: 9, cellPadding: 6, valign: "middle" },
-    columnStyles: { 1: { cellWidth: 62, halign: "center" } },
-    headStyles: { fillColor: [79, 70, 229], textColor: 255, fontStyle: "bold" },
-    theme: "grid",
-  });
+  let first = true;
+  for (const [levelTerm, idsInBlock] of byLevelTerm) {
+    // Each level-term gets its own page so a batch's schedule can be printed and
+    // handed out on its own.
+    if (!first) {
+      doc.addPage();
+      y = drawHeader(doc, "Course-wise Class Test Routine", semName);
+    }
+    first = false;
+
+    doc.setFont("times", "bold");
+    doc.setFontSize(12);
+    doc.text(`Level-Term ${levelTerm}`, MARGIN, y);
+    y += 14;
+
+    const rows = idsInBlock.map((courseId) => {
+      const cts = byCourse.get(courseId)!.sort((a, b) => a.ct_number - b.ct_number);
+      const course = cts[0].course;
+      return [
+        `${course?.code ?? ""}\n${course?.name ?? ""}`,
+        ...[1, 2, 3].map((num) => {
+          const ct = cts.find((c) => c.ct_number === num);
+          return ct
+            ? `${fmtDate(ct.date)}\n${fmtDay(ct.date)}\nWeek ${ct.week_number}\n${ctRoomNames(ct, data.rooms)}`
+            : "-";
+        }),
+      ];
+    });
+
+    autoTable(doc, {
+      startY: y,
+      margin: { left: MARGIN, right: MARGIN },
+      head: [["Course", "CT 1", "CT 2", "CT 3"]],
+      body: rows,
+      styles: { font: "times", fontSize: 9, cellPadding: 6, valign: "middle" },
+      headStyles: { fillColor: [79, 70, 229], textColor: 255, fontStyle: "bold" },
+      theme: "grid",
+    });
+
+    y = (doc as any).lastAutoTable.finalY + 24;
+  }
+
+  if (byLevelTerm.size === 0) {
+    doc.setFont("times", "normal");
+    doc.setFontSize(11);
+    doc.text("No class tests to show.", MARGIN, y);
+  }
 
   return { doc, filename: `CT-Course-wise-Routine-${slugify(semName)}.pdf` };
 }
@@ -248,16 +281,21 @@ function buildRoomWiseCTDoc(data: AppData, assignments: CTAssignment[]): CTDoc {
     (r) => roomDeptShort(r, data.departments),
   ).map((r) => r.id);
 
+  let firstRoom = true;
   for (const roomId of roomIds) {
     const room = data.rooms.find((r) => r.id === roomId);
     const rows = byRoom.get(roomId)!.slice().sort(compareCTsByLevelTerm);
 
+    // Each room starts on its own page so a single room's schedule can be printed
+    // and posted on that room's door.
+    if (!firstRoom) {
+      doc.addPage();
+      y = drawHeader(doc, "Room-wise Class Test Routine", semName);
+    }
+    firstRoom = false;
+
     doc.setFont("times", "bold");
     doc.setFontSize(11);
-    if (y > doc.internal.pageSize.getHeight() - 100) {
-      doc.addPage();
-      y = MARGIN;
-    }
     const roomDept = room ? roomDeptShort(room, data.departments) : "";
     doc.text(
       `${room?.name ?? "Unknown Room"} [${roomDept}]  (${room?.room_type ?? "-"}, capacity ${room?.capacity ?? "-"})`,
