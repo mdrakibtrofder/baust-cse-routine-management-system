@@ -24,6 +24,8 @@ import {
 } from "@/lib/ct-export";
 import { roomDeptShort } from "@/lib/room-dept";
 import { HOME_DEPT_SHORT_NAME } from "@/lib/constants";
+import { ctRoomNames, filterCTsByDepartmental } from "@/lib/ct-schedule-utils";
+import { NonDepartmentalToggle } from "@/components/NonDepartmentalToggle";
 
 export function CTTableViewPage() {
   const store = useStore();
@@ -126,6 +128,7 @@ export function CTTableViewPage() {
   // ---- Filters -------------------------------------------------------------
   // Default view: home-department (CSE) rooms only — Theory, Sessional and Both.
   const [showOtherDeptRooms, setShowOtherDeptRooms] = useState(false);
+  const [showNonDepartmental, setShowNonDepartmental] = useState(true);
   const [selectedRoomIds, setSelectedRoomIds] = useState<string[]>([]);
   const [selectedLevelTerms, setSelectedLevelTerms] = useState<string[]>([]);
 
@@ -173,44 +176,73 @@ export function CTTableViewPage() {
     [departments],
   );
 
-  const scheduleTable = useMemo(() => {
+  /** The list every download is built from, so anything hidden here stays out of
+   *  the exported schedules too. */
+  const visibleAssignments = useMemo(() => {
     const ltFilter = new Set(selectedLevelTerms);
     const roomFilter = new Set(selectedRoomIds);
 
-    const visible = assignments.filter((a) => {
+    return filterCTsByDepartmental(assignments, showNonDepartmental).filter((a) => {
       if (ltFilter.size > 0 && !ltFilter.has(levelTermKeyOf(a))) return false;
-      const room = rooms.find((r) => r.id === a.room_id);
-      if (!room) return false;
+
+      // A sitting spans every room mapped to its level-term, so it stays visible as
+      // long as at least one of those rooms passes the room filters.
+      const sittingRooms = rooms.filter((r) => (a.room_ids ?? []).includes(r.id));
+      if (sittingRooms.length === 0) return false;
       // An explicitly picked room always shows, even if it belongs to another department.
-      if (roomFilter.size > 0) return roomFilter.has(room.id);
-      return showOtherDeptRooms || isHomeRoom(room);
+      if (roomFilter.size > 0) return sittingRooms.some((r) => roomFilter.has(r.id));
+      return showOtherDeptRooms || sittingRooms.some(isHomeRoom);
     });
+  }, [
+    assignments,
+    rooms,
+    selectedRoomIds,
+    selectedLevelTerms,
+    showOtherDeptRooms,
+    showNonDepartmental,
+    isHomeRoom,
+    levelTermKeyOf,
+  ]);
+
+  const scheduleTable = useMemo(() => {
+    const roomFilter = new Set(selectedRoomIds);
 
     const grouped: Record<string, Record<string, CTAssignment>> = {};
     const uniqueDates: string[] = [];
     const roomsInUseSet = new Set<string>();
 
-    visible.forEach((a) => {
+    visibleAssignments.forEach((a) => {
       const dateStr = typeof a.date === 'string' ? a.date.split('T')[0] : format(new Date(a.date), "yyyy-MM-dd");
       if (!grouped[dateStr]) {
         grouped[dateStr] = {};
         uniqueDates.push(dateStr);
       }
-      grouped[dateStr][a.room_id] = a;
-      roomsInUseSet.add(a.room_id);
+      // One cell per room the sitting occupies, so the grid shows the CT filling
+      // its whole level-term room mapping. Columns hidden by a filter are skipped.
+      for (const room of rooms) {
+        if (!(a.room_ids ?? []).includes(room.id)) continue;
+        if (roomFilter.size > 0 ? !roomFilter.has(room.id) : !(showOtherDeptRooms || isHomeRoom(room))) {
+          continue;
+        }
+        grouped[dateStr][room.id] = a;
+        roomsInUseSet.add(room.id);
+      }
     });
 
     uniqueDates.sort();
     const roomsInUse = rooms.filter(r => roomsInUseSet.has(r.id));
 
-    return { uniqueDates, roomsInUse, grouped, visibleCount: visible.length };
-  }, [assignments, rooms, selectedRoomIds, selectedLevelTerms, showOtherDeptRooms, isHomeRoom, levelTermKeyOf]);
+    return { uniqueDates, roomsInUse, grouped, visibleCount: visibleAssignments.length };
+  }, [visibleAssignments, rooms, selectedRoomIds, showOtherDeptRooms, isHomeRoom]);
 
   const toggleIn = (list: string[], id: string) =>
     list.includes(id) ? list.filter((x) => x !== id) : [...list, id];
 
   const filtersActive =
-    showOtherDeptRooms || selectedRoomIds.length > 0 || selectedLevelTerms.length > 0;
+    showOtherDeptRooms ||
+    !showNonDepartmental ||
+    selectedRoomIds.length > 0 ||
+    selectedLevelTerms.length > 0;
 
   if (loading && assignments.length === 0) {
     return (
@@ -239,38 +271,38 @@ export function CTTableViewPage() {
             <Button
               variant="outline"
               size="sm"
-              disabled={assignments.length === 0}
-              onClick={() => exportCourseWiseCTPdf(store, assignments)}
+              disabled={visibleAssignments.length === 0}
+              onClick={() => exportCourseWiseCTPdf(store, visibleAssignments)}
               className="font-bold"
             >
-              <Download className="mr-1.5 h-3.5 w-3.5" /> Course-wise PDF
+              <Download className="mr-1.5 h-3.5 w-3.5" /> Course-wise Schedule
             </Button>
             <Button
               variant="outline"
               size="sm"
-              disabled={assignments.length === 0}
-              onClick={() => exportWeekWiseCTPdf(store, assignments)}
+              disabled={visibleAssignments.length === 0}
+              onClick={() => exportWeekWiseCTPdf(store, visibleAssignments)}
               className="font-bold"
             >
-              <Download className="mr-1.5 h-3.5 w-3.5" /> Week-wise PDF
+              <Download className="mr-1.5 h-3.5 w-3.5" /> Week-wise Schedule
             </Button>
             <Button
               variant="outline"
               size="sm"
-              disabled={assignments.length === 0}
-              onClick={() => exportTeacherWiseCTPdf(store, assignments)}
+              disabled={visibleAssignments.length === 0}
+              onClick={() => exportTeacherWiseCTPdf(store, visibleAssignments)}
               className="font-bold"
             >
-              <Download className="mr-1.5 h-3.5 w-3.5" /> Teacher-wise PDF
+              <Download className="mr-1.5 h-3.5 w-3.5" /> Teacher-wise Schedule
             </Button>
             <Button
               variant="outline"
               size="sm"
-              disabled={assignments.length === 0}
-              onClick={() => exportRoomWiseCTPdf(store, assignments)}
+              disabled={visibleAssignments.length === 0}
+              onClick={() => exportRoomWiseCTPdf(store, visibleAssignments)}
               className="font-bold"
             >
-              <Download className="mr-1.5 h-3.5 w-3.5" /> Room-wise PDF
+              <Download className="mr-1.5 h-3.5 w-3.5" /> Room-wise Schedule
             </Button>
             <CTGenerateButton
               hasSchedule={assignments.length > 0}
@@ -294,6 +326,9 @@ export function CTTableViewPage() {
                 (default: {HOME_DEPT_SHORT_NAME} only)
               </span>
             </label>
+
+            <NonDepartmentalToggle checked={showNonDepartmental} onChange={setShowNonDepartmental} />
+
 
             {/* Rooms multi-select */}
             <Popover>
@@ -418,6 +453,7 @@ export function CTTableViewPage() {
                 className="font-bold text-muted-foreground"
                 onClick={() => {
                   setShowOtherDeptRooms(false);
+                  setShowNonDepartmental(true);
                   setSelectedRoomIds([]);
                   setSelectedLevelTerms([]);
                 }}
@@ -548,22 +584,39 @@ export function CTTableViewPage() {
                 <div className="text-sm font-bold">Class Test {editingAssignment.ct_number}</div>
               </div>
               <div className="grid gap-2">
-                <Label>Room</Label>
-                <Select
-                  value={editingAssignment.room_id}
-                  onValueChange={(v) => setEditingAssignment({ ...editingAssignment, room_id: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {rooms.map((r) => (
-                      <SelectItem key={r.id} value={r.id}>
-                        {r.name} ({r.capacity})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label>Rooms</Label>
+                {/* A sitting occupies every room mapped to its level-term, so this is a
+                    multi-select rather than a single room picker. */}
+                <div className="max-h-44 space-y-1 overflow-y-auto rounded-lg border p-2">
+                  {rooms.map((r) => {
+                    const selected = (editingAssignment.room_ids ?? []).includes(r.id);
+                    return (
+                      <label
+                        key={r.id}
+                        className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-xs font-semibold hover:bg-muted"
+                      >
+                        <Checkbox
+                          checked={selected}
+                          onCheckedChange={() =>
+                            setEditingAssignment({
+                              ...editingAssignment,
+                              room_ids: selected
+                                ? (editingAssignment.room_ids ?? []).filter((id) => id !== r.id)
+                                : [...(editingAssignment.room_ids ?? []), r.id],
+                            })
+                          }
+                        />
+                        {r.name}
+                        <span className="ml-auto text-[10px] font-normal text-muted-foreground">
+                          {r.room_type} · {r.capacity}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+                <span className="text-[11px] text-muted-foreground">
+                  {ctRoomNames(editingAssignment, rooms)}
+                </span>
               </div>
               <div className="grid gap-2">
                 <Label>Date</Label>
@@ -600,7 +653,7 @@ export function CTTableViewPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditingAssignment(null)}>Cancel</Button>
             <Button onClick={() => editingAssignment && handleUpdateAssignment(editingAssignment.id, {
-              room_id: editingAssignment.room_id,
+              room_ids: editingAssignment.room_ids,
               date: editingAssignment.date
             })}>
               Save Changes
@@ -647,7 +700,7 @@ export function CTTableViewPage() {
                         {ct.course?.code} CT{ct.ct_number}
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        {ct.room?.name}
+                        {ctRoomNames(ct, rooms)}
                       </div>
                     </div>
                   </label>

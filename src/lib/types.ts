@@ -227,16 +227,17 @@ export interface CTWeekConfig {
   is_available: boolean;
 }
 
+/** One class-test sitting for a course. It occupies *every* room mapped to its
+ *  level-term (`room_ids`), because the whole cohort sits it at once. */
 export interface CTAssignment {
   id: string;
   semester_id: string;
   course_id: string;
-  room_id: string;
+  room_ids: string[];
   week_number: number;
   date: string;
   ct_number: number;
   course?: Course;
-  room?: Room;
 }
 
 /** Bucket key shared by CTLevelTermDayMapping and CTLevelTermRoomMapping. */

@@ -4,6 +4,7 @@ import { format, parseISO, isValid } from "date-fns";
 import type { AppData, CTAssignment } from "@/lib/types";
 import { slugify } from "@/lib/routine-export";
 import { courseCodeDeptShort, roomDeptShort, teacherDeptShort, sortHomeDeptFirst } from "@/lib/room-dept";
+import { ctRoomNames } from "@/lib/ct-schedule-utils";
 
 const MARGIN = 36;
 
@@ -73,7 +74,9 @@ export function exportCourseWiseCTPdf(data: AppData, assignments: CTAssignment[]
       `${course?.level}-${course?.term}`,
       ...[1, 2, 3].map((num) => {
         const ct = cts.find((c) => c.ct_number === num);
-        return ct ? `${fmtDate(ct.date)}\n${fmtDay(ct.date)}\nWeek ${ct.week_number}\n${ct.room?.name ?? ""}` : "-";
+        return ct
+          ? `${fmtDate(ct.date)}\n${fmtDay(ct.date)}\nWeek ${ct.week_number}\n${ctRoomNames(ct, data.rooms)}`
+          : "-";
       }),
     ];
   });
@@ -109,7 +112,7 @@ export function exportWeekWiseCTPdf(data: AppData, assignments: CTAssignment[]) 
     fmtDay(a.date),
     `${a.course?.code ?? ""} — ${a.course?.name ?? ""}`,
     `CT ${a.ct_number}`,
-    a.room?.name ?? "",
+    ctRoomNames(a, data.rooms),
   ]);
 
   autoTable(doc, {
@@ -142,7 +145,10 @@ export function exportTeacherWiseCTPdf(data: AppData, assignments: CTAssignment[
     for (const tid of cst.teacher_ids ?? []) set.add(tid);
   }
 
-  const rowsByTeacher = new Map<string, { code: string; name: string; day: string; date: string; week: number; ct: number }[]>();
+  const rowsByTeacher = new Map<
+    string,
+    { code: string; name: string; day: string; date: string; week: number; ct: number; rooms: string }[]
+  >();
   for (const a of assignments) {
     const teacherIds = teacherIdsByCourse.get(a.course_id);
     if (!teacherIds || teacherIds.size === 0) continue;
@@ -155,6 +161,7 @@ export function exportTeacherWiseCTPdf(data: AppData, assignments: CTAssignment[
         date: fmtDate(a.date),
         week: a.week_number,
         ct: a.ct_number,
+        rooms: ctRoomNames(a, data.rooms),
       });
     }
   }
@@ -190,10 +197,17 @@ export function exportTeacherWiseCTPdf(data: AppData, assignments: CTAssignment[
     autoTable(doc, {
       startY: y,
       margin: { left: MARGIN, right: MARGIN },
-      head: [["Course", "Day", "Date", "Week", "CT No."]],
-      body: rows.map((r) => [`${r.code} — ${r.name}`, r.day, r.date, `Week ${r.week}`, `CT ${r.ct}`]),
+      head: [["Course", "Day", "Date", "Week", "CT No.", "Room(s)"]],
+      body: rows.map((r) => [
+        `${r.code} — ${r.name}`,
+        r.day,
+        r.date,
+        `Week ${r.week}`,
+        `CT ${r.ct}`,
+        r.rooms,
+      ]),
       styles: { font: "times", fontSize: 9, cellPadding: 5 },
-      columnStyles: { 3: { cellWidth: 52, halign: "center" } },
+      columnStyles: { 3: { cellWidth: 52, halign: "center" }, 4: { cellWidth: 46, halign: "center" } },
       headStyles: { fillColor: [79, 70, 229], textColor: 255, fontStyle: "bold" },
       theme: "grid",
     });
@@ -217,10 +231,14 @@ export function exportRoomWiseCTPdf(data: AppData, assignments: CTAssignment[]) 
   const semName = getSemesterName(data);
   let y = drawHeader(doc, "Room-wise Class Test Routine", semName);
 
+  // A sitting occupies its level-term's whole room mapping, so it appears under
+  // every one of those rooms.
   const byRoom = new Map<string, CTAssignment[]>();
   for (const a of assignments) {
-    if (!byRoom.has(a.room_id)) byRoom.set(a.room_id, []);
-    byRoom.get(a.room_id)!.push(a);
+    for (const roomId of a.room_ids ?? []) {
+      if (!byRoom.has(roomId)) byRoom.set(roomId, []);
+      byRoom.get(roomId)!.push(a);
+    }
   }
 
   // Home-department (CSE) rooms first, then each other department grouped together.

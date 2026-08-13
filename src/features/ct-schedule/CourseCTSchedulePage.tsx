@@ -15,11 +15,18 @@ import { cn } from "@/lib/utils";
 import api from "@/lib/api";
 import { CTAssignment, CTWeekConfig } from "@/lib/types";
 import { toast } from "sonner";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Download } from "lucide-react";
+import { ctRoomNames, filterCTsByDepartmental } from "@/lib/ct-schedule-utils";
+import { NonDepartmentalToggle } from "@/components/NonDepartmentalToggle";
+import { exportCourseWiseCTPdf } from "@/lib/ct-export";
 
 export function CourseCTSchedulePage() {
-  const { active_semester_id, sections, rooms, departments } = useStore();
+  const store = useStore();
+  const { active_semester_id, sections, rooms, departments } = store;
   const [assignments, setAssignments] = useState<CTAssignment[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showNonDepartmental, setShowNonDepartmental] = useState(true);
   const [selectedLevelTerm, setSelectedLevelTerm] = useState<string>("all");
   const [viewingCourseKey, setViewingCourseKey] = useState<string | null>(null);
   const [editingAssignment, setEditingAssignment] = useState<CTAssignment | null>(null);
@@ -68,6 +75,13 @@ export function CourseCTSchedulePage() {
     }
   };
 
+  /** Base list for this page: hiding non-departmental CTs here removes them from
+   *  the level-term filter, the cards and the download alike. */
+  const visibleAssignments = useMemo(
+    () => filterCTsByDepartmental(assignments, showNonDepartmental),
+    [assignments, showNonDepartmental],
+  );
+
   // Get unique level-term combinations from assignments
   const uniqueLevelTerms = useMemo(() => {
     const ltMap = new Map<string, {
@@ -80,7 +94,7 @@ export function CourseCTSchedulePage() {
       assignment: CTAssignment | undefined;
     }>();
 
-    assignments.forEach(a => {
+    visibleAssignments.forEach(a => {
       if (a.course) {
         const deptId = a.course.department_id || 'none';
         const key = `${a.course.level}-${a.course.term}-${a.course.departmental_type}-${deptId}`;
@@ -125,16 +139,16 @@ export function CourseCTSchedulePage() {
       if (a.level !== b.level) return a.level - b.level;
       return a.term.localeCompare(b.term);
     });
-  }, [assignments, departments]);
+  }, [visibleAssignments, departments]);
 
   const filteredAssignments = useMemo(() => {
-    if (selectedLevelTerm === "all") return assignments;
-    return assignments.filter(a => {
+    if (selectedLevelTerm === "all") return visibleAssignments;
+    return visibleAssignments.filter(a => {
       if (!a.course) return false;
       const key = `${a.course.level}-${a.course.term}-${a.course.departmental_type}-${a.course.department_id || 'none'}`;
       return key === selectedLevelTerm;
     });
-  }, [assignments, selectedLevelTerm]);
+  }, [visibleAssignments, selectedLevelTerm]);
 
   // Group by course (showing all sections in same row)
   const groupedByCourse = useMemo(() => {
@@ -207,6 +221,16 @@ export function CourseCTSchedulePage() {
               </SelectContent>
             </Select>
           </div>
+          <NonDepartmentalToggle checked={showNonDepartmental} onChange={setShowNonDepartmental} />
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={filteredAssignments.length === 0}
+            onClick={() => exportCourseWiseCTPdf(store, filteredAssignments)}
+            className="font-bold"
+          >
+            <Download className="mr-1.5 h-3.5 w-3.5" /> Course-wise Schedule
+          </Button>
           <Button variant="outline" size="icon" onClick={loadAssignments} title="Refresh">
             <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
           </Button>
@@ -282,7 +306,7 @@ export function CourseCTSchedulePage() {
                             </div>
                             <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-bold">
                               <MapPin className="h-3 w-3 text-primary" />
-                              <span className="font-mono text-foreground">{ct.room?.name}</span>
+                              <span className="font-mono text-foreground">{ctRoomNames(ct, rooms)}</span>
                             </div>
                           </div>
                         </div>
@@ -386,7 +410,7 @@ export function CourseCTSchedulePage() {
                               </div>
                               <div className="flex items-center gap-1 text-[11px] font-bold text-muted-foreground">
                                 <MapPin className="h-3 w-3 text-primary" />
-                                <span className="font-mono text-foreground">Room {ct.room?.name}</span>
+                                <span className="font-mono text-foreground">Room {ctRoomNames(ct, rooms)}</span>
                               </div>
                             </div>
 
@@ -442,22 +466,39 @@ export function CourseCTSchedulePage() {
               </div>
 
               <div className="grid gap-2">
-                <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Select Room</Label>
-                <Select
-                  value={editingAssignment.room_id}
-                  onValueChange={(v) => setEditingAssignment({ ...editingAssignment, room_id: v })}
-                >
-                  <SelectTrigger className="font-bold">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {rooms.map((r) => (
-                      <SelectItem key={r.id} value={r.id} className="font-medium">
-                        {r.name} <span className="text-[10px] opacity-50 ml-1">({r.capacity} seats)</span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Select Rooms</Label>
+                {/* A sitting occupies every room mapped to its level-term, so rooms are
+                    picked as a set rather than one at a time. */}
+                <div className="max-h-44 space-y-1 overflow-y-auto rounded-lg border p-2">
+                  {rooms.map((r) => {
+                    const selected = (editingAssignment.room_ids ?? []).includes(r.id);
+                    return (
+                      <label
+                        key={r.id}
+                        className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-xs font-semibold hover:bg-muted"
+                      >
+                        <Checkbox
+                          checked={selected}
+                          onCheckedChange={() =>
+                            setEditingAssignment({
+                              ...editingAssignment,
+                              room_ids: selected
+                                ? (editingAssignment.room_ids ?? []).filter((id) => id !== r.id)
+                                : [...(editingAssignment.room_ids ?? []), r.id],
+                            })
+                          }
+                        />
+                        {r.name}
+                        <span className="ml-auto text-[10px] font-normal opacity-60">
+                          {r.capacity} seats
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+                <span className="text-[11px] text-muted-foreground">
+                  {ctRoomNames(editingAssignment, rooms)}
+                </span>
               </div>
 
               <div className="grid gap-2">
@@ -494,7 +535,7 @@ export function CourseCTSchedulePage() {
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setEditingAssignment(null)} className="font-bold">Cancel</Button>
             <Button className="font-black" onClick={() => editingAssignment && handleUpdateAssignment(editingAssignment.id, {
-              room_id: editingAssignment.room_id,
+              room_ids: editingAssignment.room_ids,
               date: editingAssignment.date
             })}>
               Save Changes

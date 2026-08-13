@@ -97,9 +97,22 @@ export function CTScheduleConfigPage() {
           : departments.find((d) => d.id === course.department_id)?.short_name ?? HOME_DEPT_SHORT_NAME;
       map.set(key, { ...bucket, label: `${course.level}-${course.term}`, deptLabel });
     }
+    // Home-department (CSE) buckets first, then any other department grouped
+    // together, then non-departmental; level-term order within each group.
+    const groupRank = (b: { departmental_type: string; deptLabel: string }) => {
+      if (b.departmental_type === "Non-Departmental") return 2;
+      return b.deptLabel === HOME_DEPT_SHORT_NAME ? 0 : 1;
+    };
+
     return Array.from(map.entries())
       .map(([key, b]) => ({ key, ...b }))
-      .sort((a, b) => (a.level !== b.level ? a.level - b.level : a.term.localeCompare(b.term)));
+      .sort(
+        (a, b) =>
+          groupRank(a) - groupRank(b) ||
+          a.deptLabel.localeCompare(b.deptLabel) ||
+          a.level - b.level ||
+          a.term.localeCompare(b.term),
+      );
   }, [active_semester_id, courses, course_section_teachers, departments]);
 
   const handleSaveConfiguration = async () => {

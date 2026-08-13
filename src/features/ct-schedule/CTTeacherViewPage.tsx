@@ -12,14 +12,17 @@ import { toast } from "sonner";
 import { exportTeacherWiseCTPdf } from "@/lib/ct-export";
 import { teacherDeptShort, sortHomeDeptFirst } from "@/lib/room-dept";
 import { HOME_DEPT_SHORT_NAME } from "@/lib/constants";
+import { ctRoomNames, filterCTsByDepartmental } from "@/lib/ct-schedule-utils";
+import { NonDepartmentalToggle } from "@/components/NonDepartmentalToggle";
 
 /** CT schedule grouped by teacher, resolved through course_section_teachers for the
  *  active semester. Home-department (CSE) teachers are listed first. */
 export function CTTeacherViewPage() {
   const store = useStore();
-  const { active_semester_id, teachers, course_section_teachers } = store;
+  const { active_semester_id, teachers, course_section_teachers, rooms } = store;
   const [assignments, setAssignments] = useState<CTAssignment[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showNonDepartmental, setShowNonDepartmental] = useState(true);
 
   const loadData = useCallback(async () => {
     if (!active_semester_id) return;
@@ -37,6 +40,12 @@ export function CTTeacherViewPage() {
     loadData();
   }, [loadData]);
 
+  /** Everything below — including the download — works off this filtered list. */
+  const visible = useMemo(
+    () => filterCTsByDepartmental(assignments, showNonDepartmental),
+    [assignments, showNonDepartmental],
+  );
+
   const groups = useMemo(() => {
     // course -> teachers assigned to it this semester
     const teacherIdsByCourse = new Map<string, Set<string>>();
@@ -48,7 +57,7 @@ export function CTTeacherViewPage() {
     }
 
     const byTeacher = new Map<string, CTAssignment[]>();
-    for (const a of assignments) {
+    for (const a of visible) {
       for (const tid of teacherIdsByCourse.get(a.course_id) ?? []) {
         if (!byTeacher.has(tid)) byTeacher.set(tid, []);
         byTeacher.get(tid)!.push(a);
@@ -67,7 +76,7 @@ export function CTTeacherViewPage() {
         .slice()
         .sort((a, b) => (a.date > b.date ? 1 : a.date < b.date ? -1 : a.ct_number - b.ct_number)),
     }));
-  }, [assignments, teachers, course_section_teachers, active_semester_id]);
+  }, [visible, teachers, course_section_teachers, active_semester_id]);
 
   if (loading && assignments.length === 0) {
     return (
@@ -91,18 +100,21 @@ export function CTTeacherViewPage() {
               <Users className="h-5 w-5" /> Teacher View
             </h3>
             <p className="mt-1 text-sm text-muted-foreground">
-              {groups.length} teacher(s) across {assignments.length} class tests
+              {groups.length} teacher(s) across {visible.length} class tests
             </p>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={assignments.length === 0}
-            onClick={() => exportTeacherWiseCTPdf(store, assignments)}
-            className="font-bold"
-          >
-            <Download className="mr-1.5 h-3.5 w-3.5" /> Teacher-wise PDF
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <NonDepartmentalToggle checked={showNonDepartmental} onChange={setShowNonDepartmental} />
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={visible.length === 0}
+              onClick={() => exportTeacherWiseCTPdf(store, visible)}
+              className="font-bold"
+            >
+              <Download className="mr-1.5 h-3.5 w-3.5" /> Teacher-wise Schedule
+            </Button>
+          </div>
         </div>
 
         {groups.length === 0 ? (
@@ -159,7 +171,7 @@ export function CTTeacherViewPage() {
                           <span className="font-mono font-black">{a.course?.code}</span>
                           <span className="text-muted-foreground"> — {a.course?.name}</span>
                         </TableCell>
-                        <TableCell className="font-mono text-sm font-bold">{a.room?.name}</TableCell>
+                        <TableCell className="font-mono text-sm font-bold">{ctRoomNames(a, rooms)}</TableCell>
                         <TableCell className="text-sm font-black text-primary">CT {a.ct_number}</TableCell>
                       </TableRow>
                     ))}

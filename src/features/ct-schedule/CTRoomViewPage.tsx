@@ -12,6 +12,8 @@ import { toast } from "sonner";
 import { exportRoomWiseCTPdf } from "@/lib/ct-export";
 import { roomDeptShort, sortHomeDeptFirst } from "@/lib/room-dept";
 import { HOME_DEPT_SHORT_NAME } from "@/lib/constants";
+import { filterCTsByDepartmental } from "@/lib/ct-schedule-utils";
+import { NonDepartmentalToggle } from "@/components/NonDepartmentalToggle";
 
 /** CT schedule grouped by room. Home-department (CSE) rooms are listed first,
  *  then every other department grouped alphabetically. */
@@ -20,6 +22,7 @@ export function CTRoomViewPage() {
   const { active_semester_id, rooms, departments } = store;
   const [assignments, setAssignments] = useState<CTAssignment[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showNonDepartmental, setShowNonDepartmental] = useState(true);
 
   const loadData = useCallback(async () => {
     if (!active_semester_id) return;
@@ -37,11 +40,21 @@ export function CTRoomViewPage() {
     loadData();
   }, [loadData]);
 
+  /** Everything below — including the download — works off this filtered list. */
+  const visible = useMemo(
+    () => filterCTsByDepartmental(assignments, showNonDepartmental),
+    [assignments, showNonDepartmental],
+  );
+
   const groups = useMemo(() => {
+    // A sitting occupies its level-term's whole room mapping, so it appears under
+    // each of those rooms.
     const byRoom = new Map<string, CTAssignment[]>();
-    for (const a of assignments) {
-      if (!byRoom.has(a.room_id)) byRoom.set(a.room_id, []);
-      byRoom.get(a.room_id)!.push(a);
+    for (const a of visible) {
+      for (const roomId of a.room_ids ?? []) {
+        if (!byRoom.has(roomId)) byRoom.set(roomId, []);
+        byRoom.get(roomId)!.push(a);
+      }
     }
 
     const used = rooms.filter((r) => byRoom.has(r.id));
@@ -53,7 +66,7 @@ export function CTRoomViewPage() {
         .slice()
         .sort((a, b) => (a.date > b.date ? 1 : a.date < b.date ? -1 : a.ct_number - b.ct_number)),
     }));
-  }, [assignments, rooms, departments]);
+  }, [visible, rooms, departments]);
 
   if (loading && assignments.length === 0) {
     return (
@@ -77,18 +90,21 @@ export function CTRoomViewPage() {
               <DoorOpen className="h-5 w-5" /> Room View
             </h3>
             <p className="mt-1 text-sm text-muted-foreground">
-              {groups.length} room(s) in use across {assignments.length} class tests
+              {groups.length} room(s) in use across {visible.length} class tests
             </p>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={assignments.length === 0}
-            onClick={() => exportRoomWiseCTPdf(store, assignments)}
-            className="font-bold"
-          >
-            <Download className="mr-1.5 h-3.5 w-3.5" /> Room-wise PDF
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <NonDepartmentalToggle checked={showNonDepartmental} onChange={setShowNonDepartmental} />
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={visible.length === 0}
+              onClick={() => exportRoomWiseCTPdf(store, visible)}
+              className="font-bold"
+            >
+              <Download className="mr-1.5 h-3.5 w-3.5" /> Room-wise Schedule
+            </Button>
+          </div>
         </div>
 
         {groups.length === 0 ? (
