@@ -17,7 +17,7 @@ import { CTAssignment, CTWeekConfig } from "@/lib/types";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Download } from "lucide-react";
-import { ctRoomNames, filterCTsByDepartmental } from "@/lib/ct-schedule-utils";
+import { ctRoomNames, filterCTsByDepartmental, compareCoursesByLevelTerm } from "@/lib/ct-schedule-utils";
 import { NonDepartmentalToggle } from "@/components/NonDepartmentalToggle";
 import { exportCourseWiseCTPdf } from "@/lib/ct-export";
 
@@ -164,7 +164,13 @@ export function CourseCTSchedulePage() {
       grouped[courseId].sort((a, b) => a.ct_number - b.ct_number);
     });
 
-    return grouped;
+    // Rebuild in level-term order (then course code) — object key order drives the
+    // card order below, and the raw grouping order is whatever the API returned.
+    return Object.fromEntries(
+      Object.entries(grouped).sort(([, aCTs], [, bCTs]) =>
+        compareCoursesByLevelTerm(aCTs[0]?.course, bCTs[0]?.course),
+      ),
+    ) as Record<string, CTAssignment[]>;
   }, [filteredAssignments]);
 
   const selectedCourseCTs = useMemo(() => {

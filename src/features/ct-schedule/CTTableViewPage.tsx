@@ -10,7 +10,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { format, parseISO } from "date-fns";
-import { Loader2, CalendarIcon, Download, ChevronDown, X } from "lucide-react";
+import { Loader2, CalendarIcon, Download, ChevronDown, X, FileArchive } from "lucide-react";
 import { CTGenerateButton } from "@/components/CTGenerateButton";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
@@ -21,6 +21,7 @@ import {
   exportWeekWiseCTPdf,
   exportTeacherWiseCTPdf,
   exportRoomWiseCTPdf,
+  exportAllCTSchedulesZip,
 } from "@/lib/ct-export";
 import { roomDeptShort } from "@/lib/room-dept";
 import { HOME_DEPT_SHORT_NAME } from "@/lib/constants";
@@ -33,6 +34,7 @@ export function CTTableViewPage() {
   const [assignments, setAssignments] = useState<CTAssignment[]>([]);
   const [loading, setLoading] = useState(false);
   const [editingAssignment, setEditingAssignment] = useState<CTAssignment | null>(null);
+  const [zipping, setZipping] = useState(false);
 
   const [weekConfigs, setWeekConfigs] = useState<CTWeekConfig[]>([]);
 
@@ -303,6 +305,31 @@ export function CTTableViewPage() {
               className="font-bold"
             >
               <Download className="mr-1.5 h-3.5 w-3.5" /> Room-wise Schedule
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={visibleAssignments.length === 0 || zipping}
+              onClick={async () => {
+                setZipping(true);
+                const t = toast.loading("Building all CT schedules...");
+                try {
+                  await exportAllCTSchedulesZip(store, visibleAssignments);
+                  toast.success("All CT schedules downloaded", { id: t });
+                } catch (error) {
+                  toast.error(error instanceof Error ? error.message : "Failed to build zip", { id: t });
+                } finally {
+                  setZipping(false);
+                }
+              }}
+              className="font-bold border-primary/40 text-primary"
+            >
+              {zipping ? (
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <FileArchive className="mr-1.5 h-3.5 w-3.5" />
+              )}
+              All CT Schedule (.zip)
             </Button>
             <CTGenerateButton
               hasSchedule={assignments.length > 0}

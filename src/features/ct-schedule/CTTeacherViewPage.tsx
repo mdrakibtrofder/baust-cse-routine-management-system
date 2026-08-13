@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { exportTeacherWiseCTPdf } from "@/lib/ct-export";
 import { teacherDeptShort, sortHomeDeptFirst } from "@/lib/room-dept";
 import { HOME_DEPT_SHORT_NAME } from "@/lib/constants";
-import { ctRoomNames, filterCTsByDepartmental } from "@/lib/ct-schedule-utils";
+import { ctRoomNames, filterCTsByDepartmental, compareCTsByLevelTerm } from "@/lib/ct-schedule-utils";
 import { NonDepartmentalToggle } from "@/components/NonDepartmentalToggle";
 
 /** CT schedule grouped by teacher, resolved through course_section_teachers for the
@@ -74,7 +74,8 @@ export function CTTeacherViewPage() {
       rows: byTeacher
         .get(teacher.id)!
         .slice()
-        .sort((a, b) => (a.date > b.date ? 1 : a.date < b.date ? -1 : a.ct_number - b.ct_number)),
+        // Level-term order, so a reader scans the schedule cohort by cohort.
+        .sort(compareCTsByLevelTerm),
     }));
   }, [visible, teachers, course_section_teachers, active_semester_id]);
 
@@ -151,6 +152,7 @@ export function CTTeacherViewPage() {
                       <TableHead className="w-[90px] text-xs font-black uppercase tracking-wider text-primary">Week</TableHead>
                       <TableHead className="w-[150px] text-xs font-black uppercase tracking-wider text-primary">Date &amp; Day</TableHead>
                       <TableHead className="text-xs font-black uppercase tracking-wider text-primary">Course</TableHead>
+                      <TableHead className="w-[100px] text-xs font-black uppercase tracking-wider text-primary">Level-Term</TableHead>
                       <TableHead className="w-[110px] text-xs font-black uppercase tracking-wider text-primary">Room</TableHead>
                       <TableHead className="w-[90px] text-xs font-black uppercase tracking-wider text-primary">CT No.</TableHead>
                     </TableRow>
@@ -170,6 +172,9 @@ export function CTTeacherViewPage() {
                         <TableCell className="text-sm">
                           <span className="font-mono font-black">{a.course?.code}</span>
                           <span className="text-muted-foreground"> — {a.course?.name}</span>
+                        </TableCell>
+                        <TableCell className="text-sm font-bold">
+                          {a.course?.level}-{a.course?.term}
                         </TableCell>
                         <TableCell className="font-mono text-sm font-bold">{ctRoomNames(a, rooms)}</TableCell>
                         <TableCell className="text-sm font-black text-primary">CT {a.ct_number}</TableCell>

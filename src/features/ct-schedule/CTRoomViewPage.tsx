@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { exportRoomWiseCTPdf } from "@/lib/ct-export";
 import { roomDeptShort, sortHomeDeptFirst } from "@/lib/room-dept";
 import { HOME_DEPT_SHORT_NAME } from "@/lib/constants";
-import { filterCTsByDepartmental } from "@/lib/ct-schedule-utils";
+import { filterCTsByDepartmental, compareCTsByLevelTerm } from "@/lib/ct-schedule-utils";
 import { NonDepartmentalToggle } from "@/components/NonDepartmentalToggle";
 
 /** CT schedule grouped by room. Home-department (CSE) rooms are listed first,
@@ -64,7 +64,8 @@ export function CTRoomViewPage() {
       rows: byRoom
         .get(room.id)!
         .slice()
-        .sort((a, b) => (a.date > b.date ? 1 : a.date < b.date ? -1 : a.ct_number - b.ct_number)),
+        // Level-term order, so a reader scans the schedule cohort by cohort.
+        .sort(compareCTsByLevelTerm),
     }));
   }, [visible, rooms, departments]);
 

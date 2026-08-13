@@ -1,4 +1,21 @@
-import type { CTAssignment, Room } from "./types";
+import type { CTAssignment, Course, Room } from "./types";
+
+/** Orders courses by academic progression: level, then term (I before II), then
+ *  course code. Used everywhere class tests are listed so a reader can scan the
+ *  schedule cohort by cohort instead of hunting for a batch across the page. */
+export function compareCoursesByLevelTerm(a?: Course, b?: Course): number {
+  return (
+    (a?.level ?? 0) - (b?.level ?? 0) ||
+    (a?.term ?? "").localeCompare(b?.term ?? "") ||
+    (a?.code ?? "").localeCompare(b?.code ?? "")
+  );
+}
+
+/** Level-term ordering for individual sittings; CT number breaks ties within a
+ *  course so CT1 always precedes CT2. */
+export function compareCTsByLevelTerm(a: CTAssignment, b: CTAssignment): number {
+  return compareCoursesByLevelTerm(a.course, b.course) || a.ct_number - b.ct_number;
+}
 
 /** Rooms a sitting occupies, resolved against the room list and kept in the app's
  *  room order so every view and export lists them consistently. */
