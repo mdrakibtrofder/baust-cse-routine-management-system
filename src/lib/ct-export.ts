@@ -5,7 +5,7 @@ import type { AppData, CTAssignment } from "@/lib/types";
 import { slugify } from "@/lib/routine-export";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
-import { courseCodeDeptShort, roomDeptShort, teacherDeptShort, sortHomeDeptFirst } from "@/lib/room-dept";
+import { roomDeptShort, teacherDeptShort, sortHomeDeptFirst } from "@/lib/room-dept";
 import { ctRoomNames, compareCoursesByLevelTerm, compareCTsByLevelTerm } from "@/lib/ct-schedule-utils";
 
 const MARGIN = 36;
@@ -66,13 +66,11 @@ function buildCourseWiseCTDoc(data: AppData, assignments: CTAssignment[]): CTDoc
     if (!byCourse.has(a.course_id)) byCourse.set(a.course_id, []);
     byCourse.get(a.course_id)!.push(a);
   }
-  // Home-department (CSE) courses first, then each other department grouped
-  // together; level-term order (then course code) within a department.
-  const courseIds = sortHomeDeptFirst(
-    Array.from(byCourse.keys()).sort((idA, idB) =>
-      compareCoursesByLevelTerm(byCourse.get(idA)![0].course, byCourse.get(idB)![0].course),
-    ),
-    (id) => courseCodeDeptShort(byCourse.get(id)![0].course?.code ?? ""),
+  // Level-term first, so every course a batch sits — CSE-coded or borrowed from
+  // another department — appears as one block: all 1-I, then all 1-II, and so on.
+  // Department only breaks ties inside a level-term (home department first).
+  const courseIds = Array.from(byCourse.keys()).sort((idA, idB) =>
+    compareCoursesByLevelTerm(byCourse.get(idA)![0].course, byCourse.get(idB)![0].course),
   );
 
   const rows = courseIds.map((courseId) => {

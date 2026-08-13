@@ -1,12 +1,21 @@
 import type { CTAssignment, Course, Room } from "./types";
+import { courseCodeDeptShort } from "./room-dept";
+import { HOME_DEPT_SHORT_NAME } from "./constants";
 
 /** Orders courses by academic progression: level, then term (I before II), then
- *  course code. Used everywhere class tests are listed so a reader can scan the
- *  schedule cohort by cohort instead of hunting for a batch across the page. */
+ *  home-department courses ahead of borrowed ones, then course code.
+ *
+ *  Level-term is deliberately the *primary* key, ahead of department. A batch sits
+ *  its class tests as one cohort, so every 1-I course belongs together whether it
+ *  is a CSE course or a maths/EEE course taught to the same students; sorting by
+ *  department first would scatter a batch's tests across the page. */
 export function compareCoursesByLevelTerm(a?: Course, b?: Course): number {
+  const homeRank = (c?: Course) =>
+    courseCodeDeptShort(c?.code ?? "") === HOME_DEPT_SHORT_NAME ? 0 : 1;
   return (
     (a?.level ?? 0) - (b?.level ?? 0) ||
     (a?.term ?? "").localeCompare(b?.term ?? "") ||
+    homeRank(a) - homeRank(b) ||
     (a?.code ?? "").localeCompare(b?.code ?? "")
   );
 }
