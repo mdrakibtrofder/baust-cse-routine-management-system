@@ -64,7 +64,7 @@ export function exportCourseWiseCTPdf(data: AppData, assignments: CTAssignment[]
     const course = cts[0].course;
     return [
       `${course?.code ?? ""}\n${course?.name ?? ""}`,
-      `L${course?.level}-${course?.term}`,
+      `${course?.level}-${course?.term}`,
       ...[1, 2, 3].map((num) => {
         const ct = cts.find((c) => c.ct_number === num);
         return ct ? `${fmtDate(ct.date)}\n${fmtDay(ct.date)}\nWeek ${ct.week_number}\n${ct.room?.name ?? ""}` : "-";
@@ -78,6 +78,7 @@ export function exportCourseWiseCTPdf(data: AppData, assignments: CTAssignment[]
     head: [["Course", "Level-Term", "CT 1", "CT 2", "CT 3"]],
     body: rows,
     styles: { font: "times", fontSize: 9, cellPadding: 6, valign: "middle" },
+    columnStyles: { 1: { cellWidth: 62, halign: "center" } },
     headStyles: { fillColor: [79, 70, 229], textColor: 255, fontStyle: "bold" },
     theme: "grid",
   });
@@ -111,6 +112,7 @@ export function exportWeekWiseCTPdf(data: AppData, assignments: CTAssignment[]) 
     head: [["Week", "Date", "Day", "Course", "CT No.", "Room"]],
     body: rows,
     styles: { font: "times", fontSize: 9, cellPadding: 5 },
+    columnStyles: { 0: { cellWidth: 52, halign: "center" } },
     headStyles: { fillColor: [79, 70, 229], textColor: 255, fontStyle: "bold" },
     theme: "grid",
   });
@@ -176,6 +178,7 @@ export function exportTeacherWiseCTPdf(data: AppData, assignments: CTAssignment[
       head: [["Course", "Day", "Date", "Week", "CT No."]],
       body: rows.map((r) => [`${r.code} — ${r.name}`, r.day, r.date, `Week ${r.week}`, `CT ${r.ct}`]),
       styles: { font: "times", fontSize: 9, cellPadding: 5 },
+      columnStyles: { 3: { cellWidth: 52, halign: "center" } },
       headStyles: { fillColor: [79, 70, 229], textColor: 255, fontStyle: "bold" },
       theme: "grid",
     });

@@ -8,17 +8,20 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format, parseISO, isValid } from "date-fns";
-import { Loader2, CalendarIcon, Wand2, Download } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { format, parseISO } from "date-fns";
+import { Loader2, CalendarIcon, Wand2, Download, ChevronDown, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
-import { CTAssignment } from "@/lib/types";
+import { CTAssignment, Room } from "@/lib/types";
 import { toast } from "sonner";
 import { exportCourseWiseCTPdf, exportWeekWiseCTPdf, exportTeacherWiseCTPdf } from "@/lib/ct-export";
+import { roomDeptShort } from "@/lib/room-dept";
+import { HOME_DEPT_SHORT_NAME } from "@/lib/constants";
 
 export function CTTableViewPage() {
   const store = useStore();
-  const { active_semester_id, rooms } = store;
+  const { active_semester_id, rooms, departments } = store;
   const [assignments, setAssignments] = useState<CTAssignment[]>([]);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -101,12 +104,74 @@ export function CTTableViewPage() {
     }
   };
 
+  // ---- Filters -------------------------------------------------------------
+  // Default view: home-department (CSE) rooms only — Theory, Sessional and Both.
+  const [showOtherDeptRooms, setShowOtherDeptRooms] = useState(false);
+  const [selectedRoomIds, setSelectedRoomIds] = useState<string[]>([]);
+  const [selectedLevelTerms, setSelectedLevelTerms] = useState<string[]>([]);
+
+  const isHomeRoom = useCallback(
+    (r: Room) => roomDeptShort(r, departments) === HOME_DEPT_SHORT_NAME,
+    [departments],
+  );
+
+  /** Rooms grouped for the room picker: home department first, then other departments. */
+  const roomGroups = useMemo(() => {
+    const home: Room[] = [];
+    const other: Room[] = [];
+    for (const r of rooms) (isHomeRoom(r) ? home : other).push(r);
+    return { home, other };
+  }, [rooms, isHomeRoom]);
+
+  /** Level-Term buckets present in the schedule, split departmental / non-departmental. */
+  const levelTermOptions = useMemo(() => {
+    const map = new Map<string, { key: string; label: string; deptLabel: string; nonDept: boolean }>();
+    for (const a of assignments) {
+      const c = a.course;
+      if (!c) continue;
+      const nonDept = c.departmental_type === "Non-Departmental";
+      const deptLabel = nonDept
+        ? "Non-Departmental"
+        : departments.find((d) => d.id === c.department_id)?.short_name ?? HOME_DEPT_SHORT_NAME;
+      const key = `${c.level}-${c.term}|${deptLabel}`;
+      if (!map.has(key)) map.set(key, { key, label: `${c.level}-${c.term}`, deptLabel, nonDept });
+    }
+    return Array.from(map.values()).sort(
+      (a, b) => Number(a.nonDept) - Number(b.nonDept) || a.label.localeCompare(b.label),
+    );
+  }, [assignments, departments]);
+
+  const levelTermKeyOf = useCallback(
+    (a: CTAssignment) => {
+      const c = a.course;
+      if (!c) return "";
+      const deptLabel =
+        c.departmental_type === "Non-Departmental"
+          ? "Non-Departmental"
+          : departments.find((d) => d.id === c.department_id)?.short_name ?? HOME_DEPT_SHORT_NAME;
+      return `${c.level}-${c.term}|${deptLabel}`;
+    },
+    [departments],
+  );
+
   const scheduleTable = useMemo(() => {
+    const ltFilter = new Set(selectedLevelTerms);
+    const roomFilter = new Set(selectedRoomIds);
+
+    const visible = assignments.filter((a) => {
+      if (ltFilter.size > 0 && !ltFilter.has(levelTermKeyOf(a))) return false;
+      const room = rooms.find((r) => r.id === a.room_id);
+      if (!room) return false;
+      // An explicitly picked room always shows, even if it belongs to another department.
+      if (roomFilter.size > 0) return roomFilter.has(room.id);
+      return showOtherDeptRooms || isHomeRoom(room);
+    });
+
     const grouped: Record<string, Record<string, CTAssignment>> = {};
     const uniqueDates: string[] = [];
     const roomsInUseSet = new Set<string>();
 
-    assignments.forEach((a) => {
+    visible.forEach((a) => {
       const dateStr = typeof a.date === 'string' ? a.date.split('T')[0] : format(new Date(a.date), "yyyy-MM-dd");
       if (!grouped[dateStr]) {
         grouped[dateStr] = {};
@@ -119,8 +184,14 @@ export function CTTableViewPage() {
     uniqueDates.sort();
     const roomsInUse = rooms.filter(r => roomsInUseSet.has(r.id));
 
-    return { uniqueDates, roomsInUse, grouped };
-  }, [assignments, rooms]);
+    return { uniqueDates, roomsInUse, grouped, visibleCount: visible.length };
+  }, [assignments, rooms, selectedRoomIds, selectedLevelTerms, showOtherDeptRooms, isHomeRoom, levelTermKeyOf]);
+
+  const toggleIn = (list: string[], id: string) =>
+    list.includes(id) ? list.filter((x) => x !== id) : [...list, id];
+
+  const filtersActive =
+    showOtherDeptRooms || selectedRoomIds.length > 0 || selectedLevelTerms.length > 0;
 
   if (loading && assignments.length === 0) {
     return (
@@ -184,17 +255,170 @@ export function CTTableViewPage() {
           </div>
         </div>
 
+        {assignments.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-card p-3">
+            <span className="text-xs font-black uppercase tracking-wider text-muted-foreground mr-1">Filters</span>
+
+            <label className="flex items-center gap-2 text-xs font-bold cursor-pointer rounded-lg border px-3 py-2 hover:bg-muted/50">
+              <Checkbox
+                checked={showOtherDeptRooms}
+                onCheckedChange={(v) => setShowOtherDeptRooms(!!v)}
+              />
+              Show other departments&apos; rooms
+              <span className="text-[10px] font-semibold text-muted-foreground">
+                (default: {HOME_DEPT_SHORT_NAME} only)
+              </span>
+            </label>
+
+            {/* Rooms multi-select */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="font-bold">
+                  Rooms
+                  {selectedRoomIds.length > 0 && (
+                    <span className="ml-1.5 rounded-full bg-primary/15 px-1.5 text-[10px] font-black text-primary">
+                      {selectedRoomIds.length}
+                    </span>
+                  )}
+                  <ChevronDown className="ml-1.5 h-3.5 w-3.5" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-64 p-3">
+                <div className="flex items-center justify-between pb-2">
+                  <span className="text-xs font-black uppercase text-muted-foreground">Rooms</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2 text-[11px] font-bold"
+                    disabled={selectedRoomIds.length === 0}
+                    onClick={() => setSelectedRoomIds([])}
+                  >
+                    <X className="mr-1 h-3 w-3" /> Clear
+                  </Button>
+                </div>
+                <div className="max-h-64 space-y-1 overflow-y-auto pr-1">
+                  {([
+                    [`${HOME_DEPT_SHORT_NAME} rooms`, roomGroups.home],
+                    ["Other department rooms", roomGroups.other],
+                  ] as const).map(([groupLabel, list]) =>
+                    list.length === 0 ? null : (
+                      <div key={groupLabel}>
+                        <div className="px-1 pt-1.5 pb-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                          {groupLabel}
+                        </div>
+                        {list.map((r) => (
+                          <label
+                            key={r.id}
+                            className="flex items-center gap-2 rounded px-1.5 py-1 text-xs font-semibold cursor-pointer hover:bg-muted"
+                          >
+                            <Checkbox
+                              checked={selectedRoomIds.includes(r.id)}
+                              onCheckedChange={() => setSelectedRoomIds((p) => toggleIn(p, r.id))}
+                            />
+                            {r.name}
+                            <span className="ml-auto text-[10px] font-normal text-muted-foreground">
+                              {r.room_type} · {r.capacity}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    ),
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            {/* Level-Term multi-select */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="font-bold">
+                  Level-Term
+                  {selectedLevelTerms.length > 0 && (
+                    <span className="ml-1.5 rounded-full bg-primary/15 px-1.5 text-[10px] font-black text-primary">
+                      {selectedLevelTerms.length}
+                    </span>
+                  )}
+                  <ChevronDown className="ml-1.5 h-3.5 w-3.5" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-60 p-3">
+                <div className="flex items-center justify-between pb-2">
+                  <span className="text-xs font-black uppercase text-muted-foreground">Level-Term</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2 text-[11px] font-bold"
+                    disabled={selectedLevelTerms.length === 0}
+                    onClick={() => setSelectedLevelTerms([])}
+                  >
+                    <X className="mr-1 h-3 w-3" /> Clear
+                  </Button>
+                </div>
+                <div className="max-h-64 space-y-1 overflow-y-auto pr-1">
+                  {([
+                    ["Departmental", levelTermOptions.filter((o) => !o.nonDept)],
+                    ["Non-Departmental", levelTermOptions.filter((o) => o.nonDept)],
+                  ] as const).map(([groupLabel, list]) =>
+                    list.length === 0 ? null : (
+                      <div key={groupLabel}>
+                        <div className="px-1 pt-1.5 pb-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                          {groupLabel}
+                        </div>
+                        {list.map((o) => (
+                          <label
+                            key={o.key}
+                            className="flex items-center gap-2 rounded px-1.5 py-1 text-xs font-semibold cursor-pointer hover:bg-muted"
+                          >
+                            <Checkbox
+                              checked={selectedLevelTerms.includes(o.key)}
+                              onCheckedChange={() => setSelectedLevelTerms((p) => toggleIn(p, o.key))}
+                            />
+                            {o.label}
+                            <span className="ml-auto text-[10px] font-normal text-muted-foreground">
+                              {o.deptLabel}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    ),
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            {filtersActive && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="font-bold text-muted-foreground"
+                onClick={() => {
+                  setShowOtherDeptRooms(false);
+                  setSelectedRoomIds([]);
+                  setSelectedLevelTerms([]);
+                }}
+              >
+                <X className="mr-1 h-3.5 w-3.5" /> Clear all filters
+              </Button>
+            )}
+          </div>
+        )}
+
         {assignments.length > 0 ? (
           <div className="rounded-2xl border-2 bg-card overflow-hidden shadow-lg hover:shadow-xl transition-all">
             <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-4 border-b border-primary/10">
               <div className="flex items-center justify-between">
                 <h4 className="font-bold text-sm text-primary">CT Schedule Grid</h4>
                 <span className="text-xs font-bold text-muted-foreground bg-muted px-3 py-1 rounded-full">
-                  {assignments.length} CTs across {scheduleTable.uniqueDates.length} dates
+                  {scheduleTable.visibleCount} of {assignments.length} CTs across {scheduleTable.uniqueDates.length} dates
                 </span>
               </div>
             </div>
-            <div className="overflow-x-auto">
+            {scheduleTable.visibleCount === 0 && (
+              <div className="py-16 text-center text-sm font-semibold text-muted-foreground">
+                No CTs match the current filters.
+              </div>
+            )}
+            <div className={cn("overflow-x-auto", scheduleTable.visibleCount === 0 && "hidden")}>
               <Table>
                 <TableHeader>
                   <TableRow className="bg-gradient-to-r from-primary/5 to-primary/10 border-b-2 border-primary/20 hover:bg-gradient-to-r hover:from-primary/10 hover:to-primary/15">
