@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Loader2, BookOpen, RefreshCw, CalendarIcon, MapPin, CalendarDays, Edit3 } from "lucide-react";
+import { Loader2, BookOpen, RefreshCw, CalendarIcon, MapPin, CalendarDays, Edit3, Repeat2, ArrowLeftRight } from "lucide-react";
 import { format, parseISO, isValid } from "date-fns";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
@@ -20,6 +20,7 @@ import { Download } from "lucide-react";
 import { ctRoomNames, filterCTsByDepartmental, compareCoursesByLevelTerm } from "@/lib/ct-schedule-utils";
 import { NonDepartmentalToggle } from "@/components/NonDepartmentalToggle";
 import { exportCourseWiseCTPdf } from "@/lib/ct-export";
+import { SwapCTModal, type SwapCTSource } from "@/components/SwapCTModal";
 
 export function CourseCTSchedulePage() {
   const store = useStore();
@@ -30,6 +31,9 @@ export function CourseCTSchedulePage() {
   const [selectedLevelTerm, setSelectedLevelTerm] = useState<string>("all");
   const [viewingCourseKey, setViewingCourseKey] = useState<string | null>(null);
   const [editingAssignment, setEditingAssignment] = useState<CTAssignment | null>(null);
+  /** Open swap dialog: either a whole course's CT series or one single sitting.
+   *  Null while no swap is in progress. */
+  const [swapSource, setSwapSource] = useState<SwapCTSource | null>(null);
 
   const [weekConfigs, setWeekConfigs] = useState<CTWeekConfig[]>([]);
 
@@ -283,8 +287,28 @@ export function CourseCTSchedulePage() {
                               return dept?.short_name || 'CSE';
                             })()}
                           </Badge>
+                          <Badge variant="outline" className="text-[9px] py-1 bg-background shadow-sm font-bold">
+                            {course?.credit} cr
+                          </Badge>
                         </div>
                       </div>
+
+                      {/* Swap the course's *whole* CT series with another course of the
+                          same level-term and credit. Sits on the card header because it
+                          acts on every CT below it at once. */}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="shrink-0 font-bold text-[10px] h-8 border-2 hover:border-primary hover:text-primary"
+                        title={`Swap all CTs of ${course?.code} with another course`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (course) setSwapSource({ mode: "all", courseId: course.id, cts: allCTs });
+                        }}
+                      >
+                        <Repeat2 className="mr-1 h-3.5 w-3.5" />
+                        Swap All CTs
+                      </Button>
                     </div>
                   </div>
 
@@ -304,6 +328,19 @@ export function CourseCTSchedulePage() {
                             <span className="ml-auto shrink-0 rounded-full bg-primary/15 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-primary">
                               Week {ct.week_number}
                             </span>
+                            {/* Swaps this one sitting with the same CT number of another
+                                course — CT1 with CT1, CT2 with CT2. */}
+                            <button
+                              type="button"
+                              title={`Swap CT ${ct.ct_number} with another course's CT ${ct.ct_number}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSwapSource({ mode: "single", assignment: ct });
+                              }}
+                              className="shrink-0 rounded-full p-1 text-muted-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
+                            >
+                              <ArrowLeftRight className="h-3 w-3" />
+                            </button>
                           </div>
                           <div className="space-y-1.5">
                             <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-bold">
@@ -424,19 +461,34 @@ export function CourseCTSchedulePage() {
                               Week {ct.week_number}
                             </div>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 rounded-full hover:bg-primary hover:text-primary-foreground shrink-0"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setEditingAssignment(ct);
-                              setViewingCourseKey(null);
-                            }}
-                            title="Edit CT"
-                          >
-                            <Edit3 className="h-3.5 w-3.5" />
-                          </Button>
+                          <div className="flex shrink-0 items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 rounded-full hover:bg-primary hover:text-primary-foreground shrink-0"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setViewingCourseKey(null);
+                                setSwapSource({ mode: "single", assignment: ct });
+                              }}
+                              title={`Swap CT ${ct.ct_number}`}
+                            >
+                              <ArrowLeftRight className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 rounded-full hover:bg-primary hover:text-primary-foreground shrink-0"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingAssignment(ct);
+                                setViewingCourseKey(null);
+                              }}
+                              title="Edit CT"
+                            >
+                              <Edit3 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -446,13 +498,40 @@ export function CourseCTSchedulePage() {
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              className="font-bold"
+              disabled={selectedCourseCTs.length === 0}
+              onClick={() => {
+                const courseId = selectedCourseCTs[0]?.course_id;
+                if (!courseId) return;
+                setViewingCourseKey(null);
+                setSwapSource({ mode: "all", courseId, cts: selectedCourseCTs });
+              }}
+            >
+              <Repeat2 className="mr-1.5 h-3.5 w-3.5" /> Swap All CTs
+            </Button>
             <Button variant="outline" onClick={() => setViewingCourseKey(null)} className="font-bold">
               Close
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Swap CTs — whole series or one sitting, depending on which button opened it.
+          The candidate pool is every assignment loaded for the semester (not the
+          level-term-filtered view), so a filter left on cannot silently hide a
+          legitimate swap partner; the modal restricts to the same level-term
+          itself. */}
+      {swapSource && (
+        <SwapCTModal
+          source={swapSource}
+          assignments={assignments}
+          onClose={() => setSwapSource(null)}
+          onSwapped={loadAssignments}
+        />
+      )}
 
       {/* Edit Assignment Dialog */}
       <Dialog open={!!editingAssignment} onOpenChange={(open) => !open && setEditingAssignment(null)}>
