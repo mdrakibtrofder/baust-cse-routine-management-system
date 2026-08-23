@@ -113,7 +113,6 @@ export interface CourseSectionTeacher {
   slot_teacher_ids?: string[][] | null;
   /** Other section IDs taught combined in the same class. Only set on the "primary" section's assignment. */
   combined_section_ids?: string[] | null;
-  primary_room_id?: string | null;
 }
 
 /** A virtual sub-section of a sessional course for lab scheduling.
@@ -128,7 +127,6 @@ export interface CourseLabSection {
   /** The actual section(s) this lab section's classes count toward */
   section_ids: string[];
   teacher_ids: string[];
-  primary_room_id: string | null;
 }
 
 export interface Year {

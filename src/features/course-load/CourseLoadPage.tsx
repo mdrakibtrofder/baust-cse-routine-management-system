@@ -3,12 +3,11 @@ import { useStore } from "@/lib/store";
 import { PageHeader } from "@/components/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, AlertCircle, Check, Users, FlaskConical, GitMerge, MapPin, Lock, Unlock } from "lucide-react";
+import { Calendar, AlertCircle, Check, Users, FlaskConical, GitMerge, Lock, Unlock } from "lucide-react";
 import { cn, compareDayAndTime, fmtRange12, tagColorClasses } from "@/lib/utils";
 import type { Course, Section, Department } from "@/lib/types";
 import { COURSE_TYPE_INFO } from "@/lib/types";
 import { TeacherPicker } from "./TeacherPicker";
-import { RoomPicker } from "./RoomPicker";
 import { ClassScheduleModal } from "./ClassScheduleModal";
 import { checkConflicts } from "@/lib/conflicts";
 import { RoutineDialog } from "@/components/RoutineDialog";
@@ -364,7 +363,6 @@ function SectionCell({ course, section, sections, onAssign, onManageLabSections,
               .filter((s) => s.lab_section_id === g.id)
               .sort(compareDayAndTime);
             const lockedCount = gSlots.filter(s => s.locked).length;
-            const primaryRoom = data.rooms.find((r) => r.id === g.primary_room_id);
             const complete = gSlots.length >= maxSlotsPerLab && gSlots.every((s) => s.room_id);
             const allLocked = gSlots.length > 0 && lockedCount === gSlots.length;
             const someLocked = lockedCount > 0 && !allLocked;
@@ -440,11 +438,6 @@ function SectionCell({ course, section, sections, onAssign, onManageLabSections,
                     <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
                       <Calendar className="h-3 w-3" />
                       <span>No schedule yet</span>
-                      {primaryRoom && (
-                        <Badge variant="outline" className="text-[9px] px-1 py-0 h-3.5 gap-0.5">
-                          <MapPin className="h-2.5 w-2.5 text-orange-500" /> {primaryRoom.name}
-                        </Badge>
-                      )}
                     </div>
                   </button>
                 ) : (
@@ -525,7 +518,6 @@ function SectionCell({ course, section, sections, onAssign, onManageLabSections,
         course.id,
         section.id,
         cst?.teacher_ids ?? [],
-        cst?.primary_room_id ?? null,
         cst?.slot_teacher_ids ?? null,
         null,
       );
@@ -561,7 +553,6 @@ function SectionCell({ course, section, sections, onAssign, onManageLabSections,
           {Array.from({ length: info.teachersRequired }).map((_, i) => (
             <TeacherPicker key={i} course={course} section={section} slotIndex={i} />
           ))}
-          <RoomPicker course={course} section={section} />
         </div>
         {slots.length > 0 && (
           <div className="flex items-center gap-1.5">

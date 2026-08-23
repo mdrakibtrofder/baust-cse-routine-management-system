@@ -93,13 +93,13 @@ interface StoreState extends AppData {
   updateAppSettings: (patch: Partial<Omit<AppSettings, "id">>) => Promise<void>;
 
   // assignments
-  setCourseSectionTeachers: (course_id: string, section_id: string, teacher_ids: string[], primary_room_id?: string | null, slot_teacher_ids?: string[][] | null, combined_section_ids?: string[] | null) => Promise<void>;
+  setCourseSectionTeachers: (course_id: string, section_id: string, teacher_ids: string[], slot_teacher_ids?: string[][] | null, combined_section_ids?: string[] | null) => Promise<void>;
 
   // lab sections
-  saveLabSections: (course_id: string, sections: Array<{ label: string; section_ids: string[]; teacher_ids: string[]; primary_room_id?: string | null }>) => Promise<CourseLabSection[]>;
+  saveLabSections: (course_id: string, sections: Array<{ label: string; section_ids: string[]; teacher_ids: string[] }>) => Promise<CourseLabSection[]>;
   deleteLabSection: (id: string) => Promise<void>;
   batchReplaceLabSectionSlots: (lab_section_id: string, slots: Array<{ day: string; start: string; end: string; room_id: string; week?: string; locked?: boolean }>) => Promise<void>;
-  updateLabSection: (id: string, patch: { primary_room_id?: string | null; teacher_ids?: string[] }) => Promise<void>;
+  updateLabSection: (id: string, patch: { teacher_ids?: string[] }) => Promise<void>;
   
   // class slots
   upsertClassSlot: (slot: Partial<ClassSlot> & { id?: string; semester_id?: string }) => Promise<string>;
@@ -672,14 +672,13 @@ export const useStore = create<StoreState>((set, get) => ({
     }
   },
 
-  setCourseSectionTeachers: async (course_id, section_id, teacher_ids, primary_room_id, slot_teacher_ids, combined_section_ids) => {
+  setCourseSectionTeachers: async (course_id, section_id, teacher_ids, slot_teacher_ids, combined_section_ids) => {
     try {
       const res = await api.post<CourseSectionTeacher>('/assignments', {
         semester_id: get().active_semester_id,
         course_id,
         section_id,
         teacher_ids,
-        primary_room_id,
         slot_teacher_ids: slot_teacher_ids ?? null,
         combined_section_ids: combined_section_ids ?? null,
       });

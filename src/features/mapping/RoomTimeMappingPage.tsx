@@ -2,35 +2,26 @@ import { useMemo, useState } from "react";
 import { useStore } from "@/lib/store";
 import { PageHeader } from "@/components/PageHeader";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { cn, compareTimeValues, fmtRange12, fmtTime12, sortDays, tagColorClasses } from "@/lib/utils";
+import { cn, compareTimeValues, fmtTime12, sortDays } from "@/lib/utils";
 import { timesOverlap, teacherUnavailableAt, roomUnavailableAt } from "@/lib/conflicts";
 import {
-  Users, MapPin, Clock, BookOpen, UserX, DoorClosed, Check, Search, CalendarDays, Boxes, DoorOpen, Eye, EyeOff
+  Users, MapPin, Clock, BookOpen, UserX, DoorClosed, Check, Search, CalendarDays, DoorOpen, Eye, EyeOff
 } from "lucide-react";
 import { roomDeptShort } from "@/lib/room-dept";
-import type { Course, Section, Teacher, Room, Period, ClassSlot, Department } from "@/lib/types";
-import { RoomPicker } from "@/features/course-load/RoomPicker";
-import { LabSectionRoomPicker } from "@/features/course-load/LabSectionRoomPicker";
+import type { Teacher, Room, ClassSlot } from "@/lib/types";
 import { Input } from "@/components/ui/input";
 import { HOME_DEPT_SHORT_NAME } from "@/lib/constants";
-
-const TERM_ORDER = ["I", "II"];
 
 export function RoomTimeMappingPage() {
   return (
     <div className="flex flex-col h-full">
       <PageHeader
         title="Room & Time Mapping"
-        subtitle="Manage primary rooms for sections and track teacher/room availability across time slots"
+        subtitle="Track teacher and room availability across time slots"
       />
       <div className="p-4 sm:p-6 space-y-6">
-        <Tabs defaultValue="section-room" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 max-w-2xl">
-            <TabsTrigger value="section-room" className="gap-2">
-              <Boxes className="h-4 w-4" /> Course vs Room
-            </TabsTrigger>
+        <Tabs defaultValue="teacher-time" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 max-w-xl">
             <TabsTrigger value="teacher-time" className="gap-2">
               <Users className="h-4 w-4" /> Teacher vs Time
             </TabsTrigger>
@@ -38,10 +29,6 @@ export function RoomTimeMappingPage() {
               <DoorOpen className="h-4 w-4" /> Room vs Time
             </TabsTrigger>
           </TabsList>
-
-          <TabsContent value="section-room" className="mt-6">
-            <SectionRoomMapping />
-          </TabsContent>
 
           <TabsContent value="teacher-time" className="mt-6">
             <TeacherTimeMapping />
@@ -55,239 +42,6 @@ export function RoomTimeMappingPage() {
     </div>
   );
 }
-
-function SectionRoomMapping() {
-  const data = useStore();
-  const [q, setQ] = useState("");
-
-  const homeDept = useMemo(
-    () => data.departments.find((d) => d.short_name.trim().toUpperCase() === HOME_DEPT_SHORT_NAME),
-    [data.departments],
-  );
-
-  /** Every course's sections are scoped to its own department — Departmental and
-   *  Non-Departmental alike — mirroring Course Load exactly. A course owned by e.g. CE,
-   *  EEE, or DBA uses that department's own sections (configured on the Sections page),
-   *  not CSE's. Blocks are still labeled/grouped per department, sorted after every
-   *  CSE-departmental block. */
-  const grouped = useMemo(() => {
-    const deptKey = (id: string | null | undefined) => id || homeDept?.id || "__none__";
-
-    const blockMap = new Map<string, {
-      level: number; term: string; departmental_type: string; department: Department | null;
-      courses: Course[]; sections: Section[];
-    }>();
-
-    for (const c of data.courses) {
-      const dk = deptKey(c.department_id);
-      const k = `${c.level}|${c.term}|${c.departmental_type}|${dk}`;
-      if (!blockMap.has(k)) {
-        const department = c.department_id
-          ? data.departments.find((d) => d.id === c.department_id) ?? null
-          : homeDept ?? null;
-        blockMap.set(k, {
-          level: c.level, term: c.term, departmental_type: c.departmental_type, department,
-          courses: [],
-          sections: data.sections
-            .filter((s) => s.level === c.level && s.term === c.term && deptKey(s.department_id) === dk)
-            .sort((a, b) => a.name.localeCompare(b.name)),
-        });
-      }
-      blockMap.get(k)!.courses.push(c);
-    }
-
-    const filterByQ = (text: string) => text.toLowerCase().includes(q.toLowerCase());
-
-    const result = Array.from(blockMap.values())
-      .filter((g) => {
-        if (!q) return true;
-        if (filterByQ(`Level ${g.level} Term ${g.term}`) || filterByQ(g.department?.short_name ?? "")) return true;
-        return g.sections.some((s) => filterByQ(s.name));
-      })
-      .filter((g) => g.sections.length > 0)
-      .filter((g) =>
-        g.sections.some((s) =>
-          g.courses.some((c) =>
-            data.course_section_teachers.some(
-              (x) => x.semester_id === data.active_semester_id && x.course_id === c.id && x.section_id === s.id,
-            ),
-          ),
-        ),
-      )
-      .sort((a, b) => {
-        const aCseDept = a.departmental_type === "Departmental" && (!homeDept || a.department?.id === homeDept.id);
-        const bCseDept = b.departmental_type === "Departmental" && (!homeDept || b.department?.id === homeDept.id);
-        return (
-          (aCseDept === bCseDept ? 0 : aCseDept ? -1 : 1) ||
-          a.level - b.level ||
-          TERM_ORDER.indexOf(a.term) - TERM_ORDER.indexOf(b.term) ||
-          (a.department?.short_name ?? "").localeCompare(b.department?.short_name ?? "") ||
-          (a.departmental_type === b.departmental_type ? 0 : a.departmental_type === "Departmental" ? -1 : 1)
-        );
-      });
-
-    for (const g of result) {
-      g.courses.sort((a, b) => a.code.localeCompare(b.code));
-    }
-
-    return result;
-  }, [data.courses, data.sections, data.departments, data.course_section_teachers, data.active_semester_id, homeDept, q]);
-
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-2 max-w-sm">
-        <Search className="h-4 w-4 text-muted-foreground" />
-        <Input 
-          placeholder="Search level, term or section..." 
-          value={q} 
-          onChange={e => setQ(e.target.value)}
-          className="h-9"
-        />
-      </div>
-
-      <div className="space-y-8">
-        {grouped.map((g) => (
-          <SectionRoomBlock
-            key={`${g.level}-${g.term}-${g.department?.id ?? "none"}-${g.departmental_type}`}
-            group={g}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function SectionRoomBlock({ group }: { group: any }) {
-  const data = useStore();
-
-  const getSectionRoomSummary = (sid: string, courses: Course[]) => {
-    const roomCounts: Record<string, number> = {};
-
-    courses.forEach(c => {
-      const labSections = data.course_lab_sections.filter(
-        (g) => g.course_id === c.id && g.semester_id === data.active_semester_id && g.section_ids.includes(sid),
-      );
-      if (labSections.length > 0) {
-        for (const g of labSections) {
-          const room = g.primary_room_id ? data.rooms.find((r) => r.id === g.primary_room_id) : null;
-          const key = room ? room.name : "Unassigned";
-          roomCounts[key] = (roomCounts[key] || 0) + 1;
-        }
-        return;
-      }
-      const cst = data.course_section_teachers.find(
-        x => x.semester_id === data.active_semester_id && x.course_id === c.id && x.section_id === sid
-      );
-      if (cst?.primary_room_id) {
-        const room = data.rooms.find(r => r.id === cst.primary_room_id);
-        if (room) {
-          roomCounts[room.name] = (roomCounts[room.name] || 0) + 1;
-        }
-      } else {
-        roomCounts["Unassigned"] = (roomCounts["Unassigned"] || 0) + 1;
-      }
-    });
-
-    return Object.entries(roomCounts)
-      .map(([room, count]) => `${count} ${count > 1 ? 'courses' : 'course'} in ${room}`)
-      .join(", ");
-  };
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <h3 className="font-bold text-lg text-primary">
-          Level {group.level}, Term {group.term}
-        </h3>
-        {group.department && (
-          <span className={cn(
-            "inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-bold",
-            tagColorClasses(group.department.id, group.department.short_name),
-          )}>
-            {group.department.short_name}
-          </span>
-        )}
-        {group.departmental_type === "Non-Departmental" && (
-          <Badge variant="secondary" className="text-[10px] uppercase tracking-wider">
-            Non-Departmental
-          </Badge>
-        )}
-        <div className="h-px flex-1 bg-border" />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {group.sections.map((s: Section) => {
-          // Show every course in this block for every section — including ones with no
-          // room/teacher assigned yet — so a section isn't hidden just for lacking data.
-          const courses = group.courses;
-          const summary = getSectionRoomSummary(s.id, courses);
-
-          return (
-            <Card key={s.id} className="overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-              <CardHeader className="bg-muted/30 py-3 px-4 border-b">
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm font-bold">
-                      Level {s.level}, Term {s.term} · Section {s.name}
-                    </CardTitle>
-                    <Badge variant="outline" className="text-[10px] font-normal">
-                      {courses.length} Courses
-                    </Badge>
-                  </div>
-                  {summary && (
-                    <div className="text-[10px] text-muted-foreground font-medium italic">
-                      {summary}
-                    </div>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="divide-y">
-                  {courses.map((c: Course) => {
-                    // If this course has lab sections mapped to this actual section, show
-                    // one room row per lab section instead of a single combined room.
-                    const labSections = data.course_lab_sections.filter(
-                      (g) =>
-                        g.course_id === c.id &&
-                        g.semester_id === data.active_semester_id &&
-                        g.section_ids.includes(s.id),
-                    );
-                    if (labSections.length > 0) {
-                      return (
-                        <div key={c.id} className="p-3 space-y-1.5">
-                          <div className="text-[11px] font-mono font-bold text-primary">{c.code}</div>
-                          <div className="text-xs font-medium truncate" title={c.name}>{c.name}</div>
-                          {labSections.map((g) => (
-                            <div key={g.id} className="flex items-center justify-between gap-2 pl-2 border-l-2 border-purple-300">
-                              <span className="text-[10px] font-bold text-purple-700 uppercase">{g.label}</span>
-                              <LabSectionRoomPicker course={c} labSection={g} />
-                            </div>
-                          ))}
-                        </div>
-                      );
-                    }
-                    return (
-                      <div key={c.id} className="p-3 flex items-center justify-between gap-3 group">
-                        <div className="min-w-0 flex-1">
-                          <div className="text-[11px] font-mono font-bold text-primary">{c.code}</div>
-                          <div className="text-xs font-medium truncate" title={c.name}>{c.name}</div>
-                        </div>
-                        <div className="shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
-                          <RoomPicker course={c} section={s} />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 
 function TeacherTimeMapping() {
   const data = useStore();

@@ -57,7 +57,6 @@ export function CombineSectionsDialog({ course, primarySection, allSections, ope
         course.id,
         primarySection.id,
         cst?.teacher_ids ?? [],
-        cst?.primary_room_id ?? null,
         cst?.slot_teacher_ids ?? null,
         selectedIds.length > 0 ? selectedIds : null,
       );

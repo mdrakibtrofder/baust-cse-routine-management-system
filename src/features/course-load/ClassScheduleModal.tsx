@@ -57,7 +57,6 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Checkbox } from "@/components/ui/checkbox";
 import { partitionRoomsForCourse } from "@/lib/room-dept";
-import { RoomPicker } from "./RoomPicker";
 import { RoomDayGrid } from "./RoomDayGrid";
 
 /** One weekly meeting slot, shared shape for both a regular section's class
@@ -80,7 +79,6 @@ interface EntityDraft {
   label: string;
   section_ids: string[];
   teacher_ids: string[];
-  primary_room_id: string | null;
   /** Per-meeting teacher override, section-mode `sessional_3.0` split mode only. */
   slot_teacher_ids?: string[][] | null;
   meetings: DraftMeeting[];
@@ -180,14 +178,13 @@ export function ClassScheduleModal({ mode, open, onOpenChange, course, section, 
         const e = existingSlots[i];
         return e
           ? { id: e.id, day: e.day, start: e.start, end: e.end, room_id: e.room_id, week: e.week, locked: e.locked }
-          : { ...emptyMeeting(course), room_id: cst?.primary_room_id ?? null };
+          : emptyMeeting(course);
       });
       const entity: EntityDraft = {
         id: cst?.id,
         label: `Section ${section.name}`,
         section_ids: [section.id],
         teacher_ids: cst?.teacher_ids ?? [],
-        primary_room_id: cst?.primary_room_id ?? null,
         slot_teacher_ids: cst?.slot_teacher_ids ?? null,
         meetings,
       };
@@ -221,7 +218,6 @@ export function ClassScheduleModal({ mode, open, onOpenChange, course, section, 
           label: g.label,
           section_ids: g.section_ids,
           teacher_ids: g.teacher_ids,
-          primary_room_id: g.primary_room_id,
           meetings,
         };
       });
@@ -367,7 +363,6 @@ export function ClassScheduleModal({ mode, open, onOpenChange, course, section, 
       label: nextLabel,
       section_ids: [],
       teacher_ids: [],
-      primary_room_id: null,
       meetings: Array.from({ length: meetingCount }, () => emptyMeeting(course)),
     };
     setEntities((prev) => [...prev, newEntity]);
@@ -485,7 +480,7 @@ export function ClassScheduleModal({ mode, open, onOpenChange, course, section, 
 
         const finalSlotTeacherIds = isSessional3 && splitMode ? slotTeacherIds : null;
         const teacherUnion = finalSlotTeacherIds ? [...new Set(finalSlotTeacherIds.flat())] : activeEntity.teacher_ids;
-        await data.setCourseSectionTeachers(course.id, section.id, teacherUnion, activeEntity.primary_room_id, finalSlotTeacherIds);
+        await data.setCourseSectionTeachers(course.id, section.id, teacherUnion, finalSlotTeacherIds);
 
         toast.success("Schedule saved");
         onOpenChange(false);
@@ -507,7 +502,6 @@ export function ClassScheduleModal({ mode, open, onOpenChange, course, section, 
             label: e.label.trim(),
             section_ids: e.section_ids,
             teacher_ids: e.teacher_ids,
-            primary_room_id: e.primary_room_id,
           })),
         );
         await Promise.all(
@@ -881,18 +875,6 @@ export function ClassScheduleModal({ mode, open, onOpenChange, course, section, 
                       </div>
                     )}
 
-                    {/* Primary room */}
-                    <div className="space-y-1.5">
-                      <Label className="text-xs uppercase tracking-widest text-slate-500 font-bold flex items-center gap-1">
-                        <MapPin className="h-3.5 w-3.5" /> Primary Room
-                      </Label>
-                      <RoomPicker
-                        course={course}
-                        value={activeEntity.primary_room_id}
-                        onSelect={(rid) => updateEntity(activeEntityIdx!, { primary_room_id: rid })}
-                      />
-                    </div>
-
                     {/* Teachers panel — split mode shows per-meeting picker, shared mode shows global pool */}
                     <div className="rounded-lg border bg-muted/30 p-3 space-y-3">
                       {isSessional3 && splitMode ? (
@@ -1049,40 +1031,47 @@ export function ClassScheduleModal({ mode, open, onOpenChange, course, section, 
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
                         <Label>{info.roomKind === "sessional" ? "Sessional Room" : "Theory Room"}</Label>
-                        <div className="flex items-center gap-3">
-                          <label className="flex items-center gap-1.5 text-[11px] text-muted-foreground cursor-pointer select-none">
-                            <Checkbox checked={showOtherRooms} onCheckedChange={(v) => setShowOtherRooms(v === true)} className="h-3.5 w-3.5" />
-                            Show other departments' rooms
-                          </label>
-                          <span className="text-xs text-muted-foreground">{availableRooms.length} available</span>
-                        </div>
+                        <span className="text-xs text-muted-foreground">{availableRooms.length} available</span>
                       </div>
-                      <Select value={currentMeeting.room_id ?? ""} onValueChange={(v) => setCurrentMeeting({ room_id: v })}>
-                        <SelectTrigger className="w-[320px]">
-                          <SelectValue placeholder="Pick a room" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {roomOptions.map((r) => {
-                            const ok = availableRooms.some((ar) => ar.id === r.id);
-                            const capOk = r.capacity >= totalStudents;
-                            const fullyBooked = applicablePeriods.length > 0 && applicablePeriods.every((p) =>
-                              data.class_slots.some((slot) => slot.id !== currentMeeting.id && slot.room_id === r.id && slot.day === currentMeeting.day && p.start < slot.end && slot.start < p.end),
-                            );
-                            return (
-                              <SelectItem key={r.id} value={r.id}>
-                                <span className="flex items-center gap-2">
-                                  <span className="font-mono">{r.name}</span>
-                                  <span className="text-xs text-muted-foreground">Capacity {r.capacity}</span>
-                                  {!capOk && <Badge variant="destructive" className="text-[10px]">small</Badge>}
-                                  {fullyBooked && <Badge variant="destructive" className="text-[10px]">fully booked</Badge>}
-                                  {!ok && capOk && !fullyBooked && <Badge variant="outline" className="text-[10px]">conflict</Badge>}
-                                  {ok && capOk && <Check className="h-3 w-3 text-success" />}
-                                </span>
-                              </SelectItem>
-                            );
-                          })}
-                        </SelectContent>
-                      </Select>
+                      <div className="flex items-center gap-3">
+                        <Select value={currentMeeting.room_id ?? ""} onValueChange={(v) => setCurrentMeeting({ room_id: v })}>
+                          <SelectTrigger className="w-[320px]">
+                            <SelectValue placeholder="Pick a room" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {roomOptions.map((r) => {
+                              const ok = availableRooms.some((ar) => ar.id === r.id);
+                              const capOk = r.capacity >= totalStudents;
+                              const fullyBooked = applicablePeriods.length > 0 && applicablePeriods.every((p) =>
+                                data.class_slots.some((slot) => slot.id !== currentMeeting.id && slot.room_id === r.id && slot.day === currentMeeting.day && p.start < slot.end && slot.start < p.end),
+                              );
+                              return (
+                                <SelectItem key={r.id} value={r.id}>
+                                  <span className="flex items-center gap-2">
+                                    <span className="font-mono">{r.name}</span>
+                                    <span className="text-xs text-muted-foreground">Capacity {r.capacity}</span>
+                                    {!capOk && <Badge variant="destructive" className="text-[10px]">small</Badge>}
+                                    {fullyBooked && <Badge variant="destructive" className="text-[10px]">fully booked</Badge>}
+                                    {!ok && capOk && !fullyBooked && <Badge variant="outline" className="text-[10px]">conflict</Badge>}
+                                    {ok && capOk && <Check className="h-3 w-3 text-success" />}
+                                  </span>
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
+                        {/* Widens the dropdown above to rooms outside this course's
+                            department. Kept beside the dropdown it modifies rather than
+                            pinned to the far right of the field header. */}
+                        <label className="flex items-center gap-1.5 text-[11px] text-muted-foreground cursor-pointer select-none">
+                          <Checkbox
+                            checked={showOtherRooms}
+                            onCheckedChange={(v) => setShowOtherRooms(v === true)}
+                            className="h-3.5 w-3.5"
+                          />
+                          Show other departments' rooms
+                        </label>
+                      </div>
                     </div>
 
                     {currentMeeting.id && (
