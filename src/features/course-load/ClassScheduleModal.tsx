@@ -37,7 +37,7 @@ import {
   Lock,
   Unlock,
 } from "lucide-react";
-import { COURSE_TYPE_INFO, type Course, type Section, type WeekPattern } from "@/lib/types";
+import { COURSE_TYPE_INFO, type Course, type Section, type WeekPattern, type Period } from "@/lib/types";
 import {
   checkConflicts,
   findAvailableRooms,
@@ -92,6 +92,48 @@ function emptyMeeting(course: Course): DraftMeeting {
 /** How many weekly meetings each entity needs. Regular sections use the fixed
  *  per-course-type count; lab sections derive it from course credit (same
  *  formula the legacy Lab Sections panel used). */
+/** Finds the period a stored meeting time belongs to.
+ *
+ *  A slot's start/end is always a copy of some period's, so normally the exact
+ *  match wins immediately. It can miss when a period was edited before the
+ *  server started carrying its classes across — the class keeps the old time
+ *  (e.g. 08:00–08:50) while the period now reads 08:00–08:55, and an exact-match
+ *  lookup finds nothing, which is what left the timeslot dropdown blank.
+ *
+ *  The fallbacks recover that class: first a period of the same kind starting at
+ *  the same time, then the one overlapping it most. Returning the period (rather
+ *  than just its id) lets the caller snap the draft onto the real period times,
+ *  so opening and saving the class also repairs the stored row. */
+function findPeriodForTime(
+  start: string,
+  end: string,
+  periods: Period[],
+): Period | null {
+  if (!start || !end) return null;
+
+  const exact = periods.find((p) => p.start === start && p.end === end);
+  if (exact) return exact;
+
+  const sameStart = periods.filter((p) => p.start === start);
+  if (sameStart.length === 1) return sameStart[0];
+
+  const overlapping = periods
+    .map((p) => ({ p, overlap: overlapMinutes(p.start, p.end, start, end) }))
+    .filter((x) => x.overlap > 0)
+    .sort((a, b) => b.overlap - a.overlap);
+
+  return overlapping[0]?.p ?? null;
+}
+
+/** Minutes two time ranges share; 0 when they do not overlap. */
+function overlapMinutes(aStart: string, aEnd: string, bStart: string, bEnd: string): number {
+  const mins = (t: string) => {
+    const [h, m] = t.split(":");
+    return Number(h) * 60 + Number(m);
+  };
+  return Math.max(0, Math.min(mins(aEnd), mins(bEnd)) - Math.max(mins(aStart), mins(bStart)));
+}
+
 function meetingsRequired(course: Course, mode: "section" | "lab"): number {
   if (mode === "lab") return course.credit === 1.5 ? 1 : Math.ceil(course.credit / 3);
   return COURSE_TYPE_INFO[course.course_type].classCount;
@@ -136,6 +178,12 @@ export function ClassScheduleModal({ mode, open, onOpenChange, course, section, 
   const meetingCount = meetingsRequired(course, mode);
   const orderedDays = useMemo(() => sortDays(data.days), [data.days]);
 
+  /** Periods a class of this course type can actually sit in. */
+  const applicablePeriods = useMemo(
+    () => data.periods.filter((p) => p.kind === info.roomKind && !p.is_break).sort((a, b) => a.start.localeCompare(b.start)),
+    [data.periods, info.roomKind],
+  );
+
   const [entities, setEntities] = useState<EntityDraft[]>([]);
   const [activeEntityIdx, setActiveEntityIdx] = useState<number | null>(null);
   const [activeMeetingIdx, setActiveMeetingIdx] = useState(0);
@@ -176,9 +224,17 @@ export function ClassScheduleModal({ mode, open, onOpenChange, course, section, 
         .sort(compareDayAndTime);
       const meetings: DraftMeeting[] = Array.from({ length: meetingCount }, (_, i) => {
         const e = existingSlots[i];
-        return e
-          ? { id: e.id, day: e.day, start: e.start, end: e.end, room_id: e.room_id, week: e.week, locked: e.locked }
-          : emptyMeeting(course);
+        if (!e) return emptyMeeting(course);
+        // Snap to the period's own times so the timeslot dropdown resolves even
+        // for a class stranded by an old period edit; saving then writes the
+        // corrected time back.
+        const period = findPeriodForTime(e.start, e.end, applicablePeriods);
+        return {
+          id: e.id, day: e.day,
+          start: period?.start ?? e.start,
+          end: period?.end ?? e.end,
+          room_id: e.room_id, week: e.week, locked: e.locked,
+        };
       });
       const entity: EntityDraft = {
         id: cst?.id,
@@ -209,9 +265,14 @@ export function ClassScheduleModal({ mode, open, onOpenChange, course, section, 
         const slots = data.class_slots.filter((s) => s.lab_section_id === g.id);
         const meetings: DraftMeeting[] = Array.from({ length: meetingCount }, (_, i) => {
           const s = slots[i];
-          return s
-            ? { id: s.id, day: s.day, start: s.start, end: s.end, room_id: s.room_id, week: s.week, locked: s.locked }
-            : emptyMeeting(course);
+          if (!s) return emptyMeeting(course);
+          const period = findPeriodForTime(s.start, s.end, applicablePeriods);
+          return {
+            id: s.id, day: s.day,
+            start: period?.start ?? s.start,
+            end: period?.end ?? s.end,
+            room_id: s.room_id, week: s.week, locked: s.locked,
+          };
         });
         return {
           id: g.id,
@@ -253,10 +314,6 @@ export function ClassScheduleModal({ mode, open, onOpenChange, course, section, 
   );
   const canAddTeacher = (activeEntity?.teacher_ids.length ?? 0) < maxTeachers;
 
-  const applicablePeriods = useMemo(
-    () => data.periods.filter((p) => p.kind === info.roomKind && !p.is_break).sort((a, b) => a.start.localeCompare(b.start)),
-    [data.periods, info.roomKind],
-  );
 
   // Total students the active entity's room needs to fit — the section's own
   // count in section mode, or an even split of the mapped cohort across
@@ -329,7 +386,8 @@ export function ClassScheduleModal({ mode, open, onOpenChange, course, section, 
     });
   }, [activeEntity, scope, data, course, isSessional3, splitMode, slotTeacherIds]);
 
-  const matchedPeriodId = applicablePeriods.find((p) => p.start === currentMeeting.start && p.end === currentMeeting.end)?.id ?? "";
+  const matchedPeriodId =
+    findPeriodForTime(currentMeeting.start, currentMeeting.end, applicablePeriods)?.id ?? "";
 
   const updateEntity = (idx: number, patch: Partial<EntityDraft>) => {
     setEntities((prev) => prev.map((e, i) => (i === idx ? { ...e, ...patch } : e)));
