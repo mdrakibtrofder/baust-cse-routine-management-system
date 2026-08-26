@@ -10,6 +10,7 @@ import type { AppData, ClassSlot } from "@/lib/types";
 import { timesOverlap } from "@/lib/conflicts";
 import { compareTimeValues, fmtRange12, sortDays, fmtDayTitle } from "@/lib/utils";
 import type { RoutineScope } from "@/components/RoutineView";
+import { filterScopeSlots } from "./routine-scope";
 import { buildRoutineCourseSummary, buildRoutineTeacherSummary } from "./routine-summary";
 import JSZip from "jszip";
 
@@ -111,38 +112,7 @@ export function buildRoutineMatrix(
     .sort((a, b) => compareTimeValues(a.start, b.start));
   const days = sortDays(data.days);
 
-  const slots = data.class_slots.filter((s) => {
-    if (s.semester_id !== data.active_semester_id) return false;
-    if (scope.kind === "all") return true;
-    if (scope.kind === "room") return s.room_id === scope.room_id;
-    
-    if (scope.kind === "section") {
-      if (s.section_id === scope.section_id) return true;
-      if (s.lab_section_id) {
-        const ls = data.course_lab_sections.find((x) => x.id === s.lab_section_id);
-        return !!ls && ls.section_ids.includes(scope.section_id);
-      }
-      return false;
-    }
-
-    if (scope.kind === "teacher") {
-      let teacherIds: string[] = [];
-      if (s.lab_section_id) {
-        const ls = data.course_lab_sections.find((x) => x.id === s.lab_section_id);
-        teacherIds = ls?.teacher_ids ?? [];
-      } else {
-        const cst = data.course_section_teachers.find(
-          (x) =>
-            x.semester_id === data.active_semester_id &&
-            x.course_id === s.course_id &&
-            x.section_id === s.section_id,
-        );
-        teacherIds = cst?.teacher_ids ?? [];
-      }
-      return teacherIds.includes(scope.teacher_id);
-    }
-    return false;
-  });
+  const slots = filterScopeSlots(data, scope);
 
   const cellText = (slot: ClassSlot) => {
     const c = data.courses.find((x) => x.id === slot.course_id);

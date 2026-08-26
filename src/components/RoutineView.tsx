@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { ClassScheduleModal } from "@/features/course-load/ClassScheduleModal";
 import { SwapRoomModal } from "@/components/SwapRoomModal";
 import { candidateSectionsForCourse } from "@/lib/course-sections";
+import { filterScopeSlots } from "@/lib/routine-scope";
 import { TeacherRoutineLink, RoomRoutineLink, SectionRoutineLink } from "@/components/RoutineLink";
 
 const DEFAULT_DEPT = "CSE";
@@ -146,46 +147,7 @@ export function RoutineView({
 
   const days = useMemo(() => sortDays(data.days), [data.days]);
 
-  const slots = useMemo(() => {
-    return data.class_slots.filter((s) => {
-      if (s.semester_id !== data.active_semester_id) return false;
-      if (scope.kind === "all") return true;
-      if (scope.kind === "room") return s.room_id === scope.room_id;
-      if (scope.kind === "section") {
-        // Include slots directly for this section
-        if (s.section_id === scope.section_id) return true;
-        // Include lab section slots whose mapping covers this actual section — a lab
-        // section's classes are pushed into every actual section it's mapped to.
-        if (s.lab_section_id) {
-          const ls = data.course_lab_sections.find((g) => g.id === s.lab_section_id);
-          return !!ls && ls.section_ids.includes(scope.section_id);
-        }
-        // Include slots from primary combined-section assignments where this section is a combined secondary
-        const primaryCst = data.course_section_teachers.find(
-          (x) =>
-            x.semester_id === data.active_semester_id &&
-            x.course_id === s.course_id &&
-            x.section_id === s.section_id &&
-            x.combined_section_ids?.includes(scope.section_id),
-        );
-        if (primaryCst) return true;
-        return false;
-      }
-      // teacher scope: check CST teacher_ids (covers both shared and split modes via union)
-      // Also check lab section teacher_ids
-      if (s.lab_section_id) {
-        const lg = data.course_lab_sections.find((g) => g.id === s.lab_section_id);
-        return !!lg && lg.teacher_ids.includes(scope.teacher_id);
-      }
-      const cst = data.course_section_teachers.find(
-        (x) =>
-          x.semester_id === data.active_semester_id &&
-          x.course_id === s.course_id &&
-          x.section_id === s.section_id,
-      );
-      return !!cst && cst.teacher_ids.includes(scope.teacher_id);
-    });
-  }, [data, scope]);
+  const slots = useMemo(() => filterScopeSlots(data, scope), [data, scope]);
 
   const isBreak = (pid: string) => {
     const p = data.periods.find((x) => x.id === pid);

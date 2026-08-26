@@ -12,6 +12,7 @@ import type { Teacher, Room, ClassSlot } from "@/lib/types";
 import { Input } from "@/components/ui/input";
 import { HOME_DEPT_SHORT_NAME } from "@/lib/constants";
 import { TeacherRoutineLink } from "@/components/RoutineLink";
+import { buildTeacherSlotMap } from "@/lib/routine-scope";
 
 export function RoomTimeMappingPage() {
   return (
@@ -81,23 +82,7 @@ function TeacherTimeMapping() {
     [data.class_slots, data.active_semester_id],
   );
 
-  const teacherIdToSlots = useMemo(() => {
-    const map = new Map<string, ClassSlot[]>();
-    for (const t of data.teachers) map.set(t.id, []);
-    for (const slot of slotsBySemester) {
-      const cst = data.course_section_teachers.find(
-        (x) =>
-          x.semester_id === data.active_semester_id &&
-          x.course_id === slot.course_id &&
-          x.section_id === slot.section_id,
-      );
-      if (!cst) continue;
-      for (const tid of cst.teacher_ids) {
-        map.get(tid)?.push(slot);
-      }
-    }
-    return map;
-  }, [data, slotsBySemester]);
+  const teacherIdToSlots = useMemo(() => buildTeacherSlotMap(data), [data]);
 
   return (
     <div className="space-y-4">

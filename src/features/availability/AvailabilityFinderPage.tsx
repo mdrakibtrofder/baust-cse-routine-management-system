@@ -9,6 +9,7 @@ import { NonDepartmentalToggle } from "@/components/NonDepartmentalToggle";
 import { TeacherRoutineLink, RoomRoutineLink, SectionRoutineLink } from "@/components/RoutineLink";
 import { cn, compareTimeValues, fmtRange12, fmtTime12, sortDays } from "@/lib/utils";
 import { timesOverlap, teacherUnavailableAt } from "@/lib/conflicts";
+import { buildTeacherSlotMap } from "@/lib/routine-scope";
 import { rankInfoFor } from "@/lib/teacher-rank";
 import { HOME_DEPT_SHORT_NAME } from "@/lib/constants";
 import {
@@ -126,28 +127,10 @@ export function AvailabilityFinderPage() {
       .sort((a, b) => a.short_name.localeCompare(b.short_name));
   }, [homeTeachers, otherTeachers, showOtherDepts, q]);
 
-  const slotsBySemester = useMemo(
-    () => data.class_slots.filter((s) => s.semester_id === data.active_semester_id),
-    [data.class_slots, data.active_semester_id],
-  );
-
-  const teacherIdToCstSlots = useMemo(() => {
-    const map = new Map<string, ClassSlot[]>();
-    for (const t of data.teachers) map.set(t.id, []);
-    for (const slot of slotsBySemester) {
-      const cst = data.course_section_teachers.find(
-        (x) =>
-          x.semester_id === data.active_semester_id &&
-          x.course_id === slot.course_id &&
-          x.section_id === slot.section_id,
-      );
-      if (!cst) continue;
-      for (const tid of cst.teacher_ids) {
-        map.get(tid)?.push(slot);
-      }
-    }
-    return map;
-  }, [data, slotsBySemester]);
+  /** teacher → their class meetings, resolved the SAME way the routine grid does
+   *  (lab-section groups and split-mode overrides included), so a teacher's
+   *  routine and their busy/free state here can never disagree. */
+  const teacherIdToCstSlots = useMemo(() => buildTeacherSlotMap(data), [data]);
 
   const computeCell = (day: string, p: Period): CellInfo => {
     if (/break/i.test(p.name)) {

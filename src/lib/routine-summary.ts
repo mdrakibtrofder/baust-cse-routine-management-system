@@ -1,5 +1,6 @@
 import type { AppData, Course, Teacher } from "./types";
 import type { RoutineScope } from "@/components/RoutineView";
+import { filterScopeSlots } from "./routine-scope";
 
 export interface CourseSummaryRow {
   course: Course;
@@ -70,67 +71,6 @@ export function buildRoutineCourseSummary(
   );
 
   return { rows, totals };
-}
-
-/** Helper to filter slots that are in the given scope's routine matrix
- *  (same logic used in `routine-export.ts` `buildRoutineMatrix`). */
-function filterScopeSlots(data: AppData, scope: RoutineScope) {
-  return data.class_slots.filter((s) => {
-    if (s.semester_id !== data.active_semester_id) return false;
-    if (scope.kind === "all") return true;
-    if (scope.kind === "room") return s.room_id === scope.room_id;
-    if (scope.kind === "section") {
-      if (s.section_id === scope.section_id) return true;
-      if (s.lab_section_id) {
-        const ls = data.course_lab_sections.find((g) => g.id === s.lab_section_id);
-        return !!ls && ls.section_ids.includes(scope.section_id);
-      }
-      const primaryCst = data.course_section_teachers.find(
-        (x) =>
-          x.semester_id === data.active_semester_id &&
-          x.course_id === s.course_id &&
-          x.section_id === s.section_id &&
-          x.combined_section_ids?.includes(scope.section_id),
-      );
-      if (primaryCst) return true;
-      return false;
-    }
-    if (scope.kind === "teacher") {
-      if (s.lab_section_id) {
-        const lg = data.course_lab_sections.find((g) => g.id === s.lab_section_id);
-        return !!lg && lg.teacher_ids.includes(scope.teacher_id);
-      }
-      const cst = data.course_section_teachers.find(
-        (x) =>
-          x.semester_id === data.active_semester_id &&
-          x.course_id === s.course_id &&
-          x.section_id === s.section_id,
-      );
-      if (!cst) return false;
-      if (cst.slot_teacher_ids?.length) {
-        const days = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
-        const siblings = data.class_slots
-          .filter(
-            (x) =>
-              x.semester_id === data.active_semester_id &&
-              x.course_id === s.course_id &&
-              x.section_id === s.section_id &&
-              !x.lab_section_id,
-          )
-          .sort((a, b) => {
-            const da = days.indexOf(a.day), db = days.indexOf(b.day);
-            if (da !== db) return da - db;
-            return a.start.localeCompare(b.start);
-          });
-        const idx = siblings.findIndex((x) => x.id === s.id);
-        if (idx >= 0 && cst.slot_teacher_ids[idx]?.length) {
-          return cst.slot_teacher_ids[idx].includes(scope.teacher_id);
-        }
-      }
-      return cst.teacher_ids.includes(scope.teacher_id);
-    }
-    return false;
-  });
 }
 
 /** Build the de-duplicated list of teachers who teach within the given routine scope.
