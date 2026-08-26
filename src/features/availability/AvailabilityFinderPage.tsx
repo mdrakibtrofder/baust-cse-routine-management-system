@@ -484,7 +484,7 @@ function TeacherChipBig({ teacher }: { teacher: Teacher }) {
     <div className="flex items-center gap-2 min-w-0">
       <span
         className={cn(
-          "h-7 w-8 shrink-0 rounded-md flex items-center justify-center text-[11px] font-bold border",
+          "h-7 min-w-8 px-1 shrink-0 rounded-md flex items-center justify-center text-[11px] font-bold border",
           rank.className,
         )}
         title={rank.label}

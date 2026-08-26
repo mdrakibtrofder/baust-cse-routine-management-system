@@ -1,8 +1,25 @@
 /** Teacher rank → short code + color tokens for badge display */
-export type TeacherRank = "professor" | "associate" | "assistant" | "lecturer" | "other";
+export type TeacherRank =
+  | "professor"
+  | "associate"
+  | "assistant"
+  | "lecturer"
+  | "senior_engineer"
+  | "assistant_engineer"
+  | "engineer"
+  | "other";
 
 export function teacherRank(designation: string): TeacherRank {
   const d = (designation || "").toLowerCase();
+
+  // Engineering staff first — "Assistant Software Engineer" also contains
+  // "assistant", so it must not fall through to the Assistant Professor rank.
+  if (d.includes("engineer")) {
+    if (d.includes("assistant") || d.includes("asst")) return "assistant_engineer";
+    if (d.includes("senior") || d.includes("sr.") || d.includes("sr ")) return "senior_engineer";
+    return "engineer";
+  }
+
   if (d.includes("associate")) return "associate";
   if (d.includes("assistant")) return "assistant";
   if (d.includes("lecturer")) return "lecturer";
@@ -11,7 +28,7 @@ export function teacherRank(designation: string): TeacherRank {
 }
 
 export interface RankInfo {
-  short: string;       // P / AsP / AP / L
+  short: string;       // P / AsP / AP / L / SE / ASE / SSE
   label: string;
   /** Tailwind classes for the badge (gradient-ish solid colors) */
   className: string;
@@ -37,6 +54,21 @@ export const RANK_INFO: Record<TeacherRank, RankInfo> = {
     short: "L",
     label: "Lecturer",
     className: "bg-gradient-to-br from-emerald-500 to-teal-600 text-white border-teal-700/30",
+  },
+  senior_engineer: {
+    short: "SSE",
+    label: "Senior Software Engineer",
+    className: "bg-gradient-to-br from-slate-600 to-slate-800 text-white border-slate-900/30",
+  },
+  assistant_engineer: {
+    short: "ASE",
+    label: "Assistant Software Engineer",
+    className: "bg-gradient-to-br from-rose-500 to-pink-600 text-white border-pink-700/30",
+  },
+  engineer: {
+    short: "SE",
+    label: "Software Engineer",
+    className: "bg-gradient-to-br from-cyan-500 to-teal-600 text-white border-cyan-700/30",
   },
   other: {
     short: "·",

@@ -219,7 +219,7 @@ export function ReportsPage() {
                       <tr key={t.id} className="border-t">
                         <td className="px-3 py-2">
                           <div className="flex items-center gap-2">
-                            <span className={cn("h-6 w-7 rounded flex items-center justify-center text-[10px] font-bold border", rank.className)}>{rank.short}</span>
+                            <span className={cn("h-6 min-w-7 px-1 rounded inline-flex items-center justify-center text-[10px] font-bold border", rank.className)}>{rank.short}</span>
                             <div>
                               <div className="font-mono font-semibold">{t.name}</div>
                               <div className="text-[10px] text-muted-foreground">{t.fullName}</div>

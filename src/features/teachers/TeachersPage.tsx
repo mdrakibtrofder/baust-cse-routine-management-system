@@ -205,7 +205,7 @@ export function TeachersPage() {
                       <div className="flex items-center gap-2">
                         <span
                           className={cn(
-                            "h-6 w-7 rounded-md flex items-center justify-center text-[10px] font-bold border",
+                            "h-6 min-w-7 px-1 rounded-md flex items-center justify-center text-[10px] font-bold border",
                             rank.className,
                           )}
                           title={rank.label}
