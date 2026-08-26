@@ -2,6 +2,7 @@ import { useStore } from "@/lib/store";
 import { Users } from "lucide-react";
 import { buildRoutineTeacherSummary } from "@/lib/routine-summary";
 import type { RoutineScope } from "@/components/RoutineView";
+import { TeacherRoutineLink } from "@/components/TeacherRoutineLink";
 
 /** Small Teacher Details table shown beneath the Course Summary on every routine view. */
 export function RoutineTeacherSummary({ scope }: { scope: RoutineScope }) {
@@ -31,7 +32,9 @@ export function RoutineTeacherSummary({ scope }: { scope: RoutineScope }) {
           <tbody>
             {rows.map((r) => (
               <tr key={r.teacher.id} className="border-t hover:bg-muted/30 transition-colors">
-                <td className="px-3 py-2 font-mono font-semibold text-primary">{r.teacher.short_name}</td>
+                <td className="px-3 py-2 font-mono font-semibold text-primary">
+                  <TeacherRoutineLink teacherId={r.teacher.id}>{r.teacher.short_name}</TeacherRoutineLink>
+                </td>
                 <td className="px-3 py-2">{r.teacher.name}</td>
                 <td className="px-3 py-2 text-foreground/80">
                   {r.teacher.designation}{r.teacher.department ? `, ${r.teacher.department}` : ""}

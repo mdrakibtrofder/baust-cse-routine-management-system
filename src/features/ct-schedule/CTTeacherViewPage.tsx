@@ -14,6 +14,7 @@ import { teacherDeptShort, sortHomeDeptFirst } from "@/lib/room-dept";
 import { HOME_DEPT_SHORT_NAME } from "@/lib/constants";
 import { ctRoomNames, filterCTsByDepartmental, compareCTsByLevelTerm } from "@/lib/ct-schedule-utils";
 import { NonDepartmentalToggle } from "@/components/NonDepartmentalToggle";
+import { TeacherRoutineLink } from "@/components/TeacherRoutineLink";
 
 /** CT schedule grouped by teacher, resolved through course_section_teachers for the
  *  active semester. Home-department (CSE) teachers are listed first. */
@@ -128,9 +129,12 @@ export function CTTeacherViewPage() {
             <div key={teacher.id} className="overflow-hidden rounded-2xl border-2 bg-card shadow-sm">
               <div className="flex flex-wrap items-center gap-2 border-b border-primary/10 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-4">
                 <h4 className="text-sm font-black text-primary">{teacher.name}</h4>
-                <span className="rounded-full bg-muted/60 px-2 py-0.5 font-mono text-[10px] font-black uppercase text-muted-foreground">
+                <TeacherRoutineLink
+                  teacherId={teacher.id}
+                  className="rounded-full bg-muted/60 px-2 py-0.5 font-mono text-[10px] font-black uppercase text-muted-foreground hover:text-primary"
+                >
                   {teacher.short_name}
-                </span>
+                </TeacherRoutineLink>
                 <span
                   className={cn(
                     "rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wider",

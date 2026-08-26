@@ -11,6 +11,7 @@ import { roomDeptShort } from "@/lib/room-dept";
 import type { Teacher, Room, ClassSlot } from "@/lib/types";
 import { Input } from "@/components/ui/input";
 import { HOME_DEPT_SHORT_NAME } from "@/lib/constants";
+import { TeacherRoutineLink } from "@/components/TeacherRoutineLink";
 
 export function RoomTimeMappingPage() {
   return (
@@ -157,7 +158,7 @@ function TeacherTimeMapping() {
               {filteredTeachers.map(t => (
                 <tr key={t.id} className="border-b hover:bg-muted/30 transition-colors group">
                   <td className="px-4 py-3 sticky left-0 z-10 bg-white group-hover:bg-slate-50 border-r shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
-                    <div className="font-bold text-primary font-mono">{t.short_name}</div>
+                    <TeacherRoutineLink teacherId={t.id} className="block font-bold text-primary font-mono">{t.short_name}</TeacherRoutineLink>
                     <div className="text-[10px] text-muted-foreground truncate">
                       {t.name}
                       {showOtherTeachers && t.department ? ` · ${t.department.trim().toUpperCase()}` : ""}

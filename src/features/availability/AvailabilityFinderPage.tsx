@@ -11,6 +11,7 @@ import {
   CalendarClock, UserCheck, UserX, Sparkles, Users, MapPin, BookOpen, Clock,
 } from "lucide-react";
 import type { ClassSlot, Period, Teacher } from "@/lib/types";
+import { TeacherRoutineLink } from "@/components/TeacherRoutineLink";
 
 interface BusyEntry {
   teacher: Teacher;
@@ -300,7 +301,10 @@ function TeacherChipBig({ teacher }: { teacher: Teacher }) {
         {rank.short}
       </span>
       <div className="min-w-0">
-        <div className="text-sm font-semibold truncate">{teacher.short_name} · {teacher.name}</div>
+        <div className="text-sm font-semibold truncate">
+          <TeacherRoutineLink teacherId={teacher.id} className="hover:text-primary">{teacher.short_name}</TeacherRoutineLink>
+          {" · "}{teacher.name}
+        </div>
         <div className="text-[10px] text-muted-foreground truncate">{teacher.designation}</div>
       </div>
     </div>

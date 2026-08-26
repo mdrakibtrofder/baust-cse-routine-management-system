@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { BookOpen, Users, MapPin, Calendar, Clock, GraduationCap, Sparkles } from "lucide-react";
 import type { Course } from "@/lib/types";
 import { TeacherChip } from "@/components/TeacherBadge";
+import { TeacherRoutineLink } from "@/components/TeacherRoutineLink";
 import { cn, compareDayAndTime, fmtRange12, fmtDayTitle } from "@/lib/utils";
 
 const DEFAULT_DEPT = "CSE";
@@ -176,8 +177,13 @@ export function CourseDetailsDialog({
                           </Badge>
                         )}
                         {teachers.length > 0 && (
-                          <span className="ml-auto text-[10px] font-mono text-muted-foreground">
-                            {teachers.map((t) => t.short_name).join(", ")}
+                          <span className="ml-auto text-[10px] font-mono text-muted-foreground flex items-center gap-1">
+                            {teachers.map((t, i) => (
+                              <span key={t.id} className="inline-flex items-center">
+                                <TeacherRoutineLink teacherId={t.id} className="hover:text-primary">{t.short_name}</TeacherRoutineLink>
+                                {i < teachers.length - 1 && ","}
+                              </span>
+                            ))}
                           </span>
                         )}
                       </div>

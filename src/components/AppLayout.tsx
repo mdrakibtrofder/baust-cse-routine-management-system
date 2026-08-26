@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ConfirmProvider } from "@/components/ConfirmDialog";
+import { TeacherRoutineProvider } from "@/components/TeacherRoutineLink";
 import { SemesterSelector } from "@/components/SemesterSelector";
 import { useStore } from "@/lib/store";
 
@@ -72,6 +73,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <ConfirmProvider>
+    <TeacherRoutineProvider>
     <div className="h-screen bg-background flex overflow-hidden">
       <aside className={cn(
         "hidden md:flex shrink-0 border-r bg-card flex-col sticky top-0 h-full overflow-y-auto transition-all duration-300",
@@ -258,6 +260,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <main className="flex-1 min-w-0 overflow-y-auto">{children}</main>
       </div>
     </div>
+    </TeacherRoutineProvider>
     </ConfirmProvider>
   );
 }

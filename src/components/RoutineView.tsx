@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { ClassScheduleModal } from "@/features/course-load/ClassScheduleModal";
 import { SwapRoomModal } from "@/components/SwapRoomModal";
 import { candidateSectionsForCourse } from "@/lib/course-sections";
+import { TeacherRoutineLink } from "@/components/TeacherRoutineLink";
 
 const DEFAULT_DEPT = "CSE";
 
@@ -760,7 +761,7 @@ function RoutineCell({
 
   const teachers = effectiveTeacherIds
     .map((tid) => data.teachers.find((t) => t.id === tid))
-    .filter(Boolean) as { short_name: string }[];
+    .filter(Boolean) as { id: string; short_name: string }[];
 
   if (!course) return null;
   const info = COURSE_TYPE_INFO[course.course_type];
@@ -813,12 +814,16 @@ function RoutineCell({
         </div>
         <div className="flex flex-col gap-1 items-end">
           {teachers.map((t) => (
-            <span key={t.short_name} className={cn(
-              "rounded bg-blue-100 text-blue-800 font-bold uppercase",
-              large ? "px-2 py-0.5 text-[11px]" : "px-1.5 py-0.5 text-[9px]",
-            )}>
+            <TeacherRoutineLink
+              key={t.short_name}
+              teacherId={t.id}
+              className={cn(
+                "rounded bg-blue-100 text-blue-800 font-bold uppercase hover:bg-blue-200",
+                large ? "px-2 py-0.5 text-[11px]" : "px-1.5 py-0.5 text-[9px]",
+              )}
+            >
               {t.short_name}
-            </span>
+            </TeacherRoutineLink>
           ))}
           {slot.week !== "EVERY" && (
             <span className={cn(

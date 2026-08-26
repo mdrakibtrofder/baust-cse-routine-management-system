@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { rankInfoFor } from "@/lib/teacher-rank";
 import type { Teacher } from "@/lib/types";
+import { TeacherRoutineLink } from "@/components/TeacherRoutineLink";
 
 /** Compact rank pill (just the rank short code + color) */
 export function RankPill({ designation, className }: { designation: string; className?: string }) {
@@ -24,13 +25,15 @@ export function TeacherChip({
   teacher,
   className,
 }: {
-  teacher: Pick<Teacher, "short_name" | "designation" | "name">;
+  teacher: Pick<Teacher, "short_name" | "designation" | "name"> & { id?: string };
   className?: string;
 }) {
   return (
     <span className={cn("inline-flex items-center gap-1", className)} title={`${teacher.name} · ${teacher.designation}`}>
       <RankPill designation={teacher.designation} />
-      <span className="font-mono font-semibold">{teacher.short_name}</span>
+      <TeacherRoutineLink teacherId={teacher.id} className="font-mono font-semibold hover:text-primary">
+        {teacher.short_name}
+      </TeacherRoutineLink>
     </span>
   );
 }

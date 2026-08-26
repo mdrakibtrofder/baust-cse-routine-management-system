@@ -11,6 +11,7 @@ import { TeacherPicker } from "./TeacherPicker";
 import { ClassScheduleModal } from "./ClassScheduleModal";
 import { checkConflicts } from "@/lib/conflicts";
 import { RoutineDialog } from "@/components/RoutineDialog";
+import { TeacherRoutineLink } from "@/components/TeacherRoutineLink";
 import { CourseDetailsDialog } from "@/components/CourseDetailsDialog";
 import { CombineSectionsDialog } from "./CombineSectionsDialog";
 import { HOME_DEPT_SHORT_NAME } from "@/lib/constants";
@@ -423,7 +424,7 @@ function SectionCell({ course, section, sections, onAssign, onManageLabSections,
                         const t = data.teachers.find((x) => x.id === tid);
                         return t ? (
                           <Badge key={tid} variant="secondary" className="text-[9px] px-1 py-0 h-3.5">
-                            {t.short_name}
+                            <TeacherRoutineLink teacherId={t.id}>{t.short_name}</TeacherRoutineLink>
                           </Badge>
                         ) : null;
                       })}
