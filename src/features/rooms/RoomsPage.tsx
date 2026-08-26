@@ -19,6 +19,7 @@ import { useConfirm } from "@/components/ConfirmDialog";
 import { roomDependencies } from "@/lib/conflicts";
 import { BlockedDeleteDialog } from "@/components/BlockedDeleteDialog";
 import { RoutineDialog } from "@/components/RoutineDialog";
+import { LinkButton } from "@/components/LinkButton";
 import { UnavailabilityDialog } from "@/components/UnavailabilityDialog";
 import { HOME_DEPT_SHORT_NAME } from "@/lib/constants";
 
@@ -142,7 +143,9 @@ export function RoomsPage() {
                 const deps = roomDependencies(data, r.id);
                 return (
                   <TableRow key={r.id}>
-                    <TableCell className="font-mono font-medium">{r.name}</TableCell>
+                    <TableCell className="font-mono font-medium">
+                      <LinkButton onClick={() => setRoutineFor(r)} title="View routine">{r.name}</LinkButton>
+                    </TableCell>
                     <TableCell>
                       <Badge
                         variant={

@@ -18,6 +18,7 @@ import type { Teacher } from "@/lib/types";
 import { useConfirm } from "@/components/ConfirmDialog";
 import { TeacherMoveDialog } from "@/components/TeacherMoveDialog";
 import { RoutineDialog } from "@/components/RoutineDialog";
+import { LinkButton } from "@/components/LinkButton";
 import { UnavailabilityDialog } from "@/components/UnavailabilityDialog";
 import { rankInfoFor } from "@/lib/teacher-rank";
 import { cn } from "@/lib/utils";
@@ -194,8 +195,12 @@ export function TeachersPage() {
                 const rank = rankInfoFor(t.designation);
                 return (
                   <TableRow key={t.id}>
-                    <TableCell className="font-mono font-medium">{t.short_name}</TableCell>
-                    <TableCell>{t.name}</TableCell>
+                    <TableCell className="font-mono font-medium">
+                      <LinkButton onClick={() => setRoutineFor(t)} title="View routine">{t.short_name}</LinkButton>
+                    </TableCell>
+                    <TableCell>
+                      <LinkButton onClick={() => setRoutineFor(t)} title="View routine">{t.name}</LinkButton>
+                    </TableCell>
                     <TableCell className="text-muted-foreground">
                       <div className="flex items-center gap-2">
                         <span

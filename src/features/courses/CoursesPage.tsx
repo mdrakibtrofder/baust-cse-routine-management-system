@@ -20,6 +20,8 @@ import { COURSE_TYPE_INFO } from "@/lib/types";
 import { useConfirm } from "@/components/ConfirmDialog";
 import { courseDependencies } from "@/lib/conflicts";
 import { BlockedDeleteDialog } from "@/components/BlockedDeleteDialog";
+import { CourseDetailsDialog } from "@/components/CourseDetailsDialog";
+import { LinkButton } from "@/components/LinkButton";
 import { HOME_DEPT_SHORT_NAME } from "@/lib/constants";
 
 const empty: Omit<Course, "id"> = {
@@ -41,6 +43,7 @@ export function CoursesPage() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<any>(empty);
   const [blocked, setBlocked] = useState<{ course: Course; deps: ReturnType<typeof courseDependencies> } | null>(null);
+  const [courseDetails, setCourseDetails] = useState<Course | null>(null);
   const homeDept = useMemo(
     () => data.departments.find((d) => d.short_name.trim().toUpperCase() === HOME_DEPT_SHORT_NAME),
     [data.departments],
@@ -160,8 +163,12 @@ export function CoursesPage() {
                 .sort((a,b) => a.level - b.level || a.term.localeCompare(b.term) || a.code.localeCompare(b.code))
                 .map(c => (
                 <TableRow key={c.id}>
-                  <TableCell className="font-mono font-medium">{c.code}</TableCell>
-                  <TableCell>{c.name}</TableCell>
+                  <TableCell className="font-mono font-medium">
+                    <LinkButton onClick={() => setCourseDetails(c)} title="View course details">{c.code}</LinkButton>
+                  </TableCell>
+                  <TableCell>
+                    <LinkButton onClick={() => setCourseDetails(c)} title="View course details">{c.name}</LinkButton>
+                  </TableCell>
                   <TableCell><Badge variant="outline">L{c.level} T{c.term}</Badge></TableCell>
                   <TableCell className="text-right font-medium">{c.credit}</TableCell>
                   <TableCell>
@@ -315,6 +322,12 @@ export function CoursesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <CourseDetailsDialog
+        course={courseDetails}
+        open={!!courseDetails}
+        onOpenChange={(v) => !v && setCourseDetails(null)}
+      />
 
       <BlockedDeleteDialog
         open={!!blocked}

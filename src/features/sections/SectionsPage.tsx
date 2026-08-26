@@ -18,6 +18,7 @@ import { useConfirm } from "@/components/ConfirmDialog";
 import { sectionDependencies } from "@/lib/conflicts";
 import { BlockedDeleteDialog } from "@/components/BlockedDeleteDialog";
 import { RoutineDialog } from "@/components/RoutineDialog";
+import { LinkButton } from "@/components/LinkButton";
 import { cn, tagColorClasses } from "@/lib/utils";
 import { HOME_DEPT_SHORT_NAME } from "@/lib/constants";
 
@@ -180,7 +181,9 @@ export function SectionsPage() {
                     <TableBody>
                       {group.map(s => (
                         <TableRow key={s.id}>
-                          <TableCell className="font-medium">Section {s.name}</TableCell>
+                          <TableCell className="font-medium">
+                            <LinkButton onClick={() => setRoutineFor(s)} title="View routine">Section {s.name}</LinkButton>
+                          </TableCell>
                           <TableCell className="text-right">{s.total_students}</TableCell>
                           <TableCell>
                             {(() => {
