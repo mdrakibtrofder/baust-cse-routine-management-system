@@ -22,11 +22,19 @@ interface BusyEntry {
   next: ClassSlot | null;
 }
 
+interface FreeEntry {
+  teacher: Teacher;
+  nextSameDay: ClassSlot | null;
+  /** Set when the teacher has no class but IS marked unavailable, and the
+   *  "classes only" mode is active — surfaced as a soft warning, not as busy. */
+  unavailableNote: string | null;
+}
+
 interface CellInfo {
   day: string;
   period: Period;
   busy: BusyEntry[];
-  free: { teacher: Teacher; nextSameDay: ClassSlot | null }[];
+  free: FreeEntry[];
 }
 
 const matchesTeacher = (t: Teacher, q: string) => {
@@ -80,6 +88,9 @@ export function AvailabilityFinderPage() {
   const [selected, setSelected] = useState<CellInfo | null>(null);
   const [q, setQ] = useState("");
   const [showOtherDepts, setShowOtherDepts] = useState(false);
+  /** false (default) = a teacher counts as busy only when they actually have a
+   *  class at that time. true = marked unavailability counts as busy too. */
+  const [includeUnavailability, setIncludeUnavailability] = useState(false);
 
   const periods = useMemo(() => {
     const theory = data.periods
@@ -140,10 +151,15 @@ export function AvailabilityFinderPage() {
 
   const computeCell = (day: string, p: Period): CellInfo => {
     if (/break/i.test(p.name)) {
-      return { day, period: p, busy: [], free: pool.map((t) => ({ teacher: t, nextSameDay: null })) };
+      return {
+        day,
+        period: p,
+        busy: [],
+        free: pool.map((t) => ({ teacher: t, nextSameDay: null, unavailableNote: null })),
+      };
     }
     const busy: BusyEntry[] = [];
-    const freeOnes: { teacher: Teacher; nextSameDay: ClassSlot | null }[] = [];
+    const freeOnes: FreeEntry[] = [];
     for (const t of pool) {
       const teacherSlots = teacherIdToCstSlots.get(t.id) ?? [];
       const conflicting = teacherSlots.find(
@@ -152,7 +168,7 @@ export function AvailabilityFinderPage() {
       const unavail = teacherUnavailableAt(data, t.id, { day, start: p.start, end: p.end });
       if (conflicting) {
         busy.push({ teacher: t, slot: conflicting, next: null });
-      } else if (unavail) {
+      } else if (unavail && includeUnavailability) {
         busy.push({
           teacher: t,
           slot: {
@@ -173,7 +189,13 @@ export function AvailabilityFinderPage() {
         const next = teacherSlots
           .filter((s) => s.day === day && s.start >= p.end)
           .sort((a, b) => compareTimeValues(a.start, b.start))[0] ?? null;
-        freeOnes.push({ teacher: t, nextSameDay: next });
+        freeOnes.push({
+          teacher: t,
+          nextSameDay: next,
+          unavailableNote: unavail
+            ? `Marked unavailable ${fmtRange12(unavail.start, unavail.end)}${unavail.reason ? ` · ${unavail.reason}` : ""}`
+            : null,
+        });
       }
     }
     return { day, period: p, busy, free: freeOnes };
@@ -199,6 +221,13 @@ export function AvailabilityFinderPage() {
               hint={otherTeachers.length ? `(${otherTeachers.length})` : ""}
               title="Include teachers whose department is not CSE — affects every count and list on this page"
             />
+            <NonDepartmentalToggle
+              checked={includeUnavailability}
+              onChange={setIncludeUnavailability}
+              label="Count marked unavailability as busy"
+              hint="(default: classes only)"
+              title="Off — a teacher is busy only when they have a class at that time. On — manually marked unavailable windows count as busy too."
+            />
           </div>
           <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
             <span className="inline-flex items-center gap-1.5 rounded-full border bg-muted/40 px-2.5 py-1 font-semibold">
@@ -219,6 +248,12 @@ export function AvailabilityFinderPage() {
               {singleTeacher
                 ? `Showing ${singleTeacher.short_name} only — green means free, red means busy.`
                 : "Click any cell for who is free (with their next class) and who is busy (with their current class)."}
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border bg-muted/40 px-2.5 py-1 font-semibold">
+              Busy means:{" "}
+              <span className="text-foreground">
+                {includeUnavailability ? "classes + marked unavailability" : "classes only"}
+              </span>
             </span>
           </div>
         </div>
@@ -402,8 +437,8 @@ function CellDetailsDialog({
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {free.map(({ teacher, nextSameDay }) => (
-                      <FreeRow key={teacher.id} teacher={teacher} nextSameDay={nextSameDay} />
+                    {free.map((f) => (
+                      <FreeRow key={f.teacher.id} entry={f} />
                     ))}
                   </div>
                 )}
@@ -492,14 +527,24 @@ function TeacherChipBig({ teacher }: { teacher: Teacher }) {
   );
 }
 
-function FreeRow({ teacher, nextSameDay }: { teacher: Teacher; nextSameDay: ClassSlot | null }) {
+function FreeRow({ entry }: { entry: FreeEntry }) {
+  const { teacher, nextSameDay, unavailableNote } = entry;
   const data = useStore();
   const c = nextSameDay ? data.courses.find((x) => x.id === nextSameDay.course_id) : null;
   const room = nextSameDay ? data.rooms.find((x) => x.id === nextSameDay.room_id) : null;
   const sec = nextSameDay ? data.sections.find((x) => x.id === nextSameDay.section_id) : null;
   return (
-    <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 p-3 space-y-2 transition hover:shadow-sm">
+    <div className={cn(
+      "rounded-lg border p-3 space-y-2 transition hover:shadow-sm",
+      unavailableNote ? "border-amber-300 bg-amber-50/70" : "border-emerald-200 bg-emerald-50/60",
+    )}>
       <TeacherChipBig teacher={teacher} />
+      {unavailableNote && (
+        <div className="flex items-start gap-1.5 rounded-md border border-amber-300/70 bg-amber-100/70 px-2 py-1 text-[10px] font-semibold text-amber-900">
+          <UserX className="h-3 w-3 mt-px shrink-0" />
+          <span>No class, but {unavailableNote.charAt(0).toLowerCase() + unavailableNote.slice(1)}</span>
+        </div>
+      )}
       <div className="text-[11px] text-muted-foreground border-t border-emerald-200/70 pt-2 flex items-center gap-1.5 flex-wrap">
         <Clock className="h-3 w-3" />
         {nextSameDay ? (
