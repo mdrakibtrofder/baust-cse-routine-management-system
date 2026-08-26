@@ -11,7 +11,7 @@ import { TeacherPicker } from "./TeacherPicker";
 import { ClassScheduleModal } from "./ClassScheduleModal";
 import { checkConflicts } from "@/lib/conflicts";
 import { RoutineDialog } from "@/components/RoutineDialog";
-import { TeacherRoutineLink } from "@/components/TeacherRoutineLink";
+import { TeacherRoutineLink } from "@/components/RoutineLink";
 import { CourseDetailsDialog } from "@/components/CourseDetailsDialog";
 import { CombineSectionsDialog } from "./CombineSectionsDialog";
 import { HOME_DEPT_SHORT_NAME } from "@/lib/constants";

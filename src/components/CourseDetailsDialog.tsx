@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { BookOpen, Users, MapPin, Calendar, Clock, GraduationCap, Sparkles } from "lucide-react";
 import type { Course } from "@/lib/types";
 import { TeacherChip } from "@/components/TeacherBadge";
-import { TeacherRoutineLink } from "@/components/TeacherRoutineLink";
+import { TeacherRoutineLink } from "@/components/RoutineLink";
 import { cn, compareDayAndTime, fmtRange12, fmtDayTitle } from "@/lib/utils";
 
 const DEFAULT_DEPT = "CSE";

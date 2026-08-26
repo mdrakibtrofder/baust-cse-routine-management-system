@@ -11,7 +11,7 @@ import { roomDeptShort } from "@/lib/room-dept";
 import type { Teacher, Room, ClassSlot } from "@/lib/types";
 import { Input } from "@/components/ui/input";
 import { HOME_DEPT_SHORT_NAME } from "@/lib/constants";
-import { TeacherRoutineLink } from "@/components/TeacherRoutineLink";
+import { TeacherRoutineLink } from "@/components/RoutineLink";
 
 export function RoomTimeMappingPage() {
   return (

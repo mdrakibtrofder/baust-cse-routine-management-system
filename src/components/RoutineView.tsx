@@ -16,7 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { ClassScheduleModal } from "@/features/course-load/ClassScheduleModal";
 import { SwapRoomModal } from "@/components/SwapRoomModal";
 import { candidateSectionsForCourse } from "@/lib/course-sections";
-import { TeacherRoutineLink } from "@/components/TeacherRoutineLink";
+import { TeacherRoutineLink, RoomRoutineLink, SectionRoutineLink } from "@/components/RoutineLink";
 
 const DEFAULT_DEPT = "CSE";
 
@@ -839,13 +839,16 @@ function RoutineCell({
       {/* Room + section badges */}
       <div className="flex items-center gap-1.5 flex-wrap">
         {room && (
-          <span className={cn(
-            "inline-flex items-center gap-1 font-bold rounded bg-orange-500 text-white shadow-sm",
-            large ? "px-2 py-1 text-[11px]" : "px-1.5 py-0.5 text-[10px]",
-          )}>
+          <RoomRoutineLink
+            roomId={room.id}
+            className={cn(
+              "inline-flex items-center gap-1 font-bold rounded bg-orange-500 text-white shadow-sm hover:bg-orange-600",
+              large ? "px-2 py-1 text-[11px]" : "px-1.5 py-0.5 text-[10px]",
+            )}
+          >
             <MapPin className={large ? "h-3 w-3" : "h-2.5 w-2.5"} />
             {room.name}
-          </span>
+          </RoomRoutineLink>
         )}
         {labSection && course && labMappedSections.length > 0 && (
           <span className={cn(
@@ -857,14 +860,17 @@ function RoutineCell({
           </span>
         )}
         {!labSection && section && course && (
-          <span className={cn(
-            "inline-flex items-center gap-1 font-bold rounded shadow-sm",
-            large ? "px-2 py-1 text-[11px]" : "px-1.5 py-0.5 text-[10px]",
-            isSessional ? "bg-emerald-500 text-white" : "bg-sky-500 text-white",
-          )}>
+          <SectionRoutineLink
+            sectionId={section.id}
+            className={cn(
+              "inline-flex items-center gap-1 font-bold rounded shadow-sm",
+              large ? "px-2 py-1 text-[11px]" : "px-1.5 py-0.5 text-[10px]",
+              isSessional ? "bg-emerald-500 text-white hover:bg-emerald-600" : "bg-sky-500 text-white hover:bg-sky-600",
+            )}
+          >
             {formatSection(section)}
             {combinedSections.map((s) => `+${formatSection(s)}`).join("")}
-          </span>
+          </SectionRoutineLink>
         )}
       </div>
 

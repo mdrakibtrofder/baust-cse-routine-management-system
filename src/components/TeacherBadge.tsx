@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import { rankInfoFor } from "@/lib/teacher-rank";
 import type { Teacher } from "@/lib/types";
-import { TeacherRoutineLink } from "@/components/TeacherRoutineLink";
+import { TeacherRoutineLink } from "@/components/RoutineLink";
 
 /** Compact rank pill (just the rank short code + color) */
 export function RankPill({ designation, className }: { designation: string; className?: string }) {

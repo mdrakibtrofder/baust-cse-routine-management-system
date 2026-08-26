@@ -14,7 +14,7 @@ import { teacherDeptShort, sortHomeDeptFirst } from "@/lib/room-dept";
 import { HOME_DEPT_SHORT_NAME } from "@/lib/constants";
 import { ctRoomNames, filterCTsByDepartmental, compareCTsByLevelTerm } from "@/lib/ct-schedule-utils";
 import { NonDepartmentalToggle } from "@/components/NonDepartmentalToggle";
-import { TeacherRoutineLink } from "@/components/TeacherRoutineLink";
+import { TeacherRoutineLink } from "@/components/RoutineLink";
 
 /** CT schedule grouped by teacher, resolved through course_section_teachers for the
  *  active semester. Home-department (CSE) teachers are listed first. */

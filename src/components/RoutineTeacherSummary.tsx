@@ -2,7 +2,7 @@ import { useStore } from "@/lib/store";
 import { Users } from "lucide-react";
 import { buildRoutineTeacherSummary } from "@/lib/routine-summary";
 import type { RoutineScope } from "@/components/RoutineView";
-import { TeacherRoutineLink } from "@/components/TeacherRoutineLink";
+import { TeacherRoutineLink } from "@/components/RoutineLink";
 
 /** Small Teacher Details table shown beneath the Course Summary on every routine view. */
 export function RoutineTeacherSummary({ scope }: { scope: RoutineScope }) {
