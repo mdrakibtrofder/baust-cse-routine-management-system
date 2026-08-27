@@ -269,6 +269,26 @@ export function checkConflicts(input: ConflictCheckInput): Conflict[] {
     }
   }
 
+  // Same entity, overlapping times: two meetings of the SAME course for the same
+  // section (or the same lab section) that land on top of each other. These are
+  // skipped by every other rule as "the entity's own slots", which is why a course
+  // scheduled twice in one period used to slip through undetected.
+  for (const slot of slots) {
+    if (shouldIgnore(slot.id)) continue;
+    if (!isOwnEntitySlot(slot)) continue;
+    if (slot.day !== candidate.day) continue;
+    if (!timesOverlap(slot.start, slot.end, candidate.start, candidate.end)) continue;
+    if (!weeksOverlap(slot.week, candidate.week)) continue;
+    const where =
+      scope.kind === "section"
+        ? `Section ${scope.section.name}`
+        : (data.course_lab_sections.find((g) => g.id === scope.labSectionId)?.label ?? "this lab section");
+    conflicts.push({
+      type: "self_duplicate",
+      message: `${course.code} is already scheduled for ${where} on ${slot.day} ${fmtRange12(slot.start, slot.end)} — two classes of the same course overlap.`,
+    });
+  }
+
   // Section double-booking: does any real section covered by this scope
   // (the section itself, or every section a lab meeting maps to) already have
   // a *different course's* class at this day/time?

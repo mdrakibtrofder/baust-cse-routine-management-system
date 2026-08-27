@@ -106,6 +106,9 @@ interface StoreState extends AppData {
   deleteClassSlot: (id: string) => Promise<void>;
   deleteClassSlotsForCourseSection: (course_id: string, section_id: string) => Promise<void>;
   batchReplaceClassSlots: (course_id: string, section_id: string, slots: Array<{ day: string; start: string; end: string; room_id: string; week: string }>, force?: boolean) => Promise<void>;
+  /** Exchange the day/time of two class slots atomically (each keeps its own
+   *  course, room, teachers and week pattern). `force` writes through conflicts. */
+  swapClassSlots: (slot_a_id: string, slot_b_id: string, force?: boolean) => Promise<ClassSlot[]>;
   
   // unavailability
   addTeacherUnavailability: (u: Omit<TeacherUnavailability, "id">) => Promise<void>;
@@ -715,6 +718,23 @@ export const useStore = create<StoreState>((set, get) => ({
       set({ error: err.message });
       throw err;
     }
+  },
+  swapClassSlots: async (slot_a_id, slot_b_id, force = false) => {
+    const res = await api.post<{ slots: ClassSlot[] }>('/class-slots/swap', {
+      slot_a_id,
+      slot_b_id,
+      force,
+    });
+    set((s) => {
+      const next = [...s.class_slots];
+      for (const updated of res.slots) {
+        const idx = next.findIndex((x) => x.id === updated.id);
+        if (idx === -1) next.push(updated);
+        else next[idx] = updated;
+      }
+      return { class_slots: next };
+    });
+    return res.slots;
   },
   deleteClassSlot: async (id) => {
     try {

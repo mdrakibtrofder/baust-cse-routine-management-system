@@ -18,7 +18,7 @@ import { COURSE_TYPE_INFO } from "@/lib/types";
 // Helpers
 // ---------------------------------------------------------------------------
 
-const DAY_FULL: Record<string, string> = {
+export const DAY_FULL: Record<string, string> = {
   SUN: "Sunday", MON: "Monday", TUE: "Tuesday",
   WED: "Wednesday", THU: "Thursday", FRI: "Friday", SAT: "Saturday",
 };
@@ -40,7 +40,7 @@ function useSectionLabel() {
 // ClassCard
 // ---------------------------------------------------------------------------
 
-function ClassCard({
+export function ClassCard({
   slot,
   highlight = false,
   compact = false,
@@ -170,7 +170,7 @@ function ClassCard({
 // ---------------------------------------------------------------------------
 // ConflictIcon helper
 // ---------------------------------------------------------------------------
-function ConflictIcon({ type }: { type: Conflict["type"] }) {
+export function ConflictIcon({ type }: { type: Conflict["type"] }) {
   if (type === "room_double") return <Building2 className="h-4 w-4 text-rose-500 shrink-0 mt-0.5" />;
   if (type === "room_capacity") return <GraduationCap className="h-4 w-4 text-orange-500 shrink-0 mt-0.5" />;
   if (type === "room_type") return <AlertCircle className="h-4 w-4 text-orange-500 shrink-0 mt-0.5" />;
@@ -181,7 +181,7 @@ function ConflictIcon({ type }: { type: Conflict["type"] }) {
   return <AlertTriangle className="h-4 w-4 text-rose-500 shrink-0 mt-0.5" />;
 }
 
-function conflictTypeLabel(type: Conflict["type"]) {
+export function conflictTypeLabel(type: Conflict["type"]) {
   const labels: Record<Conflict["type"], string> = {
     room_double: "Room Double-Booking",
     room_capacity: "Room Capacity Exceeded",
@@ -196,7 +196,7 @@ function conflictTypeLabel(type: Conflict["type"]) {
   return labels[type] ?? type;
 }
 
-function conflictSeverity(type: Conflict["type"]): "error" | "warning" {
+export function conflictSeverity(type: Conflict["type"]): "error" | "warning" {
   if (type === "room_capacity" || type === "teacher_unavailable" || type === "room_unavailable") return "warning";
   return "error";
 }

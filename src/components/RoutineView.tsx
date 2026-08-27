@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useStore } from "@/lib/store";
 import { cn, compareTimeValues, fmtTime12, fmtRange12, sortDays, fmtDayTitle } from "@/lib/utils";
-import { BookOpen, MapPin, Coffee, FlaskConical, FileSpreadsheet, FileText, FileType, FileJson, Image as ImageIcon, Eye, Users, Ban, Archive, Repeat2 } from "lucide-react";
+import { BookOpen, MapPin, Coffee, FlaskConical, FileSpreadsheet, FileText, FileType, FileJson, Image as ImageIcon, Eye, Users, Ban, Archive, Repeat2, ArrowLeftRight } from "lucide-react";
 import { COURSE_TYPE_INFO, type ClassSlot, type Section } from "@/lib/types";
 import { timesOverlap } from "@/lib/conflicts";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import { RoutineTeacherSummary } from "@/components/RoutineTeacherSummary";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ClassScheduleModal } from "@/features/course-load/ClassScheduleModal";
 import { SwapRoomModal } from "@/components/SwapRoomModal";
+import { SwapClassModal } from "@/components/SwapClassModal";
 import { candidateSectionsForCourse } from "@/lib/course-sections";
 import { filterScopeSlots } from "@/lib/routine-scope";
 import { TeacherRoutineLink, RoomRoutineLink, SectionRoutineLink } from "@/components/RoutineLink";
@@ -64,6 +65,10 @@ export function RoutineView({
     | null
   >(null);
   // Internal swap state — used when parent does NOT pass external state
+  /** Class-swap mode is section-scoped and always local to this view: two cells
+   *  of THIS section's routine trade day/time (with their course, teacher and room). */
+  const [classSwapMode, setClassSwapMode] = useState(false);
+  const [classSwapTarget, setClassSwapTarget] = useState<ClassSlot | null>(null);
   const [swapModeInternal, setSwapModeInternal] = useState(false);
   const [swapTargetInternal, setSwapTargetInternal] = useState<ClassSlot | null>(null);
 
@@ -202,6 +207,29 @@ export function RoutineView({
             >
               <Repeat2 className="h-3.5 w-3.5 mr-1" />
               {swapMode ? "Hide Swap" : "Swap Room"}
+            </Button>
+          )}
+          {/* Swap Class — exchange the day/time of two classes of THIS section */}
+          {scope.kind === "section" && (
+            <Button
+              size="sm"
+              variant="outline"
+              className={cn(
+                "h-7 text-xs font-semibold transition-all duration-200",
+                classSwapMode
+                  ? "text-white border-teal-500 shadow-md shadow-teal-200"
+                  : "border-teal-300 text-teal-700 hover:bg-teal-50",
+              )}
+              style={classSwapMode ? { background: "linear-gradient(135deg, oklch(0.55 0.14 190), oklch(0.45 0.13 210))" } : undefined}
+              onClick={() => {
+                setClassSwapMode((v) => !v);
+                setClassSwapTarget(null);
+                setSwapMode(false);
+                setSwapTarget(null);
+              }}
+            >
+              <ArrowLeftRight className="h-3.5 w-3.5 mr-1" />
+              {classSwapMode ? "Hide Class Swap" : "Swap Class"}
             </Button>
           )}
           <Button size="sm" variant="outline" className="h-7 text-xs bg-primary/5 border-primary/20 text-primary hover:bg-primary/10"
@@ -367,14 +395,17 @@ export function RoutineView({
                                 key={s.id}
                                 slot={s}
                                 large={!isExtended}
-                                swapMode={swapMode}
+                                swapMode={swapMode || classSwapMode}
+                                swapKind={classSwapMode ? "class" : "room"}
                                 onSwap={
-                                  swapMode && !s.lab_section_id && s.section_id
-                                    ? () => setSwapTarget(s)
-                                    : undefined
+                                  classSwapMode && !s.lab_section_id && s.section_id
+                                    ? () => setClassSwapTarget(s)
+                                    : swapMode && !s.lab_section_id && s.section_id
+                                      ? () => setSwapTarget(s)
+                                      : undefined
                                 }
                                 onEdit={
-                                  swapMode
+                                  swapMode || classSwapMode
                                     ? undefined
                                     : () =>
                                         setEditTarget(
@@ -447,6 +478,14 @@ export function RoutineView({
         <SwapRoomModal
           slot={swapTarget}
           onClose={() => setSwapTarget(null)}
+        />
+      )}
+
+      {classSwapTarget && scope.kind === "section" && (
+        <SwapClassModal
+          slot={classSwapTarget}
+          sectionId={scope.section_id}
+          onClose={() => setClassSwapTarget(null)}
         />
       )}
 
@@ -643,12 +682,15 @@ function RoutineCell({
   large,
   onEdit,
   swapMode,
+  swapKind = "room",
   onSwap,
 }: {
   slot: ClassSlot;
   large?: boolean;
   onEdit?: () => void;
   swapMode?: boolean;
+  /** Which swap the overlay button starts — room exchange or full class (time) swap. */
+  swapKind?: "room" | "class";
   onSwap?: () => void;
 }) {
   const data = useStore();
@@ -750,10 +792,16 @@ function RoutineCell({
             "hover:scale-110 active:scale-95",
             large ? "h-6 w-6" : "h-5 w-5",
           )}
-          style={{ background: "linear-gradient(135deg, oklch(0.50 0.18 290), oklch(0.42 0.20 260))" }}
-          title="Swap room"
+          style={{
+            background: swapKind === "class"
+              ? "linear-gradient(135deg, oklch(0.55 0.14 190), oklch(0.45 0.13 210))"
+              : "linear-gradient(135deg, oklch(0.50 0.18 290), oklch(0.42 0.20 260))",
+          }}
+          title={swapKind === "class" ? "Swap this class with another class of this section" : "Swap room"}
         >
-          <Repeat2 className={large ? "h-3.5 w-3.5" : "h-3 w-3"} />
+          {swapKind === "class"
+            ? <ArrowLeftRight className={large ? "h-3.5 w-3.5" : "h-3 w-3"} />
+            : <Repeat2 className={large ? "h-3.5 w-3.5" : "h-3 w-3"} />}
         </button>
       )}
       {/* Course code + teacher badges */}
