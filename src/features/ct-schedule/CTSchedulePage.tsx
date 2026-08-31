@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { Fragment, useState, useEffect, useMemo, useCallback } from "react";
 import { useStore } from "@/lib/store";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -122,6 +122,7 @@ export function CTScheduleConfigPage() {
       await api.put<CTSetting>(`/ct-schedule/settings/${active_semester_id}`, {
         total_weeks: settings.total_weeks,
         start_date: settings.start_date,
+        break_weeks: breakWeeks,
       });
       // Send the complete grid currently on screen, not the rows that happened to be
       // loaded. The server replaces the semester's calendar with exactly this payload,
@@ -146,16 +147,39 @@ export function CTScheduleConfigPage() {
     }
   };
 
-  const toggleDayAvailability = (weekNum: number, date: string) => {
+  /** `next` is passed in rather than derived from the stored row: after a break
+   *  week shifts the calendar, a day's state comes from the row for the same
+   *  (week number, weekday) under its *old* date, so flipping the stored row's
+   *  own value would disagree with the checkbox the user just clicked. */
+  const toggleDayAvailability = (weekNum: number, date: string, next: boolean) => {
     setWeekConfigs((prev) => {
       const existing = prev.find((w) => w.week_number === weekNum && w.date.startsWith(date));
       if (existing) {
         return prev.map((w) =>
-          w.week_number === weekNum && w.date.startsWith(date) ? { ...w, is_available: !w.is_available } : w
+          w.week_number === weekNum && w.date.startsWith(date) ? { ...w, is_available: next } : w
         );
       } else {
-        return [...prev, { id: "", semester_id: active_semester_id!, week_number: weekNum, date, is_available: true }];
+        return [...prev, { id: "", semester_id: active_semester_id!, week_number: weekNum, date, is_available: next }];
       }
+    });
+  };
+
+  const breakWeeks = useMemo(
+    () => Array.from(new Set(settings?.break_weeks ?? [])).sort((a, b) => a - b),
+    [settings?.break_weeks],
+  );
+
+  /** Marks/unmarks the calendar week before `weekNum` as a break (mid term).
+   *  Week numbers never change; every week from `weekNum` on simply lands one
+   *  calendar week later, and the day selections follow them by weekday. */
+  const toggleBreakWeek = (weekNum: number) => {
+    setSettings((s) => {
+      if (!s) return s;
+      const current = s.break_weeks ?? [];
+      const next = current.includes(weekNum)
+        ? current.filter((w) => w !== weekNum)
+        : [...current, weekNum].sort((a, b) => a - b);
+      return { ...s, break_weeks: next };
     });
   };
 
@@ -174,11 +198,22 @@ export function CTScheduleConfigPage() {
 
     const result = [];
     for (let i = 1; i <= settings.total_weeks; i++) {
-      const weekStart = addDays(firstWeekSunday, (i - 1) * 7);
+      // Each break week before this one pushes it a further calendar week out,
+      // without touching its number: week 8 with a break at 8 runs 04–08 Oct
+      // instead of 27 Sep–01 Oct, and every later week follows it.
+      const breaksBefore = breakWeeks.filter((b) => b <= i).length;
+      const weekStart = addDays(firstWeekSunday, (i - 1 + breaksBefore) * 7);
       const daysInWeek = DAYS.map((_, idx) => {
         const d = addDays(weekStart, idx);
         const dateStr = format(d, "yyyy-MM-dd");
-        const config = weekConfigs.find((c) => c.week_number === i && c.date.startsWith(dateStr));
+        const config =
+          weekConfigs.find((c) => c.week_number === i && c.date.startsWith(dateStr)) ??
+          // Falls back to the same weekday under this week's *previous* date, so
+          // adding or removing a break week shifts the calendar without wiping
+          // the day selections already made against it.
+          weekConfigs.find(
+            (c) => c.week_number === i && parseISO(c.date.split("T")[0]).getDay() === idx,
+          );
         return {
           date: dateStr,
           label: format(d, "dd MMM (EEE)"),
@@ -187,10 +222,23 @@ export function CTScheduleConfigPage() {
           isBeforeStart: isBefore(d, startDate),
         };
       });
-      result.push({ number: i, days: daysInWeek });
+      const breakStart = breakWeeks.includes(i)
+        ? addDays(firstWeekSunday, (i - 1 + breaksBefore - 1) * 7)
+        : null;
+      result.push({
+        number: i,
+        days: daysInWeek,
+        // The break week sitting immediately before this one, if any.
+        breakBefore: breakStart
+          ? {
+              start: breakStart,
+              label: `${format(breakStart, "dd MMM")} – ${format(addDays(breakStart, 4), "dd MMM")}`,
+            }
+          : null,
+      });
     }
     return result;
-  }, [settings, weekConfigs]);
+  }, [settings, weekConfigs, breakWeeks]);
 
   const toggleMappedDay = (key: string, code: string) => {
     setDayMappings((prev) => {
@@ -355,8 +403,26 @@ export function CTScheduleConfigPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {weeks.map((w) => (
+                <Fragment key={w.number}>
+                {w.breakBefore && (
+                  <div className="p-5 rounded-xl border-2 border-dashed border-amber-500/60 bg-gradient-to-br from-amber-500/15 to-amber-500/5 flex flex-col justify-center items-center text-center gap-2">
+                    <span className="text-2xl">🎓</span>
+                    <span className="font-black text-sm text-amber-600 uppercase tracking-wider">Mid Term Break</span>
+                    <span className="text-xs font-bold text-muted-foreground">{w.breakBefore.label}</span>
+                    <p className="text-[10px] text-muted-foreground">
+                      No week number — week {w.number} onwards moves one week later
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => toggleBreakWeek(w.number)}
+                      className="h-7 text-[10px] font-bold border-amber-500/50 hover:bg-amber-500/10"
+                    >
+                      Remove break
+                    </Button>
+                  </div>
+                )}
                 <div
-                  key={w.number}
                   className={cn(
                     "p-5 rounded-xl border-2 space-y-4 transition-all hover:shadow-md",
                     w.days.some(d => d.isAvailable)
@@ -371,13 +437,25 @@ export function CTScheduleConfigPage() {
                       </div>
                       <span className="font-black text-sm text-foreground">WEEK</span>
                     </div>
-                    <div className={cn(
-                      "px-2.5 py-1 rounded-full text-[9px] font-bold",
-                      w.days.some(d => d.isAvailable)
-                        ? "bg-success/30 text-success"
-                        : "bg-muted text-muted-foreground"
-                    )}>
-                      {w.days.filter(d => d.isAvailable).length}/{w.days.length}
+                    <div className="flex items-center gap-1.5">
+                      <div className={cn(
+                        "px-2.5 py-1 rounded-full text-[9px] font-bold",
+                        w.days.some(d => d.isAvailable)
+                          ? "bg-success/30 text-success"
+                          : "bg-muted text-muted-foreground"
+                      )}>
+                        {w.days.filter(d => d.isAvailable).length}/{w.days.length}
+                      </div>
+                      {!w.breakBefore && (
+                        <button
+                          type="button"
+                          onClick={() => toggleBreakWeek(w.number)}
+                          title={`Mark the week before week ${w.number} as a mid term break — week ${w.number} and every later week keep their numbers and move one calendar week later`}
+                          className="px-2 py-1 rounded-full text-[9px] font-bold bg-muted text-muted-foreground hover:bg-amber-500/20 hover:text-amber-600 transition-colors"
+                        >
+                          + Break
+                        </button>
+                      )}
                     </div>
                   </div>
                   <div className="space-y-2">
@@ -390,14 +468,14 @@ export function CTScheduleConfigPage() {
                             ? "opacity-40 cursor-not-allowed"
                             : "hover:bg-primary/10 cursor-pointer"
                         )}
-                        onClick={() => !d.isBeforeStart && toggleDayAvailability(w.number, d.date)}
+                        onClick={() => !d.isBeforeStart && toggleDayAvailability(w.number, d.date, !d.isAvailable)}
                         title={d.isBeforeStart ? "Before the semester start date" : undefined}
                       >
                         <Checkbox
                           id={`w${w.number}-${d.date}`}
                           checked={d.isAvailable}
                           disabled={d.isBeforeStart}
-                          onCheckedChange={() => toggleDayAvailability(w.number, d.date)}
+                          onCheckedChange={() => toggleDayAvailability(w.number, d.date, !d.isAvailable)}
                           onClick={(e) => e.stopPropagation()}
                           className="h-5 w-5"
                         />
@@ -414,6 +492,7 @@ export function CTScheduleConfigPage() {
                     ))}
                   </div>
                 </div>
+                </Fragment>
               ))}
             </div>
           </div>

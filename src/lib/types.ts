@@ -215,6 +215,11 @@ export interface CTSetting {
   semester_id: string;
   total_weeks: number;
   start_date: string | null;
+  /** Week numbers that a break week (e.g. mid term) sits *before*. An entry `8`
+   *  means the calendar week that would have carried week 8 is the break, so
+   *  weeks 8, 9, 10 … each fall one calendar week later. Nothing is renumbered:
+   *  only the dates behind the week numbers move. */
+  break_weeks: number[];
 }
 
 export interface CTWeekConfig {
