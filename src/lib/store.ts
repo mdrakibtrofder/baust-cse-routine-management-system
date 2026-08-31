@@ -378,6 +378,8 @@ export const useStore = create<StoreState>((set, get) => ({
         designation: t.designation,
         department: t.department,
         status: t.status,
+        email: t.email,
+        phone: t.phone,
         assigned_credit_hours: t.assigned_credit_hours !== undefined ? safeNum(t.assigned_credit_hours) : undefined,
       };
 

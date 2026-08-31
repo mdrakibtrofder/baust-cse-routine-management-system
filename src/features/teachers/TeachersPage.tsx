@@ -11,7 +11,7 @@ import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Trash2, Plus, Search, ArrowRightLeft, CalendarDays, Clock, Loader2 } from "lucide-react";
+import { Pencil, Trash2, Plus, Search, ArrowRightLeft, CalendarDays, Clock, Loader2, FileSpreadsheet } from "lucide-react";
 import { toast } from "sonner";
 import { teacherAssignedCreditUsed, teacherDependencies } from "@/lib/conflicts";
 import type { Teacher } from "@/lib/types";
@@ -21,11 +21,12 @@ import { RoutineDialog } from "@/components/RoutineDialog";
 import { LinkButton } from "@/components/LinkButton";
 import { UnavailabilityDialog } from "@/components/UnavailabilityDialog";
 import { rankInfoFor } from "@/lib/teacher-rank";
+import { exportTeacherInfoXlsx, takenCourseCodes } from "@/lib/teacher-export";
 import { cn } from "@/lib/utils";
 
 const empty: Omit<Teacher, "id"> = {
   short_name: "", name: "", designation: "", department: "CSE",
-  status: "", assigned_credit_hours: 0,
+  status: "", assigned_credit_hours: 0, email: "", phone: "",
 };
 
 export function TeachersPage() {
@@ -43,7 +44,7 @@ export function TeachersPage() {
 
   const filtered = useMemo(
     () => teachers.filter(t =>
-      [t.short_name, t.name, t.designation, t.department, t.status]
+      [t.short_name, t.name, t.designation, t.department, t.status, t.email, t.phone]
         .join(" ").toLowerCase().includes(q.toLowerCase())
     ),
     [teachers, q]
@@ -71,6 +72,12 @@ export function TeachersPage() {
     }
     if (shortDuplicate(form.short_name, editing?.id)) {
       toast.error(`Short name "${form.short_name}" is already used by another teacher`);
+      return;
+    }
+    // Mirrors the server's rule — the address is only checked when one was typed —
+    // so a typo is caught here instead of coming back as a 400.
+    if (form.email?.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+      toast.error("Enter a valid email address, or leave it blank");
       return;
     }
     setSubmitting(true);
@@ -142,6 +149,8 @@ export function TeachersPage() {
               designation: String(r["Designation"] ?? r.designation ?? "").trim(),
               department: String(r["Department"] ?? r.department ?? "").trim(),
               status: String(r["Status"] ?? r.status ?? "").trim(),
+              email: String(r["Email"] ?? r.email ?? "").trim(),
+              phone: String(r["Phone Number"] ?? r["Phone"] ?? r.phone ?? "").trim(),
               assigned_credit_hours:
                 Number(
                   r["Credit Hours"] ??
@@ -158,6 +167,7 @@ export function TeachersPage() {
           "Short Name": t.short_name, "Full Name": t.name,
           Designation: t.designation, Department: t.department,
           Status: t.status, "Credit Hours": t.assigned_credit_hours,
+          Email: t.email, "Phone Number": t.phone,
         }))}
         exportName="teachers.xlsx"
         showReset
@@ -168,6 +178,22 @@ export function TeachersPage() {
             <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input className="pl-9" placeholder="Search teachers..." value={q} onChange={(e) => setQ(e.target.value)} />
           </div>
+          <Button
+            variant="outline"
+            onClick={() => {
+              if (filtered.length === 0) {
+                toast.error("No teachers to export");
+                return;
+              }
+              // Exports what is on screen, so a search narrows the sheet the
+              // same way it narrows the table.
+              exportTeacherInfoXlsx(data, filtered);
+              toast.success(`Downloaded information for ${filtered.length} teacher(s)`);
+            }}
+            title="Download teacher information (short form, name, department, taken courses, email, phone) as Excel"
+          >
+            <FileSpreadsheet className="h-4 w-4 mr-1.5" /> Download Teacher Info
+          </Button>
           <Button onClick={startAdd} style={{ background: "var(--gradient-primary)", color: "var(--primary-foreground)" }}>
             <Plus className="h-4 w-4 mr-1.5" /> Add Teacher
           </Button>
@@ -181,6 +207,8 @@ export function TeachersPage() {
                 <TableHead>Full Name</TableHead>
                 <TableHead>Designation</TableHead>
                 <TableHead>Dept</TableHead>
+                <TableHead>Contact</TableHead>
+                <TableHead>Taken Courses</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Total Credit</TableHead>
                 <TableHead className="text-right">Assigned</TableHead>
@@ -193,6 +221,7 @@ export function TeachersPage() {
                 const over = t.assigned_credit_hours > 0 && used > t.assigned_credit_hours + 0.001;
                 const depCount = teacherDependencies(data, t.id).length;
                 const rank = rankInfoFor(t.designation);
+                const takenCourses = takenCourseCodes(data, t.id);
                 return (
                   <TableRow key={t.id}>
                     <TableCell className="font-mono font-medium">
@@ -217,6 +246,25 @@ export function TeachersPage() {
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline">{t.department || "-"}</Badge>
+                    </TableCell>
+                    <TableCell className="text-xs">
+                      {t.email || t.phone ? (
+                        <div className="flex flex-col leading-tight">
+                          {t.email && (
+                            <a href={`mailto:${t.email}`} className="text-primary hover:underline">{t.email}</a>
+                          )}
+                          {t.phone && <span className="text-muted-foreground">{t.phone}</span>}
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground max-w-52">
+                      {takenCourses.length > 0 ? (
+                        <span title={takenCourses.join(", ")}>{takenCourses.join(", ")}</span>
+                      ) : (
+                        "-"
+                      )}
                     </TableCell>
                     <TableCell className="text-muted-foreground text-xs">{t.status || "-"}</TableCell>
                     <TableCell className="text-right">{Number(t.assigned_credit_hours || 0).toFixed(2)}</TableCell>
@@ -293,6 +341,23 @@ export function TeachersPage() {
             <div>
               <Label>Status</Label>
               <Input value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} />
+            </div>
+            <div>
+              <Label>Email</Label>
+              <Input
+                type="email"
+                placeholder="name@baust.edu.bd"
+                value={form.email ?? ""}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label>Phone number</Label>
+              <Input
+                placeholder="01XXXXXXXXX"
+                value={form.phone ?? ""}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              />
             </div>
             <div className="col-span-2">
               <Label>Total credit</Label>

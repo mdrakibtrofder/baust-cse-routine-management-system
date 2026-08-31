@@ -17,6 +17,9 @@ export interface Teacher {
   department: string;
   status: string;
   assigned_credit_hours: number;
+  /** Contact details; empty string when unknown, never null. */
+  email: string;
+  phone: string;
 }
 
 export interface Course {
