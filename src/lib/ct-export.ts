@@ -2,7 +2,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format, parseISO, isValid } from "date-fns";
 import type { AppData, CTAssignment } from "@/lib/types";
-import { slugify } from "@/lib/routine-export";
+import { sentenceCaseDashed } from "@/lib/routine-export";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import { roomDeptShort, teacherDeptShort, sortHomeDeptFirst } from "@/lib/room-dept";
@@ -132,7 +132,7 @@ function buildCourseWiseCTDoc(data: AppData, assignments: CTAssignment[]): CTDoc
     doc.text("No class tests to show.", MARGIN, y);
   }
 
-  return { doc, filename: `CT-Course-wise-Routine-${slugify(semName)}.pdf` };
+  return { doc, filename: `CT-Course-Wise-Routine-${sentenceCaseDashed(semName)}.pdf` };
 }
 
 /** Week-wise CT routine: grouped by week number and date, listing every course/room/CT number that day. */
@@ -166,7 +166,7 @@ function buildWeekWiseCTDoc(data: AppData, assignments: CTAssignment[]): CTDoc {
     theme: "grid",
   });
 
-  return { doc, filename: `CT-Week-wise-Routine-${slugify(semName)}.pdf` };
+  return { doc, filename: `CT-Week-Wise-Routine-${sentenceCaseDashed(semName)}.pdf` };
 }
 
 /** Teacher-wise CT routine: resolves teacher(s) per course via course_section_teachers for the
@@ -255,7 +255,7 @@ function buildTeacherWiseCTDoc(data: AppData, assignments: CTAssignment[]): CTDo
     doc.text("No teacher-course mapping found for this semester's CT courses.", MARGIN, y);
   }
 
-  return { doc, filename: `CT-Teacher-wise-Routine-${slugify(semName)}.pdf` };
+  return { doc, filename: `CT-Teacher-Wise-Routine-${sentenceCaseDashed(semName)}.pdf` };
 }
 
 /** Room-wise CT routine: one section per room (in the app's room order), listing every
@@ -335,7 +335,7 @@ function buildRoomWiseCTDoc(data: AppData, assignments: CTAssignment[]): CTDoc {
     doc.text("No class tests have been assigned to any room yet.", MARGIN, y);
   }
 
-  return { doc, filename: `CT-Room-wise-Routine-${slugify(semName)}.pdf` };
+  return { doc, filename: `CT-Room-Wise-Routine-${sentenceCaseDashed(semName)}.pdf` };
 }
 
 function save({ doc, filename }: CTDoc) {
@@ -375,5 +375,5 @@ export async function exportAllCTSchedulesZip(data: AppData, assignments: CTAssi
   }
 
   const content = await zip.generateAsync({ type: "blob" });
-  saveAs(content, `All-CT-Schedules-${slugify(semName)}.zip`);
+  saveAs(content, `All-CT-Schedules-${sentenceCaseDashed(semName)}.zip`);
 }
