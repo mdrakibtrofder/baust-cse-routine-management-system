@@ -41,6 +41,7 @@ const nav = [
       { to: "/ct-schedule/table", label: "Calendar View" },
       { to: "/ct-schedule/view", label: "Course View" },
       { to: "/ct-schedule/rooms", label: "Room View" },
+      { to: "/ct-schedule/same-day-rooms", label: "Same-Day Room CT" },
       { to: "/ct-schedule/teachers", label: "Teacher View" },
       { to: "/ct-schedule/reschedule", label: "Reschedule CT" },
     ],

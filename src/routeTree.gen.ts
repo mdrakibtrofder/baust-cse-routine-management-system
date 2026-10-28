@@ -28,6 +28,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as CtScheduleViewRouteImport } from './routes/ct-schedule.view'
 import { Route as CtScheduleTeachersRouteImport } from './routes/ct-schedule.teachers'
 import { Route as CtScheduleTableRouteImport } from './routes/ct-schedule.table'
+import { Route as CtScheduleSameDayRoomsRouteImport } from './routes/ct-schedule.same-day-rooms'
 import { Route as CtScheduleRoomsRouteImport } from './routes/ct-schedule.rooms'
 import { Route as CtScheduleRescheduleRouteImport } from './routes/ct-schedule.reschedule'
 import { Route as CtScheduleConfigRouteImport } from './routes/ct-schedule.config'
@@ -127,6 +128,11 @@ const CtScheduleTableRoute = CtScheduleTableRouteImport.update({
   path: '/ct-schedule/table',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CtScheduleSameDayRoomsRoute = CtScheduleSameDayRoomsRouteImport.update({
+  id: '/ct-schedule/same-day-rooms',
+  path: '/ct-schedule/same-day-rooms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CtScheduleRoomsRoute = CtScheduleRoomsRouteImport.update({
   id: '/ct-schedule/rooms',
   path: '/ct-schedule/rooms',
@@ -163,6 +169,7 @@ export interface FileRoutesByFullPath {
   '/ct-schedule/config': typeof CtScheduleConfigRoute
   '/ct-schedule/reschedule': typeof CtScheduleRescheduleRoute
   '/ct-schedule/rooms': typeof CtScheduleRoomsRoute
+  '/ct-schedule/same-day-rooms': typeof CtScheduleSameDayRoomsRoute
   '/ct-schedule/table': typeof CtScheduleTableRoute
   '/ct-schedule/teachers': typeof CtScheduleTeachersRoute
   '/ct-schedule/view': typeof CtScheduleViewRoute
@@ -187,6 +194,7 @@ export interface FileRoutesByTo {
   '/ct-schedule/config': typeof CtScheduleConfigRoute
   '/ct-schedule/reschedule': typeof CtScheduleRescheduleRoute
   '/ct-schedule/rooms': typeof CtScheduleRoomsRoute
+  '/ct-schedule/same-day-rooms': typeof CtScheduleSameDayRoomsRoute
   '/ct-schedule/table': typeof CtScheduleTableRoute
   '/ct-schedule/teachers': typeof CtScheduleTeachersRoute
   '/ct-schedule/view': typeof CtScheduleViewRoute
@@ -212,6 +220,7 @@ export interface FileRoutesById {
   '/ct-schedule/config': typeof CtScheduleConfigRoute
   '/ct-schedule/reschedule': typeof CtScheduleRescheduleRoute
   '/ct-schedule/rooms': typeof CtScheduleRoomsRoute
+  '/ct-schedule/same-day-rooms': typeof CtScheduleSameDayRoomsRoute
   '/ct-schedule/table': typeof CtScheduleTableRoute
   '/ct-schedule/teachers': typeof CtScheduleTeachersRoute
   '/ct-schedule/view': typeof CtScheduleViewRoute
@@ -238,6 +247,7 @@ export interface FileRouteTypes {
     | '/ct-schedule/config'
     | '/ct-schedule/reschedule'
     | '/ct-schedule/rooms'
+    | '/ct-schedule/same-day-rooms'
     | '/ct-schedule/table'
     | '/ct-schedule/teachers'
     | '/ct-schedule/view'
@@ -262,6 +272,7 @@ export interface FileRouteTypes {
     | '/ct-schedule/config'
     | '/ct-schedule/reschedule'
     | '/ct-schedule/rooms'
+    | '/ct-schedule/same-day-rooms'
     | '/ct-schedule/table'
     | '/ct-schedule/teachers'
     | '/ct-schedule/view'
@@ -286,6 +297,7 @@ export interface FileRouteTypes {
     | '/ct-schedule/config'
     | '/ct-schedule/reschedule'
     | '/ct-schedule/rooms'
+    | '/ct-schedule/same-day-rooms'
     | '/ct-schedule/table'
     | '/ct-schedule/teachers'
     | '/ct-schedule/view'
@@ -311,6 +323,7 @@ export interface RootRouteChildren {
   CtScheduleConfigRoute: typeof CtScheduleConfigRoute
   CtScheduleRescheduleRoute: typeof CtScheduleRescheduleRoute
   CtScheduleRoomsRoute: typeof CtScheduleRoomsRoute
+  CtScheduleSameDayRoomsRoute: typeof CtScheduleSameDayRoomsRoute
   CtScheduleTableRoute: typeof CtScheduleTableRoute
   CtScheduleTeachersRoute: typeof CtScheduleTeachersRoute
   CtScheduleViewRoute: typeof CtScheduleViewRoute
@@ -451,6 +464,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CtScheduleTableRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ct-schedule/same-day-rooms': {
+      id: '/ct-schedule/same-day-rooms'
+      path: '/ct-schedule/same-day-rooms'
+      fullPath: '/ct-schedule/same-day-rooms'
+      preLoaderRoute: typeof CtScheduleSameDayRoomsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ct-schedule/rooms': {
       id: '/ct-schedule/rooms'
       path: '/ct-schedule/rooms'
@@ -495,6 +515,7 @@ const rootRouteChildren: RootRouteChildren = {
   CtScheduleConfigRoute: CtScheduleConfigRoute,
   CtScheduleRescheduleRoute: CtScheduleRescheduleRoute,
   CtScheduleRoomsRoute: CtScheduleRoomsRoute,
+  CtScheduleSameDayRoomsRoute: CtScheduleSameDayRoomsRoute,
   CtScheduleTableRoute: CtScheduleTableRoute,
   CtScheduleTeachersRoute: CtScheduleTeachersRoute,
   CtScheduleViewRoute: CtScheduleViewRoute,

@@ -1,5 +1,5 @@
-import type { CTAssignment, Course, Room } from "./types";
-import { courseCodeDeptShort } from "./room-dept";
+import type { CTAssignment, Course, Department, Room } from "./types";
+import { courseCodeDeptShort, roomDeptShort, sortHomeDeptFirst } from "./room-dept";
 import { HOME_DEPT_SHORT_NAME } from "./constants";
 
 /** Orders courses by academic progression: level, then term (I before II), then
@@ -24,6 +24,12 @@ export function compareCoursesByLevelTerm(a?: Course, b?: Course): number {
  *  course so CT1 always precedes CT2. */
 export function compareCTsByLevelTerm(a: CTAssignment, b: CTAssignment): number {
   return compareCoursesByLevelTerm(a.course, b.course) || a.ct_number - b.ct_number;
+}
+
+/** Course-code ordering for individual sittings; CT number breaks ties within a
+ *  course so CT1 always precedes CT2. */
+export function compareCTsByCourseCode(a: CTAssignment, b: CTAssignment): number {
+  return (a.course?.code ?? "").localeCompare(b.course?.code ?? "") || a.ct_number - b.ct_number;
 }
 
 /** Rooms a sitting occupies, resolved against the room list and kept in the app's
@@ -53,4 +59,53 @@ export function filterCTsByDepartmental(
   showNonDepartmental: boolean,
 ): CTAssignment[] {
   return showNonDepartmental ? assignments : assignments.filter((a) => !isNonDepartmentalCT(a));
+}
+
+/** One room on one date that hosts more than one class test. */
+export interface SameDayRoomGroup {
+  room: Room;
+  dept: string;
+  /** yyyy-MM-dd. */
+  date: string;
+  /** The two-or-more sittings in that room on that date, in course-code order. */
+  rows: CTAssignment[];
+}
+
+/** Days a single room hosts more than one class test — the double-booked cases a
+ *  room's normal schedule hides between unrelated cohorts. Rooms follow the app's
+ *  room order (home department first), each room's days run earliest first, and
+ *  each day's sittings are listed in course-code order. */
+export function sameDayRoomCTGroups(
+  assignments: CTAssignment[],
+  rooms: Room[],
+  departments: Department[],
+): SameDayRoomGroup[] {
+  const buckets = new Map<string, SameDayRoomGroup>();
+  for (const a of assignments) {
+    const date = (a.date ?? "").split("T")[0];
+    if (!date) continue;
+    for (const roomId of a.room_ids ?? []) {
+      const room = rooms.find((r) => r.id === roomId);
+      if (!room) continue;
+      const key = `${roomId}::${date}`;
+      let bucket = buckets.get(key);
+      if (!bucket) {
+        bucket = { room, dept: roomDeptShort(room, departments), date, rows: [] };
+        buckets.set(key, bucket);
+      }
+      bucket.rows.push(a);
+    }
+  }
+
+  const groups = Array.from(buckets.values()).filter((g) => g.rows.length > 1);
+  for (const g of groups) g.rows.sort(compareCTsByCourseCode);
+
+  const roomRank = new Map(
+    sortHomeDeptFirst(rooms, (r) => roomDeptShort(r, departments)).map((r, i) => [r.id, i]),
+  );
+  return groups.sort(
+    (a, b) =>
+      (roomRank.get(a.room.id) ?? 0) - (roomRank.get(b.room.id) ?? 0) ||
+      a.date.localeCompare(b.date),
+  );
 }

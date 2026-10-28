@@ -6,7 +6,7 @@ import { sentenceCaseDashed } from "@/lib/routine-export";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import { roomDeptShort, teacherDeptShort, sortHomeDeptFirst } from "@/lib/room-dept";
-import { ctRoomNames, compareCoursesByLevelTerm, compareCTsByLevelTerm } from "@/lib/ct-schedule-utils";
+import { ctRoomNames, compareCoursesByLevelTerm, compareCTsByLevelTerm, sameDayRoomCTGroups } from "@/lib/ct-schedule-utils";
 
 const MARGIN = 36;
 
@@ -343,6 +343,80 @@ function buildRoomWiseCTDoc(data: AppData, assignments: CTAssignment[]): CTDoc {
   return { doc, filename: `CT-Room-Wise-Routine-${sentenceCaseDashed(semName)}.pdf` };
 }
 
+/** Same-day room CT routine: one page per room that carries more than one class
+ *  test on a given date, listing each of those clashing days' sittings. */
+function buildSameDayRoomCTDoc(data: AppData, assignments: CTAssignment[]): CTDoc {
+  const doc = newDoc();
+  const semName = getSemesterName(data);
+  const title = "Same-Day Class Tests by Room";
+  let y = drawHeader(doc, title, semName);
+
+  // Keep the helper's room ordering: home-department rooms first, days earliest first.
+  const byRoom = new Map<string, ReturnType<typeof sameDayRoomCTGroups>>();
+  for (const group of sameDayRoomCTGroups(assignments, data.rooms, data.departments)) {
+    if (!byRoom.has(group.room.id)) byRoom.set(group.room.id, []);
+    byRoom.get(group.room.id)!.push(group);
+  }
+
+  if (byRoom.size === 0) {
+    doc.setFont("times", "normal");
+    doc.setFontSize(11);
+    doc.text("No room is scheduled for more than one class test on the same day.", MARGIN, y);
+    return { doc, filename: `CT-Same-Day-Room-Routine-${sentenceCaseDashed(semName)}.pdf` };
+  }
+
+  let firstRoom = true;
+  for (const roomGroups of byRoom.values()) {
+    const room = roomGroups[0].room;
+
+    // Each room starts on its own page so a single room's clashes can be printed
+    // and posted on that room's door.
+    if (!firstRoom) {
+      doc.addPage();
+      y = drawHeader(doc, title, semName);
+    }
+    firstRoom = false;
+
+    doc.setFont("times", "bold");
+    doc.setFontSize(11);
+    doc.text(
+      `${room.name} [${roomGroups[0].dept}]  (${room.room_type}, capacity ${room.capacity}) — ` +
+        `${roomGroups.length} clash day(s)`,
+      MARGIN,
+      y,
+    );
+    y += 14;
+
+    autoTable(doc, {
+      startY: y,
+      margin: { left: MARGIN, right: MARGIN },
+      head: [["Week", "Date", "Day", "Course", "Level-Term", "CT No."]],
+      body: roomGroups.flatMap((group) =>
+        group.rows.map((a) => [
+          `Week ${a.week_number}`,
+          fmtDate(a.date),
+          fmtDay(a.date),
+          `${a.course?.code ?? ""} — ${a.course?.name ?? ""}`,
+          `${a.course?.level}-${a.course?.term}`,
+          `CT ${a.ct_number}`,
+        ]),
+      ),
+      styles: { font: "times", fontSize: 9, cellPadding: 5 },
+      columnStyles: {
+        0: { cellWidth: 52, halign: "center" },
+        4: { cellWidth: 62, halign: "center" },
+        5: { cellWidth: 46, halign: "center" },
+      },
+      headStyles: { fillColor: [79, 70, 229], textColor: 255, fontStyle: "bold" },
+      theme: "grid",
+    });
+
+    y = (doc as any).lastAutoTable.finalY + 24;
+  }
+
+  return { doc, filename: `CT-Same-Day-Room-Routine-${sentenceCaseDashed(semName)}.pdf` };
+}
+
 function save({ doc, filename }: CTDoc) {
   doc.save(filename);
 }
@@ -361,6 +435,10 @@ export function exportTeacherWiseCTPdf(data: AppData, assignments: CTAssignment[
 
 export function exportRoomWiseCTPdf(data: AppData, assignments: CTAssignment[]) {
   save(buildRoomWiseCTDoc(data, assignments));
+}
+
+export function exportSameDayRoomCTPdf(data: AppData, assignments: CTAssignment[]) {
+  save(buildSameDayRoomCTDoc(data, assignments));
 }
 
 /** Every CT schedule — course-wise, week-wise, teacher-wise and room-wise — in a
