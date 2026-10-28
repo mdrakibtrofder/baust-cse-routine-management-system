@@ -42,6 +42,7 @@ const nav = [
       { to: "/ct-schedule/view", label: "Course View" },
       { to: "/ct-schedule/rooms", label: "Room View" },
       { to: "/ct-schedule/teachers", label: "Teacher View" },
+      { to: "/ct-schedule/reschedule", label: "Reschedule CT" },
     ],
   },
   { to: "/mapping", label: "Room & Time Mapping", icon: Boxes },

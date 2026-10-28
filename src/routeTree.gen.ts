@@ -29,6 +29,7 @@ import { Route as CtScheduleViewRouteImport } from './routes/ct-schedule.view'
 import { Route as CtScheduleTeachersRouteImport } from './routes/ct-schedule.teachers'
 import { Route as CtScheduleTableRouteImport } from './routes/ct-schedule.table'
 import { Route as CtScheduleRoomsRouteImport } from './routes/ct-schedule.rooms'
+import { Route as CtScheduleRescheduleRouteImport } from './routes/ct-schedule.reschedule'
 import { Route as CtScheduleConfigRouteImport } from './routes/ct-schedule.config'
 
 const TeachersRoute = TeachersRouteImport.update({
@@ -131,6 +132,11 @@ const CtScheduleRoomsRoute = CtScheduleRoomsRouteImport.update({
   path: '/ct-schedule/rooms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CtScheduleRescheduleRoute = CtScheduleRescheduleRouteImport.update({
+  id: '/ct-schedule/reschedule',
+  path: '/ct-schedule/reschedule',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CtScheduleConfigRoute = CtScheduleConfigRouteImport.update({
   id: '/ct-schedule/config',
   path: '/ct-schedule/config',
@@ -155,6 +161,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/teachers': typeof TeachersRoute
   '/ct-schedule/config': typeof CtScheduleConfigRoute
+  '/ct-schedule/reschedule': typeof CtScheduleRescheduleRoute
   '/ct-schedule/rooms': typeof CtScheduleRoomsRoute
   '/ct-schedule/table': typeof CtScheduleTableRoute
   '/ct-schedule/teachers': typeof CtScheduleTeachersRoute
@@ -178,6 +185,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/teachers': typeof TeachersRoute
   '/ct-schedule/config': typeof CtScheduleConfigRoute
+  '/ct-schedule/reschedule': typeof CtScheduleRescheduleRoute
   '/ct-schedule/rooms': typeof CtScheduleRoomsRoute
   '/ct-schedule/table': typeof CtScheduleTableRoute
   '/ct-schedule/teachers': typeof CtScheduleTeachersRoute
@@ -202,6 +210,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/teachers': typeof TeachersRoute
   '/ct-schedule/config': typeof CtScheduleConfigRoute
+  '/ct-schedule/reschedule': typeof CtScheduleRescheduleRoute
   '/ct-schedule/rooms': typeof CtScheduleRoomsRoute
   '/ct-schedule/table': typeof CtScheduleTableRoute
   '/ct-schedule/teachers': typeof CtScheduleTeachersRoute
@@ -227,6 +236,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/teachers'
     | '/ct-schedule/config'
+    | '/ct-schedule/reschedule'
     | '/ct-schedule/rooms'
     | '/ct-schedule/table'
     | '/ct-schedule/teachers'
@@ -250,6 +260,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/teachers'
     | '/ct-schedule/config'
+    | '/ct-schedule/reschedule'
     | '/ct-schedule/rooms'
     | '/ct-schedule/table'
     | '/ct-schedule/teachers'
@@ -273,6 +284,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/teachers'
     | '/ct-schedule/config'
+    | '/ct-schedule/reschedule'
     | '/ct-schedule/rooms'
     | '/ct-schedule/table'
     | '/ct-schedule/teachers'
@@ -297,6 +309,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   TeachersRoute: typeof TeachersRoute
   CtScheduleConfigRoute: typeof CtScheduleConfigRoute
+  CtScheduleRescheduleRoute: typeof CtScheduleRescheduleRoute
   CtScheduleRoomsRoute: typeof CtScheduleRoomsRoute
   CtScheduleTableRoute: typeof CtScheduleTableRoute
   CtScheduleTeachersRoute: typeof CtScheduleTeachersRoute
@@ -445,6 +458,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CtScheduleRoomsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ct-schedule/reschedule': {
+      id: '/ct-schedule/reschedule'
+      path: '/ct-schedule/reschedule'
+      fullPath: '/ct-schedule/reschedule'
+      preLoaderRoute: typeof CtScheduleRescheduleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ct-schedule/config': {
       id: '/ct-schedule/config'
       path: '/ct-schedule/config'
@@ -473,6 +493,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   TeachersRoute: TeachersRoute,
   CtScheduleConfigRoute: CtScheduleConfigRoute,
+  CtScheduleRescheduleRoute: CtScheduleRescheduleRoute,
   CtScheduleRoomsRoute: CtScheduleRoomsRoute,
   CtScheduleTableRoute: CtScheduleTableRoute,
   CtScheduleTeachersRoute: CtScheduleTeachersRoute,

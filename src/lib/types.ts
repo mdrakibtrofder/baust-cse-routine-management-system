@@ -273,6 +273,92 @@ export interface CTLevelTermRoomMapping extends CTLevelTermBucket {
   room_ids: string[];
 }
 
+/** Cohort group the Reschedule CT feature splits the department into. Group 1
+ *  tests Monday+Wednesday in weeks 11 & 13 and Sunday+Tuesday+Thursday in weeks
+ *  12 & 14; Group 2 is the mirror image. */
+export type CTRescheduleGroup = 1 | 2;
+
+/** One class test's before/after as the Reschedule CT page shows it. */
+export interface CTRescheduleShift {
+  id: string;
+  course_id: string;
+  course_code: string;
+  course_name: string;
+  level: number;
+  term: string;
+  group: CTRescheduleGroup;
+  ct_number: number;
+  room_ids: string[];
+  old_date: string;
+  old_week: number;
+  new_date: string;
+  new_week: number;
+  status: "moved" | "unchanged" | "unplaced";
+  /** Why a sitting could not be placed, when `status` is `unplaced`. */
+  note?: string;
+}
+
+export interface CTRescheduleSnapshotInfo {
+  created_at: string;
+  count: number;
+}
+
+/** Two or more different courses of one level-term sitting on the same date —
+ *  impossible for a cohort that tests together, so the reschedule separates them. */
+export interface CTRescheduleConflict {
+  level: number;
+  term: string;
+  date: string;
+  week: number;
+  courses: { course_code: string; ct_number: number }[];
+}
+
+/** Which weekdays a group sits on during one window week. */
+export interface CTRescheduleWeekSlot {
+  week: number;
+  group: CTRescheduleGroup;
+  days: string[];
+}
+
+/** Two level-terms of the reschedule sitting in the same room on the same date.
+ *  The window had no clash-free date left, so a room is shared rather than a
+ *  class test left outside weeks 11–14. */
+export interface CTRescheduleOverlap {
+  date: string;
+  week: number;
+  room_ids: string[];
+  entries: { level: number; term: string; course_code: string; ct_number: number }[];
+}
+
+export interface CTReschedulePlan {
+  /** Class tests from this week on are the ones the reschedule moves. */
+  from_week: number;
+  first_week: number;
+  last_week: number;
+  /** Null until the first Apply — the schedule Restore would return to. */
+  snapshot: CTRescheduleSnapshotInfo | null;
+  week_slots: CTRescheduleWeekSlot[];
+  /** Same-day clashes the current schedule already has, per level-term. */
+  conflicts: CTRescheduleConflict[];
+  /** Room clashes between two level-terms of the generated schedule. */
+  overlaps: CTRescheduleOverlap[];
+  shifts: CTRescheduleShift[];
+  warnings: string[];
+}
+
+export interface CTRescheduleApplyResult {
+  applied: number;
+  unplaced: number;
+  warnings: string[];
+  plan: CTReschedulePlan;
+  assignments: CTAssignment[];
+}
+
+export interface CTRescheduleRestoreResult {
+  restored: number;
+  assignments: CTAssignment[];
+}
+
 export const COURSE_TYPE_INFO: Record<
   CourseType,
   {
