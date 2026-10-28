@@ -259,7 +259,7 @@ function buildTeacherWiseCTDoc(data: AppData, assignments: CTAssignment[]): CTDo
 }
 
 /** Room-wise CT routine: one section per room (in the app's room order), listing every
- *  class test sitting in that room in chronological order. */
+ *  class test sitting in that room in date order (earliest first). */
 function buildRoomWiseCTDoc(data: AppData, assignments: CTAssignment[]): CTDoc {
   const doc = newDoc();
   const semName = getSemesterName(data);
@@ -284,7 +284,12 @@ function buildRoomWiseCTDoc(data: AppData, assignments: CTAssignment[]): CTDoc {
   let firstRoom = true;
   for (const roomId of roomIds) {
     const room = data.rooms.find((r) => r.id === roomId);
-    const rows = byRoom.get(roomId)!.slice().sort(compareCTsByLevelTerm);
+    // Date order (earliest first), so the room's CTs read as a running calendar;
+    // course code breaks ties when two sittings share a date.
+    const rows = byRoom.get(roomId)!.slice().sort((a, b) => {
+      const byDate = (a.date ?? "").localeCompare(b.date ?? "");
+      return byDate !== 0 ? byDate : (a.course?.code ?? "").localeCompare(b.course?.code ?? "");
+    });
 
     // Each room starts on its own page so a single room's schedule can be printed
     // and posted on that room's door.
