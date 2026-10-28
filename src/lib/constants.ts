@@ -11,6 +11,17 @@ export const THEORY_AUTO_GENERATION_MAX_PERIOD_NUMBER = 6;
  *  in ct-schedule.service.ts. */
 export const CT_MIN_WEEK_GAP = 3;
 
+/** Minimum number of weeks between consecutive class tests of the same course
+ *  after the CT reschedule re-places them into weeks 11–14. Keep in sync with
+ *  `CT_RESCHEDULE_WEEK_GAP` in shared/constants.ts and the backend copy in
+ *  ct-reschedule.service.ts. */
+export const CT_RESCHEDULE_WEEK_GAP = 2;
+
+/** Weekday a level-term's overflow ("Extra") class test uses. Keep in sync with
+ *  `CT_RESCHEDULE_EXTRA_DAY` in shared/constants.ts and the backend copy in
+ *  ct-reschedule.service.ts. */
+export const CT_RESCHEDULE_EXTRA_DAY = "THU";
+
 /** Password required to unlock an already-generated CT schedule for regeneration.
  *  A workflow guard against accidental regeneration, not a security control —
  *  it is checked in the browser and is visible to anyone reading the bundle. */

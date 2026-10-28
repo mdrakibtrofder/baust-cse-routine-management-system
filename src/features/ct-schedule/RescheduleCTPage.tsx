@@ -13,6 +13,7 @@ import { format, parseISO, isValid } from "date-fns";
 import {
   AlertTriangle,
   ArrowRight,
+  CalendarPlus,
   CalendarX2,
   CheckCircle2,
   Info,
@@ -118,12 +119,20 @@ export function RescheduleCTPage() {
     return [...map.values()];
   }, [shifts]);
 
-  /** Week number → the two groups' sitting days, for the reference grid. */
+  /** The overflow ("Extra") class tests — those the level-term's own days could
+   *  not hold, so they take the extra day of a week the group already sits. */
+  const extraShifts = useMemo(() => shifts.filter((s) => s.extra), [shifts]);
+
+  /** Week number → the two groups' sitting days (and extra days), for the
+   *  reference grid. */
   const weekGrid = useMemo(() => {
-    const map = new Map<number, Partial<Record<CTRescheduleGroup, string[]>>>();
+    const map = new Map<
+      number,
+      Partial<Record<CTRescheduleGroup, { days: string[]; extra_days: string[] }>>
+    >();
     for (const slot of plan?.week_slots ?? []) {
       const entry = map.get(slot.week) ?? {};
-      entry[slot.group] = slot.days;
+      entry[slot.group] = { days: slot.days, extra_days: slot.extra_days };
       map.set(slot.week, entry);
     }
     return [...map.entries()].sort((a, b) => a[0] - b[0]);
@@ -228,10 +237,13 @@ export function RescheduleCTPage() {
                   <p className="text-muted-foreground">
                     Only CSE departmental level-terms are moved, and only their class tests sitting in
                     week {plan.from_week} or later — week {plan.from_week} never actually runs, so those
-                    tests are re-placed too. Every one of them is fitted into weeks {plan.first_week}–
-                    {plan.last_week} on its group's days for that week, spaced out across the window
-                    without any fixed gap. The generated layout can be applied again and again; it is
-                    always rebuilt from the original schedule, which is restored in one click.
+                    tests are re-placed too. Each course keeps at least a 2-week gap between its class
+                    tests, and a level-term never sits two on the same day. When a level-term has more
+                    class tests than its own days can hold, the overflow takes its extra day (the
+                    Thursday of a week it already sits) and is listed separately as an{" "}
+                    <span className="font-bold text-foreground">Extra CT</span>. The generated layout can
+                    be applied again and again; it is always rebuilt from the original schedule, which is
+                    restored in one click.
                   </p>
                 </div>
               </div>
@@ -282,6 +294,14 @@ export function RescheduleCTPage() {
                       {counts.unplaced} unplaced
                     </Badge>
                   )}
+                  {extraShifts.length > 0 && (
+                    <Badge
+                      variant="outline"
+                      className="font-bold border-amber-500/50 text-amber-700 dark:text-amber-400"
+                    >
+                      {extraShifts.length} extra CT{extraShifts.length === 1 ? "" : "s"}
+                    </Badge>
+                  )}
                   <Badge
                     variant="outline"
                     className={cn(
@@ -328,27 +348,81 @@ export function RescheduleCTPage() {
                     ))}
                   </div>
                   <div className="space-y-1.5">
-                    {weekGrid.map(([week, days]) => (
-                      <div key={week} className="flex items-center gap-2 text-xs">
-                        <span className="w-16 shrink-0 font-black text-muted-foreground">
-                          Week {week}
-                        </span>
-                        <span className="flex flex-wrap gap-1">
-                          {(days[group] ?? []).map((d) => (
-                            <span
-                              key={d}
-                              className="rounded-full bg-background px-2 py-0.5 font-bold shadow-sm"
-                            >
-                              {DAY_LABELS[d] ?? d}
-                            </span>
-                          ))}
-                        </span>
-                      </div>
-                    ))}
+                    {weekGrid.map(([week, byGroup]) => {
+                      const days = byGroup[group]?.days ?? [];
+                      const extraDays = byGroup[group]?.extra_days ?? [];
+                      return (
+                        <div key={week} className="flex items-center gap-2 text-xs">
+                          <span className="w-16 shrink-0 font-black text-muted-foreground">
+                            Week {week}
+                          </span>
+                          <span className="flex flex-wrap gap-1">
+                            {days.map((d) => (
+                              <span
+                                key={d}
+                                className="rounded-full bg-background px-2 py-0.5 font-bold shadow-sm"
+                              >
+                                {DAY_LABELS[d] ?? d}
+                              </span>
+                            ))}
+                            {extraDays.map((d) => (
+                              <span
+                                key={d}
+                                className="rounded-full border border-dashed border-amber-500/60 bg-amber-500/10 px-2 py-0.5 font-bold text-amber-700 dark:text-amber-400"
+                                title="Extra day — where a level-term's overflow class tests go"
+                              >
+                                {DAY_LABELS[d] ?? d} *
+                              </span>
+                            ))}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               ))}
             </div>
+
+            {/* Extra CTs — the overflow a level-term's own days could not hold */}
+            {extraShifts.length > 0 && (
+              <div className="rounded-2xl border-2 border-amber-500/40 bg-amber-500/5 p-4 space-y-2">
+                <div className="flex items-center gap-2 font-black text-amber-700 dark:text-amber-400">
+                  <CalendarPlus className="h-4 w-4" />
+                  {extraShifts.length} Extra CT{extraShifts.length === 1 ? "" : "s"}
+                </div>
+                <p className="text-xs font-semibold text-muted-foreground">
+                  These level-terms have more class tests than their own days in weeks{" "}
+                  {plan.first_week}–{plan.last_week} can hold, so the overflow sits on the level-term's
+                  extra day (marked <span className="font-bold">Thursday *</span> above). That week the
+                  level-term sits two class tests, on two different days — one of them here.
+                </p>
+                <div className="divide-y divide-amber-500/20">
+                  {extraShifts.map((s) => (
+                    <div
+                      key={s.id}
+                      className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2 text-xs"
+                    >
+                      <Badge variant="outline" className="bg-background font-black">
+                        Level {s.level}-{s.term}
+                      </Badge>
+                      <span className="font-mono font-bold">
+                        {s.course_code} (CT{s.ct_number})
+                      </span>
+                      <span className="font-bold">
+                        {fmtDate(s.new_date)}
+                        <span className="ml-1 text-[10px] font-semibold text-muted-foreground">
+                          Week {s.new_week} · {DAY_LABELS[dayCode(s.new_date)] ?? dayCode(s.new_date)}
+                        </span>
+                      </span>
+                      <span className="flex items-center gap-1 text-muted-foreground">
+                        <MapPin className="h-3 w-3" />
+                        {roomNames(s.room_ids)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Same-day clashes in the current schedule, per level-term */}
             {plan.conflicts.length > 0 && (
@@ -541,6 +615,15 @@ export function RescheduleCTPage() {
                                       <CheckCircle2 className="ml-1 inline h-3 w-3" />
                                     ) : null}
                                   </div>
+                                  {row.extra && (
+                                    <Badge
+                                      variant="outline"
+                                      className="mt-1 border-amber-500/50 bg-amber-500/10 px-1.5 py-0 text-[9px] font-black uppercase tracking-wide text-amber-700 dark:text-amber-400"
+                                      title="Overflow class test — placed on the level-term's extra day"
+                                    >
+                                      Extra
+                                    </Badge>
+                                  )}
                                 </>
                               )}
                             </TableCell>

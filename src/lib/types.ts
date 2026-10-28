@@ -294,6 +294,9 @@ export interface CTRescheduleShift {
   new_date: string;
   new_week: number;
   status: "moved" | "unchanged" | "unplaced";
+  /** True when the sitting did not fit on its group's own days and takes the
+   *  level-term's extra day (Thursday) instead — the Extra CT list. */
+  extra: boolean;
   /** Why a sitting could not be placed, when `status` is `unplaced`. */
   note?: string;
 }
@@ -313,11 +316,14 @@ export interface CTRescheduleConflict {
   courses: { course_code: string; ct_number: number }[];
 }
 
-/** Which weekdays a group sits on during one window week. */
+/** Which weekdays a group sits on during one window week. `extra_days` are the
+ *  days the group may additionally use that week — the Thursday of the weeks the
+ *  group does not already sit on Thursday, where its overflow (Extra CTs) goes. */
 export interface CTRescheduleWeekSlot {
   week: number;
   group: CTRescheduleGroup;
   days: string[];
+  extra_days: string[];
 }
 
 /** Two level-terms of the reschedule sitting in the same room on the same date.
